@@ -154,6 +154,18 @@ const stylesSingLog = StyleSheet.create({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
+    },
+    containerMaisCliente: {
+        height: 1100
+    },
+    containerTitleOther: {
+        width: width,
+        height: 150,
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignContent: 'center', 
+        marginTop: '20%' 
     }
   });
 
