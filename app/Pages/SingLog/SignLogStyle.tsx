@@ -5,7 +5,9 @@ const { height, width } = Dimensions.get('window');
 const stylesSingLog = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#717171'
+        backgroundColor: '#717171',
+        display: 'flex',
+        flexDirection: 'column'
     },
     containerImage: {
         width: '100%',
@@ -110,16 +112,49 @@ const stylesSingLog = StyleSheet.create({
         display: 'flex',
         flexDirection: 'row',
         justifyContent: 'center',
-        alignContent: 'center',  
+        alignContent: 'center', 
+        marginTop: '20%' 
     },
     imgTipo: {
-        height: 40, 
-        width: width
+        height: 60, 
+        width: 60
     },
     imgTipoContainer: {
         width: width * 0.8,
         flex: 1
     },
+    containerRegistrar:{
+        width: width,
+        height: 150,
+        display: 'flex',
+        flexDirection: 'row'
+    },
+    TouchableOpacityContainer: {
+        height: 125,
+        width: width * 0.33,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+    },
+    square: {
+        width: 30,
+        height: 30,
+        backgroundColor: '#D9D9D9',
+        borderRadius: 5
+    },
+    squareActive: {
+        width: 30,
+        height: 30,
+        backgroundColor: '#03B800',
+        borderRadius: 5
+    },
+    botaoFinal: {
+        width: width,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+    }
   });
 
 export default stylesSingLog

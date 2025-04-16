@@ -9,7 +9,10 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 type RootStackParamList = {
     Login: undefined;
     SignIn: undefined;
-};
+    SignEmpresa: undefined;
+    SignFuncionario: undefined;
+    SignCliente: undefined;
+  };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
 
