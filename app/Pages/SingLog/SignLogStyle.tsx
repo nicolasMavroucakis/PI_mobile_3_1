@@ -7,7 +7,7 @@ const stylesSingLog = StyleSheet.create({
         flex: 1,
         backgroundColor: '#717171',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
     },
     containerImage: {
         width: '100%',
@@ -127,11 +127,13 @@ const stylesSingLog = StyleSheet.create({
         width: width,
         height: 150,
         display: 'flex',
-        flexDirection: 'row'
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center'
     },
     TouchableOpacityContainer: {
         height: 125,
-        width: width * 0.33,
+        width: width * 0.5,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',

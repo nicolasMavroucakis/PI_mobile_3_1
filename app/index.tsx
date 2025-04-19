@@ -4,6 +4,7 @@ import SignIn from "./Pages/SingLog/SignInScreen";
 import SignCliente from "./Pages/SingLog/SignCliente";
 import SignFuncionario from "./Pages/SingLog/SignFuncionario";
 import SignEmpresa from "./Pages/SingLog/SignEmpresa";
+import HomeScreen from "./Pages/PrincipalApp/HomeScreen/HomeScreen";
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 type RootStackParamList = {
@@ -12,6 +13,7 @@ type RootStackParamList = {
   SignEmpresa: undefined;
   SignFuncionario: undefined;
   SignCliente: undefined;
+  HomeApp: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -24,8 +26,8 @@ export default function Page() {
         <Stack.Screen name="SignCliente" component={SignCliente} options={{ headerShown: false }} />
         <Stack.Screen name="SignFuncionario" component={SignEmpresa} options={{ headerShown: false }} />
         <Stack.Screen name="SignEmpresa" component={SignFuncionario} options={{ headerShown: false }} />
+        <Stack.Screen name="HomeApp" component={HomeScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
-
   );
 }
 

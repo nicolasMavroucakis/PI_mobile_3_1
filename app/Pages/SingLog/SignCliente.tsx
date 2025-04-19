@@ -19,7 +19,7 @@ const SignCliente = () => {
     };
 
     return (
-        <ScrollView style={[stylesSingLog.container, stylesSingLog.containerMaisCliente]}>
+        <ScrollView contentContainerStyle={[stylesSingLog.container, stylesSingLog.containerMaisCliente]}>
             <View style={[stylesSingLog.container, stylesSingLog.containerMaisCliente]}>
                 <View style={stylesSingLog.containerTitleOther}>
                     <Text style={stylesSingLog.Title}>

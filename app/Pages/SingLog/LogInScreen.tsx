@@ -12,6 +12,7 @@ type RootStackParamList = {
     SignEmpresa: undefined;
     SignFuncionario: undefined;
     SignCliente: undefined;
+    HomeApp: undefined
   };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
@@ -23,7 +24,11 @@ const LogInScreen = () => {
 
     const handleCadastro = () => {
         navigation.navigate("SignIn"); 
-      };
+    };
+    
+    const handleLogin = () => {
+        navigation.navigate("HomeApp"); 
+    }
 
     return(
         <View style={stylesSingLog.container}>
@@ -66,7 +71,7 @@ const LogInScreen = () => {
                         </TouchableOpacity>
                     </View>
                 </View>
-                <TouchableOpacity style={stylesSingLog.botaoCadastro} onPress={handleCadastro}>
+                <TouchableOpacity style={stylesSingLog.botaoCadastro} onPress={handleLogin}>
                     <Text style={stylesSingLog.botaoTexto}>Entre</Text>
                 </TouchableOpacity>
             </View>
