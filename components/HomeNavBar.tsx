@@ -1,38 +1,51 @@
-import { TouchableOpacity, View, Image, Text } from "react-native"
-import HomeNavBarStyle from "./HomeNavBarStyle"
-import HomeImg from "./assets/Images/Home.png"
-import BuscaImg from "./assets/Images/Busca.png"
-import UserImg from "./assets/Images/User.png"
-import CalendarioImg from "./assets/Images/Calendario.png"
+import { TouchableOpacity, View, Image, Text } from "react-native";
+import HomeNavBarStyle from "./HomeNavBarStyle";
+import HomeImg from "./assets/Images/Home.png";
+import BuscaImg from "./assets/Images/Busca.png";
+import UserImg from "./assets/Images/User.png";
+import CalendarioImg from "./assets/Images/Calendario.png";
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+type RootStackParamList = {
+    SearchScreen: undefined;
+    HomeApp: undefined;
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const HomeNavBar = () => {
-    return(
+    const navigation = useNavigation<NavigationProp>();
+
+    return (
         <View style={HomeNavBarStyle.containerNavBar}>
-            <TouchableOpacity>
-                <Image source={HomeImg}/>
-                <Text>
-
-                </Text>
+            <TouchableOpacity
+                style={HomeNavBarStyle.tamanhoBotao}
+                onPress={() => navigation.navigate('HomeApp')}
+            >
+                <Image source={HomeImg} style={HomeNavBarStyle.tamanhoImagem} />
+                <Text style={HomeNavBarStyle.text}>Início</Text>
             </TouchableOpacity>
-            <TouchableOpacity>
-                <Image source={BuscaImg}/>
-                <Text>
 
-                </Text>
+            <TouchableOpacity
+                style={HomeNavBarStyle.tamanhoBotao}
+                onPress={() => navigation.navigate('SearchScreen')}
+            >
+                <Image source={BuscaImg} style={HomeNavBarStyle.tamanhoImagem} />
+                <Text style={HomeNavBarStyle.text}>Busca</Text>
             </TouchableOpacity>
-            <TouchableOpacity>
-                <Image source={UserImg}/>
-                <Text>
 
-                </Text>
+            <TouchableOpacity style={HomeNavBarStyle.tamanhoBotao}>
+                <Image source={UserImg} style={HomeNavBarStyle.tamanhoImagem} />
+                <Text style={HomeNavBarStyle.text}>Agendamento</Text>
             </TouchableOpacity>
-            <TouchableOpacity>
-                <Image source={CalendarioImg}/>
-                <Text>
 
-                </Text>
+            <TouchableOpacity style={HomeNavBarStyle.tamanhoBotao}>
+                <Image source={CalendarioImg} style={HomeNavBarStyle.tamanhoImagem} />
+                <Text style={HomeNavBarStyle.text}>Perfil</Text>
             </TouchableOpacity>
         </View>
-    )
-}
-export default HomeNavBar
+    );
+};
+
+export default HomeNavBar;
