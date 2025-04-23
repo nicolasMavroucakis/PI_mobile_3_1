@@ -5,7 +5,6 @@ const { height, width } = Dimensions.get('window');
 const HomeScreenStyle = StyleSheet.create({
     container:{
         width: width,
-        height: 2000,
         backgroundColor: '#000000'
     },
     text: {
