@@ -9,6 +9,7 @@ import SearchScreen from "./Pages/PrincipalApp/SearchScreen.tsx/SearchScreen";
 import UserScreen from "./Pages/PrincipalApp/UserScreen/UserScreen";
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AgendamentoScreen from "./Pages/PrincipalApp/AgendamentosScreen/AgendamentosScreen";
+import ClienteConfigPage from "./Pages/UserInfo/Cliente/ClienteConfigPage";
 
 type RootStackParamList = {
   Login: undefined;
@@ -20,6 +21,7 @@ type RootStackParamList = {
   SearchScreen: undefined;
   AgendamentoScreen: undefined;
   UserScreen: undefined;
+  ClienteConfig: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -36,6 +38,7 @@ export default function Page() {
         <Stack.Screen name="SearchScreen" component={SearchScreen} options={{ headerShown: false }} />
         <Stack.Screen name="AgendamentoScreen" component={AgendamentoScreen} options={{ headerShown: false }} />
         <Stack.Screen name="UserScreen" component={UserScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="ClienteConfig" component={ClienteConfigPage} options={{ headerShown: false }} />
       </Stack.Navigator>
   );
 }
