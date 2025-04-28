@@ -14,8 +14,22 @@ import Location from "../../../../assets/images/location.png"
 import ImgExemplo from "../../../../assets/images/imageExemplo.png"
 import DescontoImg from "../../../../assets/images/descontoImg.png"
 import HomeNavBar from "@/components/HomeNavBar";
+import EmpresaInfoScreen from "../EmpresaInfoScreen/EmpresaInfoScreen";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useNavigation } from "expo-router";
+import { RFPercentage } from "react-native-responsive-fontsize";
+
+type RootStackParamList = {
+    UserScreen: undefined;
+    CategoriaScreen: undefined; 
+    EmpresaInfoScreen: undefined;
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const HomeScreen = () => {
+    const navigation = useNavigation<NavigationProp>();
+
     return(
         <View style={{ flex: 1 }}>
             <ScrollView contentContainerStyle={HomeScreenStyle.container}>
@@ -39,25 +53,25 @@ const HomeScreen = () => {
                     <View style={HomeScreenStyle.topPageCategoriasContainer}>
                         <TouchableOpacity style={HomeScreenStyle.topPageCategoriasContainerButton}>
                             <Image source={AulasImg} />
-                            <Text style={[HomeScreenStyle.text, {fontSize: 12}]}>
+                            <Text style={[HomeScreenStyle.text, {fontSize: RFPercentage(1) }]}>
                                 Aulas
                             </Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={HomeScreenStyle.topPageCategoriasContainerButton}>
                             <Image source={EletricistaImg} />
-                            <Text style={[HomeScreenStyle.text, {fontSize: 12}]}>
+                            <Text style={[HomeScreenStyle.text, {fontSize: RFPercentage(1) }]}>
                                 Eletricista
                             </Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={HomeScreenStyle.topPageCategoriasContainerButton}>
+                        <TouchableOpacity style={HomeScreenStyle.topPageCategoriasContainerButton} onPress={() => navigation.navigate('CategoriaScreen')}>
                             <Image source={CabelereiroImg} />
-                            <Text style={[HomeScreenStyle.text, {fontSize: 12}]}>
+                            <Text style={[HomeScreenStyle.text, {fontSize: RFPercentage(1) }]}>
                                 Cabelereiro
                             </Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={HomeScreenStyle.topPageCategoriasContainerButton}>
                             <Image source={DiaristaImg} />
-                            <Text style={[HomeScreenStyle.text, {fontSize: 12}]}>
+                            <Text style={[HomeScreenStyle.text, {fontSize: RFPercentage(1) }]}>
                                 Diarista
                             </Text>
                         </TouchableOpacity>
@@ -65,25 +79,25 @@ const HomeScreen = () => {
                     <View style={HomeScreenStyle.topPageCategoriasContainer}>
                         <TouchableOpacity style={HomeScreenStyle.topPageCategoriasContainerButton}>
                             <Image source={TecImg} />
-                            <Text style={[HomeScreenStyle.text, {fontSize: 12}]}>
+                            <Text style={[HomeScreenStyle.text, {fontSize: RFPercentage(1) }]}>
                                 Tec.Ti
                             </Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={HomeScreenStyle.topPageCategoriasContainerButton}>
                             <Image source={EncanadorImg} />
-                            <Text style={[HomeScreenStyle.text, {fontSize: 12}]}>
+                            <Text style={[HomeScreenStyle.text, {fontSize: RFPercentage(1) }]}>
                                 Encanador
                             </Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={HomeScreenStyle.topPageCategoriasContainerButton}>
                             <Image source={MassagemImg} />
-                            <Text style={[HomeScreenStyle.text, {fontSize: 12}]}>
+                            <Text style={[HomeScreenStyle.text, {fontSize: RFPercentage(1) }]}>
                                 Massagem
                             </Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={HomeScreenStyle.topPageCategoriasContainerButton}>
                             <Image source={MecanicoImg} />
-                            <Text style={[HomeScreenStyle.text, {fontSize: 12}]}>
+                            <Text style={[HomeScreenStyle.text, {fontSize: RFPercentage(1) }]}>
                                 Mecanico
                             </Text>
                         </TouchableOpacity>
@@ -194,12 +208,15 @@ const HomeScreen = () => {
                         Ultimos Serviços
                     </Text>
                     <ScrollView style={HomeScreenStyle.containerUltimosServicos} horizontal={true}>
-                        <TouchableOpacity style={HomeScreenStyle.containerUltimosServicosDentro}>
+                        <TouchableOpacity 
+                            style={HomeScreenStyle.containerUltimosServicosDentro} 
+                            onPress={() => navigation.navigate('EmpresaInfoScreen')}
+                        >
                             <View style={HomeScreenStyle.ImgUltServiView}>
                                 <Image source={ImgExemplo} style={HomeScreenStyle.ImgUltServi}/>
                             </View>
                             <View style={HomeScreenStyle.ImgUltServiView}>
-                                <Text style={{fontSize: 13, fontWeight: 'bold', color: '#fff'}}>
+                                <Text style={{fontSize: RFPercentage(1) , fontWeight: 'bold', color: '#fff'}}>
                                     Mecanico
                                 </Text>
                             </View>
@@ -209,7 +226,7 @@ const HomeScreen = () => {
                                 <Image source={ImgExemplo} style={HomeScreenStyle.ImgUltServi}/>
                             </View>
                             <View style={HomeScreenStyle.ImgUltServiView}>
-                                <Text style={{fontSize: 13, fontWeight: 'bold', color: '#fff'}}>
+                                <Text style={{fontSize: RFPercentage(1) , fontWeight: 'bold', color: '#fff'}}>
                                     Mecanico
                                 </Text>
                             </View>
@@ -219,7 +236,7 @@ const HomeScreen = () => {
                                 <Image source={ImgExemplo} style={HomeScreenStyle.ImgUltServi}/>
                             </View>
                             <View style={HomeScreenStyle.ImgUltServiView}>
-                                <Text style={{fontSize: 13, fontWeight: 'bold', color: '#fff'}}>
+                                <Text style={{fontSize: RFPercentage(1) , fontWeight: 'bold', color: '#fff'}}>
                                     Mecanico
                                 </Text>
                             </View>
@@ -229,7 +246,7 @@ const HomeScreen = () => {
                                 <Image source={ImgExemplo} style={HomeScreenStyle.ImgUltServi}/>
                             </View>
                             <View style={HomeScreenStyle.ImgUltServiView}>
-                                <Text style={{fontSize: 13, fontWeight: 'bold', color: '#fff'}}>
+                                <Text style={{fontSize: RFPercentage(1) , fontWeight: 'bold', color: '#fff'}}>
                                     Mecanico
                                 </Text>
                             </View>
@@ -239,7 +256,7 @@ const HomeScreen = () => {
                                 <Image source={ImgExemplo} style={HomeScreenStyle.ImgUltServi}/>
                             </View>
                             <View style={HomeScreenStyle.ImgUltServiView}>
-                                <Text style={{fontSize: 13, fontWeight: 'bold', color: '#fff'}}>
+                                <Text style={{fontSize: RFPercentage(1) , fontWeight: 'bold', color: '#fff'}}>
                                     Mecanico
                                 </Text>
                             </View>
@@ -249,7 +266,7 @@ const HomeScreen = () => {
                                 <Image source={ImgExemplo} style={HomeScreenStyle.ImgUltServi}/>
                             </View>
                             <View style={HomeScreenStyle.ImgUltServiView}>
-                                <Text style={{fontSize: 13, fontWeight: 'bold', color: '#fff'}}>
+                                <Text style={{fontSize: RFPercentage(1) , fontWeight: 'bold', color: '#fff'}}>
                                     Mecanico
                                 </Text>
                             </View>

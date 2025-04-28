@@ -2,9 +2,17 @@ import { TextInput, View, Text, TouchableOpacity, ScrollView } from "react-nativ
 import stylesSingLog from "./SignLogStyle"
 import { useState } from "react"
 import { useNavigation } from '@react-navigation/native'
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+
+type RootStackParamList = {
+    UserScreen: undefined;
+    HomeApp: undefined; 
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const SignCliente = () => {
-    const navigation = useNavigation();
+    const navigation = useNavigation<NavigationProp>();
     const [nome, setNome] = useState('')
     const [senha, setSenha] = useState('')
     const [email, setEmail] = useState('')
@@ -15,12 +23,12 @@ const SignCliente = () => {
     const [complemento, setComplemento] = useState('')
 
     const handleCadastro = () => {
-        navigation.navigate("SignIn"); 
+        navigation.navigate("HomeApp"); 
     };
 
     return (
-        <ScrollView contentContainerStyle={[stylesSingLog.container, stylesSingLog.containerMaisCliente]}>
-            <View style={[stylesSingLog.container, stylesSingLog.containerMaisCliente]}>
+        <ScrollView style={{flex: 1}}>
+            <View style={[stylesSingLog.container]}>
                 <View style={stylesSingLog.containerTitleOther}>
                     <Text style={stylesSingLog.Title}>
                         Adicione suas Informações

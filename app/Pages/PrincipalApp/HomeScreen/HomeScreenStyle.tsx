@@ -1,4 +1,5 @@
 import { StyleSheet, Dimensions } from 'react-native';
+import { RFPercentage } from "react-native-responsive-fontsize";
 
 const { height, width } = Dimensions.get('window');
 

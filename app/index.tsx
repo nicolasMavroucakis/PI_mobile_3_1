@@ -10,6 +10,8 @@ import UserScreen from "./Pages/PrincipalApp/UserScreen/UserScreen";
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AgendamentoScreen from "./Pages/PrincipalApp/AgendamentosScreen/AgendamentosScreen";
 import ClienteConfigPage from "./Pages/UserInfo/Cliente/ClienteConfigPage";
+import EmpresaInfoScreen from "./Pages/PrincipalApp/EmpresaInfoScreen/EmpresaInfoScreen";
+import CategoriaScreen from "./Pages/PrincipalApp/CategoriaScreen/CategoriaScreen";
 
 type RootStackParamList = {
   Login: undefined;
@@ -22,6 +24,8 @@ type RootStackParamList = {
   AgendamentoScreen: undefined;
   UserScreen: undefined;
   ClienteConfig: undefined;
+  CategoriaScreen: undefined;
+  EmpresaInfoScreen: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -39,6 +43,8 @@ export default function Page() {
         <Stack.Screen name="AgendamentoScreen" component={AgendamentoScreen} options={{ headerShown: false }} />
         <Stack.Screen name="UserScreen" component={UserScreen} options={{ headerShown: false }} />
         <Stack.Screen name="ClienteConfig" component={ClienteConfigPage} options={{ headerShown: false }} />
+        <Stack.Screen name="CategoriaScreen" component={CategoriaScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="EmpresaInfoScreen" component={EmpresaInfoScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
   );
 }

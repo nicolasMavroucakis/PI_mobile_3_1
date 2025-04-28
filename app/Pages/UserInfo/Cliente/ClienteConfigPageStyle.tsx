@@ -36,6 +36,35 @@ const ClienteConfigPageStyle = StyleSheet.create({
         fontWeight: 'bold', 
         marginLeft: width * 0.08, 
         marginBottom: 10
+    },
+    salvarAlteracao: {
+        width: width * 0.60, 
+        height: 50,
+        backgroundColor: '#00C20A',
+        marginLeft: width * 0.2,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 30
+    }, 
+    textButtonGreen: {
+        fontSize: 17, 
+        color: 'white', 
+        fontWeight: 'bold', 
+    },
+    sair: {
+        width: width * 0.60, 
+        height: 20,
+        marginLeft: width * 0.2,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 20
+    },
+    textButtonRed: {
+        fontSize: 17, 
+        color: '#FF5959', 
+        fontWeight: 'bold', 
     }
 })
 
