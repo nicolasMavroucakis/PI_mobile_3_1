@@ -31,7 +31,8 @@ const stylesCategoriaScreenStyle = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 5,
         marginTop: 10
-    }
+    },
+    
 });
 
 export default stylesCategoriaScreenStyle;

@@ -12,7 +12,8 @@ type RootStackParamList = {
     SignEmpresa: undefined;
     SignFuncionario: undefined;
     SignCliente: undefined;
-    HomeApp: undefined
+    HomeApp: undefined;
+    AdicionarCategoriaScreen: undefined
   };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
@@ -66,7 +67,7 @@ const LogInScreen = () => {
                         <Text style={{ color: '#fff', fontSize: 18, marginLeft: 10 }}>Esqueceu</Text>
                     </View>
                     <View>
-                        <TouchableOpacity onPress={handleCadastro} style={stylesSingLog.buttonSenha}>
+                        <TouchableOpacity onPress={() => navigation.navigate('AdicionarCategoriaScreen')} style={stylesSingLog.buttonSenha}>
                             <Text style={stylesSingLog.buttonText}>a sua Senha?</Text>
                         </TouchableOpacity>
                     </View>

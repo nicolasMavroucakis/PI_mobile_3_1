@@ -56,6 +56,35 @@ const EmpresaServicos = () => {
                     </View>
                 </View>
             </View> 
+            <View style={EmpresaInfoScreenStyle.line}/>
+            <View style={EmpresaInfoScreenStyle.servicoContainer}>
+                <View style={EmpresaInfoScreenStyle.servicoContainerText}>
+                    <Text style={EmpresaInfoScreenStyle.titleDentroServico}>
+                        Vistoria pré-compra
+                    </Text>
+                    <Text style={EmpresaInfoScreenStyle.subtitleDentroServico}>
+                        Realizamos uma avaliação completa do veículo antes da compra...
+                    </Text>
+                    <View>
+                        <Image source={imageExp} style={EmpresaInfoScreenStyle.imgDentroServico}/>
+                    </View>
+                </View>
+                <View style={EmpresaInfoScreenStyle.servicoContainerReserva}>
+                    <TouchableOpacity style={EmpresaInfoScreenStyle.buttonReservar}>
+                        <Text  style={{color: 'white', fontWeight: 'bold', fontSize: 12}}>
+                            Reservar
+                        </Text>
+                    </TouchableOpacity>
+                    <View style={EmpresaInfoScreenStyle.containerTextPrice}>
+                        <Text style={{color: 'white', fontWeight: 'bold', fontSize: 14}}>
+                            R$ 120,00
+                        </Text>
+                        <Text style={{color: 'rgba(255, 255, 255, 0.65)', fontWeight: 'bold', fontSize: 10}}>
+                            1h
+                        </Text>
+                    </View>
+                </View>
+            </View> 
         </View>
       )}
     </View>

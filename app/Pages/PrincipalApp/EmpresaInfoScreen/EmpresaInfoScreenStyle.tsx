@@ -120,10 +120,11 @@ const EmpresaInfoScreenStyle = StyleSheet.create({
   },
   styleContainerServico: {
     width: width,
-    height: 300,
+    minHeight: 500,
     backgroundColor: '#252525',
     paddingLeft: 16,
-    paddingTop: 10
+    paddingTop: 10,
+    flexGrow: 1
   },
   titleDentroServico: {
     fontSize: 18,
@@ -167,6 +168,84 @@ const EmpresaInfoScreenStyle = StyleSheet.create({
   containerTextPrice: {
     width: 100,
     alignItems: 'flex-end'
+  },
+  line:{
+    width: width * 0.85,
+    height: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginLeft: width * 0.037,
+    marginTop: 10,
+    marginBottom: 10
+  },
+  buttonPagSelecionada: {
+    backgroundColor: '#252525',
+    borderTopRightRadius: 12,
+    borderTopLeftRadius: 12
+  },
+  containerCartaoPresente: {
+    width: width * 0.9,
+    height: 200,
+    borderRadius: 12,
+    margin: 'auto',
+    marginTop: 0,
+    marginBottom: 10
+  },
+  textoMenorCartaoPresente: {
+    fontSize: 10,
+    color: 'white',
+    fontWeight: 'bold'
+  },
+  containerCartaoPresenteImg: {
+    width: 30,
+    height: 30,
+    borderRadius: '50%',
+    marginBottom: 5
+  },
+  textoDinheiroCartaoPresente: {
+    fontSize: 14,
+    color: 'white',
+    fontWeight: 'bold'
+  },
+  boxPrecoCartaoPresente: {
+    width: (width * 0.9) - 10,
+    height: 50,
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start'
+  },
+  boxPreco: {
+    width: 150,
+    height: 47,
+    alignItems: 'flex-end',
+  },
+  boxServicoCartaoPresente: {
+    height: 97,
+    width: (width * 0.9) - 10,
+    justifyContent: 'center'
+  },
+  containerCartaoPresenteImagem: {
+    width: (width * 0.9) - 10,
+    height: 47,
+    justifyContent:'flex-start',
+    alignItems: 'center',
+    display: 'flex',
+    flexDirection: 'row', 
+    gap: 10
+  },
+  textValePresente: {
+    fontSize: 20,
+    color: 'white',
+    fontWeight: 'bold'
+  },
+  textServicoValePresente: {
+    fontSize: 10,
+    color: 'white',
+    fontWeight: 'bold'
+  },
+  map: {
+    width: width,
+    height: 250,
   }
 });
 

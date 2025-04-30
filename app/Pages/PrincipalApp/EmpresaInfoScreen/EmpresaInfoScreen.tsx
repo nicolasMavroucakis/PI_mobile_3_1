@@ -7,13 +7,44 @@ import EmpresaInfoScreenStyle from "./EmpresaInfoScreenStyle";
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import { useState } from "react";
 import EmpresaServicos from "@/components/EmpresaInfoComponents/EmpresaServicos";
+import EmpresaCartaoPresente from "@/components/EmpresaInfoComponents/EmpresaCartaoPresente";
+import EmpresaDetalhes from "@/components/EmpresaInfoComponents/EmpresaDetalhes";
 
 const EmpresaInfoScreen = () => {
     const [favoritado, setFavoritado] = useState(false); // Corrigido aqui
+    const [servico, setServico] = useState(true)
+    const [avaliacao, setAvaliacao] = useState(false)
+    const [cartaoPresente, setCartaoPresente] = useState(false)
+    const [detalhes, setDetalhes] = useState(false)
 
     const toggleFavorito = () => {
         setFavoritado(!favoritado);
     };
+
+    const handleTrocaTipoPagina = (tipo: any) => {
+        if (tipo == 'servico') {
+            setServico(true)
+            setAvaliacao(false)
+            setCartaoPresente(false)
+            setDetalhes(false)
+        } else if (tipo == 'avaliacao') {
+            setServico(false)
+            setAvaliacao(true)
+            setCartaoPresente(false)
+            setDetalhes(false)
+        } else if ( tipo == 'cartPresente') {
+            setServico(false)
+            setAvaliacao(false)
+            setCartaoPresente(true)
+            setDetalhes(false)
+        } else {
+            setServico(false)
+            setAvaliacao(false)
+            setCartaoPresente(false)
+            setDetalhes(true)
+        }
+
+    }
 
     return (
         <View style={{ flex: 1, backgroundColor: "#323232" }}>
@@ -57,28 +88,30 @@ const EmpresaInfoScreen = () => {
                         </View>
                     </View>
                     <View style={EmpresaInfoScreenStyle.tipoPagEmpresa}>
-                        <TouchableOpacity style={EmpresaInfoScreenStyle.tipoPagEmpresaButton}>
+                        <TouchableOpacity style={servico == true ? [EmpresaInfoScreenStyle.tipoPagEmpresaButton, EmpresaInfoScreenStyle.buttonPagSelecionada] : EmpresaInfoScreenStyle.tipoPagEmpresaButton} onPress={() => handleTrocaTipoPagina('servico')}>
                             <Text style={EmpresaInfoScreenStyle.textPag}>
                                 Serviços
                             </Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={EmpresaInfoScreenStyle.tipoPagEmpresaButton}>
+                        <TouchableOpacity style={avaliacao == true ? [EmpresaInfoScreenStyle.tipoPagEmpresaButton, EmpresaInfoScreenStyle.buttonPagSelecionada] : EmpresaInfoScreenStyle.tipoPagEmpresaButton} onPress={() => handleTrocaTipoPagina('avaliacao')}>
                             <Text style={EmpresaInfoScreenStyle.textPag}>
                                 Avaliação
                             </Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={EmpresaInfoScreenStyle.tipoPagEmpresaButton}>
+                        <TouchableOpacity style={cartaoPresente == true ? [EmpresaInfoScreenStyle.tipoPagEmpresaButton, EmpresaInfoScreenStyle.buttonPagSelecionada] : EmpresaInfoScreenStyle.tipoPagEmpresaButton} onPress={() => handleTrocaTipoPagina('cartPresente')}>
                             <Text style={EmpresaInfoScreenStyle.textPag}>
                                 Cart. Pres
                             </Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={EmpresaInfoScreenStyle.tipoPagEmpresaButton}>
+                        <TouchableOpacity style={detalhes == true ? [EmpresaInfoScreenStyle.tipoPagEmpresaButton, EmpresaInfoScreenStyle.buttonPagSelecionada] : EmpresaInfoScreenStyle.tipoPagEmpresaButton} onPress={() => handleTrocaTipoPagina('Detalhes')}>
                             <Text style={EmpresaInfoScreenStyle.textPag}>
                                 Detalhes
                             </Text>
                         </TouchableOpacity>
                     </View>
-                    <EmpresaServicos/>
+                    {servico === true && <EmpresaServicos />}
+                    {cartaoPresente === true && <EmpresaCartaoPresente />}
+                    {detalhes === true && <EmpresaDetalhes/>}
                 </View>
             </ScrollView>
             <HomeNavBar/>

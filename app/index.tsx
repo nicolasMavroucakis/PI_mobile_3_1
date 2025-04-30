@@ -12,6 +12,7 @@ import AgendamentoScreen from "./Pages/PrincipalApp/AgendamentosScreen/Agendamen
 import ClienteConfigPage from "./Pages/UserInfo/Cliente/ClienteConfigPage";
 import EmpresaInfoScreen from "./Pages/PrincipalApp/EmpresaInfoScreen/EmpresaInfoScreen";
 import CategoriaScreen from "./Pages/PrincipalApp/CategoriaScreen/CategoriaScreen";
+import AdicionarCategoriaScreen from "./Pages/PrincipalApp/CategoriaScreen/AdicionarCategoriaScreen";
 
 type RootStackParamList = {
   Login: undefined;
@@ -26,6 +27,7 @@ type RootStackParamList = {
   ClienteConfig: undefined;
   CategoriaScreen: undefined;
   EmpresaInfoScreen: undefined;
+  AdicionarCategoriaScreen: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -45,6 +47,7 @@ export default function Page() {
         <Stack.Screen name="ClienteConfig" component={ClienteConfigPage} options={{ headerShown: false }} />
         <Stack.Screen name="CategoriaScreen" component={CategoriaScreen} options={{ headerShown: false }} />
         <Stack.Screen name="EmpresaInfoScreen" component={EmpresaInfoScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="AdicionarCategoriaScreen" component={AdicionarCategoriaScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
   );
 }
