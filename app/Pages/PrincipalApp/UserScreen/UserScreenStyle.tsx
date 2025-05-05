@@ -13,7 +13,8 @@ const UserScreenStyle = StyleSheet.create({
         height: 50,
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        textAlign: 'center'
     },
     containerRest: {
         width: width,
@@ -114,7 +115,12 @@ const UserScreenStyle = StyleSheet.create({
         width: 50, 
         height: 50,
         borderRadius: '50%'
-    }
+    },
+    lapisImg: {
+        width: 20,
+        height: 20,
+        marginLeft: 8,
+    },
 })
 
 export default UserScreenStyle

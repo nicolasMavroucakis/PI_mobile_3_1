@@ -6,8 +6,19 @@ import ClockImg from "../../../../assets/images/clock.png"
 import Location from "../../../../assets/images/location.png"
 import ImgExemplo from "../../../../assets/images/imageExemplo.png"
 import CheckImg from "../../../../assets/images/check.png"
+import { NativeStackNavigationProp } from "@react-navigation/native-stack"
+import { useNavigation } from "expo-router"
+import DetalhesAgendamento from "./DetalhesAgendamento"
+
+type RootStackParamList = {
+    DetalhesAgendamento: undefined;
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const AgendamentoScreen = () => {
+    const navigation = useNavigation<NavigationProp>();
+
     return (
         <View style={{ flex: 1,height: 1000, backgroundColor: "#000" }}>
             <ScrollView  showsVerticalScrollIndicator={false}>
@@ -101,10 +112,8 @@ const AgendamentoScreen = () => {
                                                     </Text>
                                                 </View>
                                             </View>
-
                                             <View style={AgendamentoScreenStyle.line} />
-
-                                            <TouchableOpacity style={AgendamentoScreenStyle.TouchableOpacity}>
+                                            <TouchableOpacity style={AgendamentoScreenStyle.TouchableOpacity} onPress={() => navigation.navigate('DetalhesAgendamento')}>
                                                 <Text style={AgendamentoScreenStyle.TouchableOpacityText}>
                                                     Adicionar à sacola
                                                 </Text>

@@ -246,6 +246,198 @@ const EmpresaInfoScreenStyle = StyleSheet.create({
   map: {
     width: width,
     height: 250,
+  },
+  funcionariosImg: {
+    width: 50,
+    height: 50,
+    borderRadius: '50%'
+  },
+  funcionariosConteinerImg: {
+    marginTop: 10,
+    width: 60,
+    height: 60,
+    display: 'flex',
+    justifyContent:'center',
+    alignItems:'center',
+    gap: 10
+  },
+  conteinerFuncionarios: {
+    width: width,
+    height: 80,
+    gap: 30,
+    display: 'flex',
+  },
+  tituloDetalhe:{
+    fontSize:20,
+    color: 'white',
+    fontWeight: 'bold',
+    marginTop: 10,
+    marginBottom: 10
+  },
+  containerTudoMenosMaps: {
+    width: width * 0.9,
+    margin: 'auto'
+  },
+  boxDiaAberto:{
+    width: width * 0.9,
+    height: 25,
+    display: 'flex',
+    justifyContent: 'space-between',
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  containerPhone: {
+    width: width * 0.9,
+    height: 60,
+    borderWidth: 2,
+    borderRadius: 8,
+    borderColor: '#656565',
+    display:'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 20
+  },
+  containerPhoneLeft: {
+    width: width * 0.6,
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent:'space-around',
+    alignItems: 'center'
+  },
+  buttonLigar: {
+    width: width * 0.2,
+    height: 40,
+    borderRadius: 8,
+    borderColor: '#656565',
+    borderWidth: 2,
+    justifyContent:'center',
+    alignItems: 'center',
+    marginRight: 10
+  },
+  ImgMidiasSociais: {
+    width: 50,
+    height: 50
+  },
+  midiasSociasButtons:{
+    width: width * 0.9,
+    height: 100,
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent:'space-around'
+  },
+  widthButton:{
+    width: 80,
+    height: 80,
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  imgComodidades: {
+    width: 30,
+    height: 30
+  },
+  textComodidades: {
+    fontSize:13,
+    color: 'white',
+    fontWeight: 'bold'
+  },
+  containerTipoComodidades: {
+    width: width * 0.9,
+    height: 50,
+    marginLeft: width * 0.025,
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: width * 0.5,  
+    marginLeft: width * 0.09
+  },
+  ratingLabel: {
+    width: 20,
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  barContainer: {
+    width: width * 0.7,
+    alignSelf: 'center',
+    marginVertical: 4,
+  },
+  barBackground: {
+    height: 8,
+    backgroundColor: '#ffffff',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  barFill: {
+    height: '100%',
+    backgroundColor: '#D17A00',
+  },
+  ratingCount: {
+    width: 30,
+    color: 'white',
+    textAlign: 'right',
+  },
+  totalAvaliacoes: {
+    width: width * 0.9,
+    height: 20,
+    marginLeft: width * 0.025, 
+    textAlign: 'center',
+    color: "white", 
+    marginBottom: 10
+  },
+  numeroTotalAvalaiações: {
+    flexDirection: "row", 
+    textAlign: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: width * 0.9,
+    height: 50,
+    marginLeft: width * 0.025, 
+  },
+  userImg:{ 
+    width:40,
+    height: 40,
+    borderRadius: '50%',
+    marginRight: 10
+  },
+  containerUserImageName: {
+    width: width * 0.8,
+    height: 30,
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent:'flex-start',
+    alignItems: 'center',
+    marginTop: 20
+  },
+  containerAvalaicaoUser: {
+    width: width * 0.8,
+    flexGrow: 1,
+    margin: 'auto',
+    backgroundColor: '#252525'
+  },
+  textInformationUser:{
+    fontSize: 13,
+    fontWeight: 'bold'
+  },
+  containerTudoAvalaicao: {
+    width: width * 0.9,
+    marginLeft: width * 0.025
+  },
+  textDaAvalaicao: {
+    fontSize: 15,
+    color: 'white',
+    marginTop: 15, 
+    width: width * 0.9
+  },
+  containerMembroServico: {
+    display: 'flex',
+    flexDirection: 'row',
+    gap: 5
   }
 });
 

@@ -137,6 +137,46 @@ const AgendamentoScreenStyle = StyleSheet.create({
         color: '#D03E3E',
         fontWeight: 'bold',
         fontSize: 20
+    },
+    MaisInformacoesAgendamento: {
+        width: width,
+        minHeight: height,
+        borderTopRightRadius: 16,
+        borderTopLeftRadius: 16,
+        backgroundColor: '#323232'
+    },
+    MaisInformacoesAgendamentoText: {
+        width: width * 0.9,
+        marginLeft: width * 0.025,
+        marginTop: 10
+    },
+    TouchbleOpacityMaps: {
+        width: 60,
+        height: 60,
+        borderRadius: 12,
+        backgroundColor: '#D9D9D9',
+        justifyContent: 'center',
+        alignItems:'center'
+    },
+    continerTextCamposInfo: {
+        width: width * 0.9,
+        display: 'flex',
+        flexDirection: 'row',
+        marginTop: 5
+    },
+    informacoesText: {
+        fontSize: 14, 
+        color: 'rgba(255, 255, 255, 0.34)'
+    },
+    informacoesTextBranco: {
+        fontSize: 14, 
+        color: 'white'
+    },
+    containerTouchbleOpacityMaps: {
+        width: width,
+        height: 200,
+        justifyContent:'center',
+        alignItems: 'center'
     }
 })
 
