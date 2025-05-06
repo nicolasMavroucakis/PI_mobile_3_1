@@ -9,8 +9,17 @@ import engrenagemImg from "../../../../assets/images/engrenagemColorida.png";
 import EmpresaInfoMoneyScreenStyle from "./EmpresaInfoMoneyScreenStyle";
 import calendarioImg from "../../../../components/assets/Images/Calendario.png";
 import ferramentaImg from "../../../../assets/images/ferramenta.png";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useNavigation } from "expo-router";
+
+type RootStackParamList = {
+    UserScreen: undefined;
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const EmpresaInfoMoneyScreen = () => {
+    const navigation = useNavigation<NavigationProp>();
     const [date, setDate] = useState(new Date());
     const [selectedService, setSelectedService] = useState("Corte de cabelo");
     const [modalVisible, setModalVisible] = useState(false);
@@ -26,7 +35,7 @@ const EmpresaInfoMoneyScreen = () => {
         <View style={{ flex: 1, backgroundColor: "#000" }}>
             <View style={EmpresaInfoMoneyScreenStyle.containerTitle}>
                 <View>
-                    <TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate("UserScreen")}>
                         <Image source={setaImg} style={EmpresaInfoMoneyScreenStyle.tamanhoImagensContainerTitle} />
                     </TouchableOpacity>
                 </View>

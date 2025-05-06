@@ -1,8 +1,9 @@
-import { ScrollView, TouchableOpacity, View, Text, TextInput } from "react-native";
+import { ScrollView, TouchableOpacity, View, Text, TextInput, Alert } from "react-native";
 import stylesSingLog from "./SignLogStyle";
 import { useState } from "react";
 import { useNavigation } from "expo-router";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { seedDatabase } from "@/app/crud/seedDatabase";
 
 type RootStackParamList = {
     UserScreen: undefined;
@@ -25,6 +26,20 @@ const SignFuncionario = () => {
 
     const handleCadastro = () => {
         navigation.navigate("HomeApp"); 
+    };
+
+    const handleSeedDatabase = async () => {
+        try {
+            const success = await seedDatabase();
+            if (success) {
+                Alert.alert("Sucesso", "Dados de exemplo inseridos com sucesso!");
+            } else {
+                Alert.alert("Erro", "Erro ao inserir dados de exemplo.");
+            }
+        } catch (error) {
+            console.error("Erro ao inserir dados:", error);
+            Alert.alert("Erro", "Erro ao inserir dados de exemplo.");
+        }
     };
 
     const inputs = [
@@ -69,6 +84,13 @@ const SignFuncionario = () => {
 
                     <TouchableOpacity style={stylesSingLog.botaoCadastro} onPress={handleCadastro}>
                         <Text style={stylesSingLog.botaoTexto}>Entre</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                        style={[stylesSingLog.botaoCadastro, { marginTop: 20, backgroundColor: '#666' }]} 
+                        onPress={handleSeedDatabase}
+                    >
+                        <Text style={stylesSingLog.botaoTexto}>Inserir Dados de Exemplo</Text>
                     </TouchableOpacity>
                 </View>
             </View>

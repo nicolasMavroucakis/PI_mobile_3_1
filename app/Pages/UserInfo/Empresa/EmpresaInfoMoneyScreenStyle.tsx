@@ -158,6 +158,86 @@ const EmpresaInfoMoneyScreenStyle = StyleSheet.create({
         justifyContent: 'space-evenly',
         marginTop: 20,
         marginRight: 40,
+    },
+    containerboxAgendamentos: {
+        width: width,
+        alignItems: 'center',
+        flexGrow: 1,
+        gap: 30
+    },
+    containerMinhaPaginaTop: {
+        width: width,
+        height: 70,
+        justifyContent: 'center',
+        alignItems: 'flex-end',
+        paddingRight: 5,
+    },
+    containerMinhaPaginaBottom: {
+        width: width,
+        justifyContent: 'center',
+        alignItems: 'flex-end',
+        paddingRight: 5,
+        flexGrow: 1,
+        marginBottom: 30,
+        minHeight: 50,
+        gap: 30,
+    },
+    touchbleOpacityButtonMinhaPaginaTop: {
+        width: width * 0.4,
+        height: 60,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 10,
+        borderColor: '#00C20A',
+        borderWidth: 2
+    },
+    iconesAddDeleteActionsMinhaPagina: {
+        width: 25,
+        height: 25,
+    },
+    containerCategoriaServicosAdd:{
+        width: width * 0.9,
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        margin: 'auto',
+        marginBottom: 20
+    },
+    textTitleServicos: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: 'white'
+    },
+    containerCategorias: {
+        marginBottom: 20,
+        marginTop: 20,
+        flexGrow: 1,
+    },
+    containerServicos: {
+        marginBottom: 20,
+        marginTop: 20,
+        flexGrow: 1,
+    },
+    containerItens: {
+        gap: 10,
+    },
+    item: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        backgroundColor: '#333', // Fundo para destacar os itens
+        borderRadius: 8,
+        width: '90%',
+        alignSelf: 'center',
+    },
+    containerPenDelete: {
+        width: 70,
+        height: 25,
+        flexDirection: 'row',
+        justifyContent: 'space-between'
     }
 });
 

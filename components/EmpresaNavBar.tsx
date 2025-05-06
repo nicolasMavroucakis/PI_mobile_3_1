@@ -10,10 +10,11 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 type RootStackParamList = {
     SearchScreen: undefined;
-    HomeApp: undefined;
-    AgendamentoScreen: undefined;
+    EmpresaInfoMoneyScreen: undefined;
+    EmpresaInfoAgendamentoScreen: undefined;
     UserScreen: undefined;
     EmpresaInfoFuncionariosScreen: undefined;
+    EmpresaMinhaPaginaScreen: undefined;
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -25,7 +26,7 @@ const EmpresaNavBar = () => {
         <View style={HomeNavBarStyle.containerNavBar}>
             <TouchableOpacity
                 style={HomeNavBarStyle.tamanhoBotao}
-                onPress={() => navigation.navigate('HomeApp')}
+                onPress={() => navigation.navigate('EmpresaInfoMoneyScreen')}
             >
                 <Image source={HomeImg} style={HomeNavBarStyle.tamanhoImagem} />
                 <Text style={HomeNavBarStyle.text}>Início</Text>
@@ -39,14 +40,14 @@ const EmpresaNavBar = () => {
             </TouchableOpacity>
             <TouchableOpacity 
                 style={HomeNavBarStyle.tamanhoBotao}
-                onPress={() => navigation.navigate('AgendamentoScreen')}
+                onPress={() => navigation.navigate('EmpresaInfoAgendamentoScreen')}
             >
                 <Image source={CalendarioImg} style={HomeNavBarStyle.tamanhoImagem} />
                 <Text style={HomeNavBarStyle.text}>Agendamento</Text>
             </TouchableOpacity>
             <TouchableOpacity 
                 style={HomeNavBarStyle.tamanhoBotao}
-                onPress={() => navigation.navigate('UserScreen')}
+                onPress={() => navigation.navigate('EmpresaMinhaPaginaScreen')}
             >
                 <Image source={minhaPaginaImg} style={HomeNavBarStyle.tamanhoImagem} />
                 <Text style={HomeNavBarStyle.text}>M.Pagina</Text>

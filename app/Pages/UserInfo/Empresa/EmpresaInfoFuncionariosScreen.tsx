@@ -6,16 +6,37 @@ import EmpresaInfoMoneyScreenStyle from "./EmpresaInfoMoneyScreenStyle";
 import setaImg from "../../../../assets/images/seta.png";
 import engrenagemImg from "../../../../assets/images/engrenagemColorida.png";
 import funcionariosImg from "../../../../assets/images/funcionarios.png"
+import EmpresaNavBar from "@/components/EmpresaNavBar";
+import calendarioImg from "../../../../components/assets/Images/Calendario.png";
+import ferramentaImg from "../../../../assets/images/ferramenta.png";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useNavigation } from "expo-router";
+
+type RootStackParamList = {
+    UserScreen: undefined;
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const EmpresaInfoFuncionariosScreen = () => {
+    const navigation = useNavigation<NavigationProp>();
     const [selectedService, setSelectedService] = useState("Corte de cabelo");
     const [modalVisible, setModalVisible] = useState(false);
     const funcionarios = ["Corte de cabelo", "Barba", "Manicure", "Massagem"];
+    const [date, setDate] = useState(new Date());
+
+    const servicos = ["Corte de cabelo", "Barba", "Manicure", "Massagem"];
+
+    const onChange = (event: any, selectedDate: any) => {
+        const currentDate = selectedDate || date;
+        setDate(currentDate);
+    };
 
     return (
         <View style={{ flex: 1, backgroundColor: "#000" }}>
-            <View style={EmpresaInfoMoneyScreenStyle.containerTitle}>
-                <TouchableOpacity>
+            <View style={[EmpresaInfoMoneyScreenStyle.containerTitle]}>
+            <TouchableOpacity onPress={() => navigation.navigate("UserScreen")}>
                     <Image source={setaImg} style={EmpresaInfoMoneyScreenStyle.tamanhoImagensContainerTitle} />
                 </TouchableOpacity>
                 <Text style={UserScreenStyle.textTitle}>Funcionarios</Text>
@@ -24,7 +45,7 @@ const EmpresaInfoFuncionariosScreen = () => {
                 </TouchableOpacity>
             </View>
             <ScrollView showsVerticalScrollIndicator={false}>
-                <View style={UserScreenStyle.containerRest}>
+                <View style={[UserScreenStyle.containerRest,{height:850}]}>
                     <View style={EmpresaInfoMoneyScreenStyle.containerInputFotoFuncionarios}>
                         <View style={EmpresaInfoMoneyScreenStyle.contianerImgFuncionarios}>
                             <Image source={funcionariosImg} style={EmpresaInfoMoneyScreenStyle.imgFuncionarios}/>
@@ -44,8 +65,154 @@ const EmpresaInfoFuncionariosScreen = () => {
                             </TouchableOpacity>
                         </View>
                     </View>
+                    <View style={EmpresaInfoMoneyScreenStyle.continerAgendamentos}>
+                        <View style={EmpresaInfoMoneyScreenStyle.continerAgendamentosMetade}>
+                            <Text style={EmpresaInfoMoneyScreenStyle.textAgendamentos}>
+                                Total de agendamentos para hoje
+                            </Text>
+                            <Text style={[EmpresaInfoMoneyScreenStyle.textAgendamentos, { color: '#0057C2' }]}>
+                                29
+                            </Text>
+                        </View>
+                        <View style={EmpresaInfoMoneyScreenStyle.continerAgendamentosMetade}>
+                            <Text style={EmpresaInfoMoneyScreenStyle.textAgendamentos}>
+                                Agendamentos realizados no dia de hoje
+                            </Text>
+                            <Text style={[EmpresaInfoMoneyScreenStyle.textAgendamentos, { color: '#00C20A' }]}>
+                                34
+                            </Text>
+                        </View>
+                    </View>
+                    <View style={EmpresaInfoMoneyScreenStyle.containerServicoReservado}>
+                        <View>
+                            <Text style={EmpresaInfoMoneyScreenStyle.titleSecundarios}>
+                                Serviços Reservados
+                            </Text>
+                        </View>
+                        <View style={EmpresaInfoMoneyScreenStyle.containerServicoReservadosfiltros}>
+                            <View style={[EmpresaInfoMoneyScreenStyle.containerFilterEsquerda, { alignItems: 'flex-start', justifyContent: 'center' }]}>
+                                <Text style={EmpresaInfoMoneyScreenStyle.textFiltros}>
+                                    Linha Temporal
+                                </Text>
+                                <View style={EmpresaInfoMoneyScreenStyle.containerFilterFiltrosEsquerda}>
+                                    <Image source={calendarioImg} style={EmpresaInfoMoneyScreenStyle.imgFiltros} />
+                                    <DateTimePicker
+                                        value={date}
+                                        mode="date"
+                                        display="default"
+                                        onChange={onChange}
+                                    />
+                                </View>
+                            </View>
+                            <View style={[EmpresaInfoMoneyScreenStyle.containerFilterDireita, { alignItems: 'flex-end', justifyContent: 'center' }]}>
+                                <Text style={EmpresaInfoMoneyScreenStyle.textFiltros}>
+                                    Serviços
+                                </Text>
+                                <TouchableOpacity
+                                    onPress={() => setModalVisible(true)}
+                                    style={[EmpresaInfoMoneyScreenStyle.containerFilterFiltrosEsquerda, { backgroundColor: "rgba(50, 50, 50, 0.8)", padding: 10, borderRadius: 8, justifyContent: 'flex-end', }]}
+                                >
+                                    <Text style={{ color: "white" }}>{selectedService}</Text>
+                                    <Image source={ferramentaImg} style={[EmpresaInfoMoneyScreenStyle.imgFiltros, { marginLeft: 10 }]} />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                        <View>
+                            <View style={EmpresaInfoMoneyScreenStyle.tabelaValorResultadoFiltros}>
+                                <View style={EmpresaInfoMoneyScreenStyle.tabelaValorResultadoFiltrosMenor}>
+                                    <View style={[EmpresaInfoMoneyScreenStyle.tabelaValorResultadoFiltrosMenorMenor, { borderTopLeftRadius: 10}]}>
+                                        <Text style={[EmpresaInfoMoneyScreenStyle.textFiltros, {fontWeight: 'bold'}]}>
+                                            Quantidade
+                                        </Text>
+                                    </View>
+                                    <View style={[EmpresaInfoMoneyScreenStyle.tabelaValorResultadoFiltrosMenorMenor, { borderTopRightRadius: 10}]}>
+                                        <Text style={[EmpresaInfoMoneyScreenStyle.textFiltros, {fontWeight: 'bold'}]}>
+                                            Valor
+                                        </Text>
+                                    </View>
+                                </View>
+                                <View style={EmpresaInfoMoneyScreenStyle.tabelaValorResultadoFiltrosMenor}>
+                                    <View style={[EmpresaInfoMoneyScreenStyle.tabelaValorResultadoFiltrosMenorMenor, { borderBottomLeftRadius: 10}]}>
+                                        <Text style={[EmpresaInfoMoneyScreenStyle.textFiltros, {fontWeight: 'bold'}]}>
+                                            105
+                                        </Text>
+                                    </View>
+                                    <View style={[EmpresaInfoMoneyScreenStyle.tabelaValorResultadoFiltrosMenorMenor, { borderBottomRightRadius: 10}]}>
+                                        <Text style={[EmpresaInfoMoneyScreenStyle.textFiltros, {fontWeight: 'bold'}]}>
+                                            R$ 105,00
+                                        </Text>
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
+                    </View>
+                    <View style={EmpresaInfoMoneyScreenStyle.containerServicoReservado}>
+                        <View>
+                            <Text style={EmpresaInfoMoneyScreenStyle.titleSecundarios}>
+                                Serviços Realizados
+                            </Text>
+                        </View>
+                        <View style={EmpresaInfoMoneyScreenStyle.containerServicoReservadosfiltros}>
+                            <View style={[EmpresaInfoMoneyScreenStyle.containerFilterEsquerda, { alignItems: 'flex-start', justifyContent: 'center' }]}>
+                                <Text style={EmpresaInfoMoneyScreenStyle.textFiltros}>
+                                    Linha Temporal
+                                </Text>
+                                <View style={EmpresaInfoMoneyScreenStyle.containerFilterFiltrosEsquerda}>
+                                    <Image source={calendarioImg} style={EmpresaInfoMoneyScreenStyle.imgFiltros} />
+                                    <DateTimePicker
+                                        value={date}
+                                        mode="date"
+                                        display="default"
+                                        onChange={onChange}
+                                        textColor="red"
+                                    />
+                                </View>
+                            </View>
+                            <View style={[EmpresaInfoMoneyScreenStyle.containerFilterDireita, { alignItems: 'flex-end', justifyContent: 'center' }]}>
+                                <Text style={EmpresaInfoMoneyScreenStyle.textFiltros}>
+                                    Serviços
+                                </Text>
+                                <TouchableOpacity
+                                    onPress={() => setModalVisible(true)}
+                                    style={[EmpresaInfoMoneyScreenStyle.containerFilterFiltrosEsquerda, { backgroundColor: "rgba(50, 50, 50, 0.8)", padding: 10, borderRadius: 8, justifyContent: 'flex-end' }]}
+                                >
+                                    <Text style={{ color: "white" }}>{selectedService}</Text>
+                                    <Image source={ferramentaImg} style={[EmpresaInfoMoneyScreenStyle.imgFiltros, { marginLeft: 10 }]} />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                        <View>
+                            <View style={EmpresaInfoMoneyScreenStyle.tabelaValorResultadoFiltros}>
+                                <View style={EmpresaInfoMoneyScreenStyle.tabelaValorResultadoFiltrosMenor}>
+                                    <View style={[EmpresaInfoMoneyScreenStyle.tabelaValorResultadoFiltrosMenorMenor, { borderTopLeftRadius: 10}]}>
+                                        <Text style={[EmpresaInfoMoneyScreenStyle.textFiltros, {fontWeight: 'bold'}]}>
+                                            Quantidade
+                                        </Text>
+                                    </View>
+                                    <View style={[EmpresaInfoMoneyScreenStyle.tabelaValorResultadoFiltrosMenorMenor, { borderTopRightRadius: 10}]}>
+                                        <Text style={[EmpresaInfoMoneyScreenStyle.textFiltros, {fontWeight: 'bold'}]}>
+                                            Valor
+                                        </Text>
+                                    </View>
+                                </View>
+                                <View style={EmpresaInfoMoneyScreenStyle.tabelaValorResultadoFiltrosMenor}>
+                                    <View style={[EmpresaInfoMoneyScreenStyle.tabelaValorResultadoFiltrosMenorMenor, { borderBottomLeftRadius: 10}]}>
+                                        <Text style={[EmpresaInfoMoneyScreenStyle.textFiltros, {fontWeight: 'bold'}]}>
+                                            105
+                                        </Text>
+                                    </View>
+                                    <View style={[EmpresaInfoMoneyScreenStyle.tabelaValorResultadoFiltrosMenorMenor, { borderBottomRightRadius: 10}]}>
+                                        <Text style={[EmpresaInfoMoneyScreenStyle.textFiltros, {fontWeight: 'bold'}]}>
+                                            R$ 105,00
+                                        </Text>
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
+                    </View>
                 </View>
             </ScrollView>
+            <EmpresaNavBar/>
             <Modal visible={modalVisible} transparent animationType="slide">
                 <View style={EmpresaInfoMoneyScreenStyle.modalContainer}>
                     <View style={EmpresaInfoMoneyScreenStyle.modalContent}>

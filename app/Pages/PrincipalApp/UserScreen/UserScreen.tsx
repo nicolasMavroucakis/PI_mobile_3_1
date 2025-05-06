@@ -19,12 +19,14 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 const UserScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const {
-    nome: setNomeGlobal,
-    senha: setSenhaGlobal,
+    nome: nomeGlobal,
+    senha: senhaGlobal,
     usuarioGlobal,
-    cidade: setCidadeGlobal,
-    endereco: setEnderecoGlobal,
-    numero: setNumeroGlobal,
+    cidade: cidadeGlobal,
+    endereco: enderecoGlobal,
+    numero: numeroGlobal,
+    numeroTelefone: telefoneGlobal,
+    email: emailGlobal,
   } = useUserGlobalContext();
 
   const handleClickEngrenagem = () => {
@@ -51,9 +53,9 @@ const UserScreen: React.FC = () => {
               />
             </View>
             <View>
-              <Text style={UserScreenStyle.userName}>Heitor Miranda</Text>
+              <Text style={UserScreenStyle.userName}>{nomeGlobal}</Text>
               <Text style={UserScreenStyle.userEmail}>
-                email12345@gmail.com
+                {emailGlobal}
               </Text>
             </View>
             <TouchableOpacity onPress={handleClickEngrenagem}>
@@ -88,7 +90,7 @@ const UserScreen: React.FC = () => {
                 <Text style={UserScreenStyle.userInfo}>Endereço:</Text>
                 <View style={UserScreenStyle.userInfoBox}>
                   <Text style={UserScreenStyle.userInfoDentro}>
-                    Rua São Paulo 1234 - São Paulo ,SP
+                    {enderecoGlobal} {numeroGlobal} - {cidadeGlobal}
                   </Text>
                 </View>
               </View>
@@ -96,7 +98,7 @@ const UserScreen: React.FC = () => {
                 <Text style={UserScreenStyle.userInfo}>Celular:</Text>
                 <View style={UserScreenStyle.userInfoBox}>
                   <Text style={UserScreenStyle.userInfoDentro}>
-                    Rua São Paulo 1234 - São Paulo ,SP
+                    {telefoneGlobal}
                   </Text>
                 </View>
               </View>
@@ -104,7 +106,7 @@ const UserScreen: React.FC = () => {
                 <Text style={UserScreenStyle.userInfo}>Email:</Text>
                 <View style={UserScreenStyle.userInfoBox}>
                   <Text style={UserScreenStyle.userInfoDentro}>
-                    Rua São Paulo 1234 - São Paulo ,SP
+                    {emailGlobal}
                   </Text>
                 </View>
               </View>

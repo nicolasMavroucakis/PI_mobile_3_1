@@ -8,6 +8,8 @@ interface UserGlobalContextType {
     setUsuarioGlobal: Dispatch<SetStateAction<string>>;
     senha: string;
     setSenha: Dispatch<SetStateAction<string>>;
+    email: string;
+    setEmail: Dispatch<SetStateAction<string>>;
     nome: string;
     setNome: Dispatch<SetStateAction<string>>;
     cidade: boolean;
@@ -16,6 +18,8 @@ interface UserGlobalContextType {
     numero: string;
     complemento: string;
     setComplemento: Dispatch<SetStateAction<string>>
+    numeroTelefone: string;
+    setNumeroTelefone: Dispatch<SetStateAction<string>>;
 }
 
 export const UserGlobalContext = createContext<UserGlobalContextType>({
@@ -23,6 +27,8 @@ export const UserGlobalContext = createContext<UserGlobalContextType>({
     setEndereco: () => {},
     usuarioGlobal: '',
     setUsuarioGlobal: () => {},
+    email: '',
+    setEmail: () => {},
     senha: '',
     setSenha: () => {},
     nome: '',
@@ -32,7 +38,9 @@ export const UserGlobalContext = createContext<UserGlobalContextType>({
     numero: '',
     setNumero: () => {},
     complemento: '',
-    setComplemento: () => {}
+    setComplemento: () => {},
+    numeroTelefone: '',
+    setNumeroTelefone: () => {}
 });
 
 export const UserGlobalContextProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -43,6 +51,8 @@ export const UserGlobalContextProvider: React.FC<{ children: ReactNode }> = ({ c
     const [cidade, setCidade] = useState<boolean>(false);
     const [numero, setNumero] = useState<string>('');
     const [complemento, setComplemento] = useState<string>('')
+    const [numeroTelefone, setNumeroTelefone] = useState<string>('');
+    const [email, setEmail] = useState<string>('');
 
     useEffect(() => {
         const loadAsyncData = async () => {
@@ -67,6 +77,8 @@ export const UserGlobalContextProvider: React.FC<{ children: ReactNode }> = ({ c
         console.log(cidade)
         console.log(numero)
         console.log(complemento)
+        console.log(numeroTelefone)
+        console.log(email)
     }, [endereco]);
 
     return (
@@ -84,7 +96,11 @@ export const UserGlobalContextProvider: React.FC<{ children: ReactNode }> = ({ c
             numero,
             setNumero,
             complemento,
-            setComplemento
+            setComplemento,
+            numeroTelefone,
+            setNumeroTelefone,
+            email,
+            setEmail,
         }}>
             {children}
         </UserGlobalContext.Provider>

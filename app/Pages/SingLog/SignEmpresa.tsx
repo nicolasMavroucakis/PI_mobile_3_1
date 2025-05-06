@@ -1,7 +1,7 @@
 import { ScrollView, TextInput, TouchableOpacity, View, Text, Alert } from "react-native";
 import stylesSingLog from "./SignLogStyle";
 import { useState } from "react";
-import { useNavigation, useRouter } from "expo-router";
+import { useNavigation } from "expo-router";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import StartFirebase from "@/app/crud/firebaseConfig";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -19,14 +19,15 @@ const SignEmpresa = () => {
     const db = StartFirebase();
 
     const {
-            setNome: setNomeGlobal,
-            setSenha: setSenhaGlobal,
-            setUsuarioGlobal,
-            setCidade: setCidadeGlobal,
-            setEndereco: setEnderecoGlobal,
-            setNumero: setNumeroGlobal,
-            setComplemento: setComplementoGlobal
-        } = useUserGlobalContext();
+        setNome: setNomeGlobal,
+        setSenha: setSenhaGlobal,
+        setUsuarioGlobal,
+        setCidade: setCidadeGlobal,
+        setEndereco: setEnderecoGlobal,
+        setNumero: setNumeroGlobal,
+        setComplemento: setComplementoGlobal,
+        setNumeroTelefone: setTelefoneGlobal, 
+    } = useUserGlobalContext();
 
     const [nome, setNome] = useState('');
     const [senha, setSenha] = useState('');
@@ -36,6 +37,7 @@ const SignEmpresa = () => {
     const [endereco, setEndereco] = useState('');
     const [numero, setNumero] = useState('');
     const [complemento, setComplemento] = useState('');
+    const [telefone, setTelefone] = useState(''); 
 
     const handleCepChange = async (cepDigitado: string) => {
         const onlyNumbers = cepDigitado.replace(/\D/g, '');
@@ -60,7 +62,7 @@ const SignEmpresa = () => {
 
     const handleCadastro = async () => {
         const emailId = email.trim().toLowerCase();
-        if (!email || !senha || !nome || !cep || !cidade || !endereco || !numero) {
+        if (!email || !senha || !nome || !cep || !cidade || !endereco || !numero || !telefone) {
             Alert.alert("Erro", "Preencha todos os campos obrigatórios.");
             return;
         }
@@ -79,7 +81,8 @@ const SignEmpresa = () => {
                 Numero: numero,
                 Endereco: endereco,
                 Senha: senha,
-                TipoUsuario: "Empresa"
+                TipoUsuario: "Empresa",
+                Telefone: telefone, // Adicionado telefone ao banco de dados
             };
             await setDoc(docRef, novoUsuario);
 
@@ -89,7 +92,8 @@ const SignEmpresa = () => {
             setCidadeGlobal(true);
             setEnderecoGlobal(true);
             setNumeroGlobal(numero);
-            setComplemento(complemento)
+            setComplementoGlobal(complemento);
+            setTelefoneGlobal(telefone); // Atualizando o telefone no contexto global
 
             Alert.alert("Sucesso", "Cadastro realizado com sucesso.");
             navigation.navigate("HomeApp");
@@ -108,6 +112,7 @@ const SignEmpresa = () => {
         { label: 'Endereco', value: endereco, set: setEndereco, secure: false },
         { label: 'Numero', value: numero, set: setNumero, secure: false },
         { label: 'Complemento', value: complemento, set: setComplemento, secure: false },
+        { label: 'Telefone', value: telefone, set: setTelefone, secure: false }, // Adicionado campo de telefone
     ];
 
     return (

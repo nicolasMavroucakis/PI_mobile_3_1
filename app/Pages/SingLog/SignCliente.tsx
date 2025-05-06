@@ -25,7 +25,8 @@ const SignCliente = () => {
         setCidade: setCidadeGlobal,
         setEndereco: setEnderecoGlobal,
         setNumero: setNumeroGlobal,
-        setComplemento: setComplementoGlobal
+        setComplemento: setComplementoGlobal,
+        setNumeroTelefone: setTelefoneGlobal,
     } = useUserGlobalContext();
 
     const [nome, setNome] = useState('');
@@ -37,6 +38,7 @@ const SignCliente = () => {
     const [numero, setNumero] = useState('');
     const [complemento, setComplemento] = useState('');
     const [cpf, setCpf] = useState('');
+    const [telefone, setTelefone] = useState('');
 
     const handleCepChange = async (cepDigitado: string) => {
         const onlyNumbers = cepDigitado.replace(/\D/g, '');
@@ -81,21 +83,23 @@ const SignCliente = () => {
                 Endereco: endereco,
                 Senha: senha,
                 CPF: cpf,
-                TipoUsuario: "Cliente"
+                TipoUsuario: "Cliente",
+                telefone: telefone
             };
             await setDoc(docRef, novoUsuario);
-
+    
             setNomeGlobal(nome);
             setSenhaGlobal(senha);
             setUsuarioGlobal(email);
             setCidadeGlobal(true);
             setEnderecoGlobal(true);
             setNumeroGlobal(numero);
-            setComplemento(complemento);
-
+            setComplementoGlobal(complemento);
+            setTelefoneGlobal(telefone); // Corrigido
+    
             Alert.alert("Sucesso", "Cadastro realizado com sucesso.");
             navigation.navigate("HomeApp");
-
+    
         } catch (error) {
             console.error("Erro ao cadastrar usuário:", error);
             Alert.alert("Erro", "Erro ao cadastrar. Tente novamente.");
@@ -121,6 +125,7 @@ const SignCliente = () => {
                         { label: 'Endereco', value: endereco, set: setEndereco },
                         { label: 'Numero', value: numero, set: setNumero },
                         { label: 'Complemento', value: complemento, set: setComplemento },
+                        { label: 'Telefone', value: telefone, set: setTelefone },
                     ].map((input, index) => (
                         <View
                             key={index}

@@ -60,7 +60,7 @@ const AgendamentoScreenStyle = StyleSheet.create({
         shadowColor: "#000",
         shadowOffset: {
             width: 0,
-            height: 8, // quanto maior, mais "embaixo"
+            height: 8, 
         },
         shadowOpacity: 0.5,
         shadowRadius: 4.65,

@@ -16,6 +16,8 @@ import AdicionarCategoriaScreen from "./Pages/PrincipalApp/CategoriaScreen/Adici
 import DetalhesAgendamento from "./Pages/PrincipalApp/AgendamentosScreen/DetalhesAgendamento";
 import EmpresaInfoMoneyScreen from "./Pages/UserInfo/Empresa/EmpresaInfoMoneyScreen";
 import EmpresaInfoFuncionariosScreen from "./Pages/UserInfo/Empresa/EmpresaInfoFuncionariosScreen";
+import EmpresaInfoAgendamentoScreen from "./Pages/UserInfo/Empresa/EmpresaInfoAgendamentoScreen";
+import EmpresaMinhaPaginaScreen from "./Pages/UserInfo/Empresa/EmpresaMinhaPaginaScreen";
 
 import { UserGlobalContextProvider } from "./GlobalContext/UserGlobalContext";
 
@@ -36,6 +38,8 @@ type RootStackParamList = {
   DetalhesAgendamento: undefined;
   EmpresaInfoMoneyScreen: undefined;
   EmpresaInfoFuncionariosScreen: undefined;
+  EmpresaInfoAgendamentoScreen: undefined;
+  EmpresaMinhaPaginaScreen: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -60,6 +64,8 @@ export default function Page() {
         <Stack.Screen name="DetalhesAgendamento" component={DetalhesAgendamento} options={{ headerShown: false }} />
         <Stack.Screen name="EmpresaInfoMoneyScreen" component={EmpresaInfoMoneyScreen} options={{ headerShown: false }} />
         <Stack.Screen name="EmpresaInfoFuncionariosScreen" component={EmpresaInfoFuncionariosScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="EmpresaInfoAgendamentoScreen" component={EmpresaInfoAgendamentoScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="EmpresaMinhaPaginaScreen" component={EmpresaMinhaPaginaScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
     </UserGlobalContextProvider>
   );

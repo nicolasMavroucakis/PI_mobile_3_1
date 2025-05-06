@@ -40,6 +40,8 @@ const LogInScreen = () => {
                 setCidade: setCidadeGlobal,
                 setEndereco: setEnderecoGlobal,
                 setNumero: setNumeroGlobal,
+                setNumeroTelefone: setTelefoneGlobal,
+                setEmail: setEmailGlobal,
             } = useUserGlobalContext();
     
 
@@ -73,6 +75,8 @@ const LogInScreen = () => {
                     setCidadeGlobal(data.Cidade || '');
                     setEnderecoGlobal(data.Endereco || '');
                     setNumeroGlobal(data.Numero || '');
+                    setTelefoneGlobal(data.Telefone || '');
+                    setEmailGlobal(email);
     
                     navigation.navigate("HomeApp");
                 } else {

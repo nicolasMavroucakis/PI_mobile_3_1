@@ -18,7 +18,7 @@ const UserScreenStyle = StyleSheet.create({
     },
     containerRest: {
         width: width,
-        height: 750,
+        minHeight: height,
         borderTopLeftRadius: 16,
         borderTopRightRadius: 16,
         backgroundColor: '#323232',
