@@ -3,7 +3,7 @@ import stylesSingLog from "./SignLogStyle";
 import { useState } from "react";
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, serverTimestamp } from "firebase/firestore";
 import StartFirebase from "@/app/crud/firebaseConfig";
 import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext";
 
@@ -17,18 +17,6 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 const SignCliente = () => {
     const navigation = useNavigation<NavigationProp>();
     const db = StartFirebase();
-
-    const {
-        setNome: setNomeGlobal,
-        setSenha: setSenhaGlobal,
-        setUsuarioGlobal,
-        setCidade: setCidadeGlobal,
-        setEndereco: setEnderecoGlobal,
-        setNumero: setNumeroGlobal,
-        setComplemento: setComplementoGlobal,
-        setNumeroTelefone: setTelefoneGlobal,
-    } = useUserGlobalContext();
-
     const [nome, setNome] = useState('');
     const [senha, setSenha] = useState('');
     const [email, setEmail] = useState('');
@@ -37,8 +25,18 @@ const SignCliente = () => {
     const [endereco, setEndereco] = useState('');
     const [numero, setNumero] = useState('');
     const [complemento, setComplemento] = useState('');
-    const [cpf, setCpf] = useState('');
     const [telefone, setTelefone] = useState('');
+
+    const {
+        setNome: setNomeGlobal,
+        setSenha: setSenhaGlobal,
+        setUsuarioGlobal,
+        setCidade: setCidadeGlobal,
+        setEndereco: setEnderecoGlobal,
+        setNumero: setNumeroGlobal,
+        setNumeroTelefone: setTelefoneGlobal,
+        setEmail: setEmailGlobal,
+    } = useUserGlobalContext();
 
     const handleCepChange = async (cepDigitado: string) => {
         const onlyNumbers = cepDigitado.replace(/\D/g, '');
@@ -63,93 +61,100 @@ const SignCliente = () => {
 
     const handleCadastro = async () => {
         const emailId = email.trim().toLowerCase();
-        if (!email || !senha || !nome || !cep || !cidade || !endereco || !numero || !cpf) {
+        if (!email || !senha || !nome || !cep || !cidade || !endereco || !numero || !telefone) {
             Alert.alert("Erro", "Preencha todos os campos obrigatórios.");
             return;
         }
+
         try {
-            const docRef = doc(db, "InfoUsuaEmpresaFuncionario", emailId);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
+            // Check if user already exists
+            const usersRef = collection(db, "users");
+            const userQuery = await getDocs(query(usersRef, where("email", "==", emailId)));
+            
+            if (!userQuery.empty) {
                 Alert.alert("Aviso", "Já existe um usuário com esse email.");
                 return;
             }
-            const novoUsuario = {
-                Cep: cep,
-                Cidade: cidade,
-                Complemento: complemento || "",
-                Nome: nome,
-                Numero: numero,
-                Endereco: endereco,
-                Senha: senha,
-                CPF: cpf,
-                TipoUsuario: "Cliente",
-                telefone: telefone
+
+            // Create user document
+            const userData = {
+                nome,
+                email: emailId,
+                senha,
+                tipoUsuario: "Cliente",
+                telefone,
+                endereco: {
+                    cep,
+                    cidade,
+                    rua: endereco,
+                    numero,
+                    complemento: complemento || ""
+                },
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
             };
-            await setDoc(docRef, novoUsuario);
-    
+
+            const userRef = await addDoc(usersRef, userData);
+
+            // Update global context
             setNomeGlobal(nome);
             setSenhaGlobal(senha);
-            setUsuarioGlobal(email);
+            setUsuarioGlobal(emailId);
             setCidadeGlobal(true);
             setEnderecoGlobal(true);
             setNumeroGlobal(numero);
-            setComplementoGlobal(complemento);
-            setTelefoneGlobal(telefone); // Corrigido
-    
+            setTelefoneGlobal(telefone);
+            setEmailGlobal(email);
+
             Alert.alert("Sucesso", "Cadastro realizado com sucesso.");
             navigation.navigate("HomeApp");
-    
         } catch (error) {
             console.error("Erro ao cadastrar usuário:", error);
             Alert.alert("Erro", "Erro ao cadastrar. Tente novamente.");
         }
     };
 
+    const inputs = [
+        { label: 'Email', value: email, set: setEmail },
+        { label: 'Senha', value: senha, set: setSenha, secure: true },
+        { label: 'Nome', value: nome, set: setNome },
+        { label: 'CEP', value: cep, set: handleCepChange },
+        { label: 'Cidade', value: cidade, set: setCidade },
+        { label: 'Endereço', value: endereco, set: setEndereco },
+        { label: 'Número', value: numero, set: setNumero },
+        { label: 'Complemento', value: complemento, set: setComplemento },
+        { label: 'Telefone', value: telefone, set: setTelefone },
+    ];
+
     return (
-        <ScrollView style={{ flex: 1 }}>
-            <View style={[stylesSingLog.container]}>
-                <View style={stylesSingLog.containerTitleOther}>
-                    <Text style={stylesSingLog.Title}>
-                        Adicione suas Informações
-                    </Text>
-                </View>
-                <View style={stylesSingLog.containerInput}>
-                    {[
-                        { label: 'Email', value: email, set: setEmail },
-                        { label: 'Senha', value: senha, set: setSenha, secure: true },
-                        { label: 'Nome Completo', value: nome, set: setNome },
-                        { label: 'CPF', value: cpf, set: setCpf },
-                        { label: 'CEP', value: cep, set: handleCepChange },
-                        { label: 'Cidade', value: cidade, set: setCidade },
-                        { label: 'Endereco', value: endereco, set: setEndereco },
-                        { label: 'Numero', value: numero, set: setNumero },
-                        { label: 'Complemento', value: complemento, set: setComplemento },
-                        { label: 'Telefone', value: telefone, set: setTelefone },
-                    ].map((input, index) => (
-                        <View
-                            key={index}
-                            style={[
-                                stylesSingLog.inputContainerOneInput,
-                                { backgroundColor: 'transparent' },
-                                stylesSingLog.inpuitDeBaixo
-                            ]}
-                        >
-                            <Text style={{ color: '#00C20A' }}>{input.label}</Text>
-                            <TextInput
-                                style={[stylesSingLog.input, { backgroundColor: 'transparent' }]}
-                                placeholder=""
-                                placeholderTextColor="#ccc"
-                                secureTextEntry={input.secure}
-                                value={input.value}
-                                onChangeText={input.set}
-                            />
-                        </View>
-                    ))}
-                    <TouchableOpacity style={stylesSingLog.botaoCadastro} onPress={handleCadastro}>
-                        <Text style={stylesSingLog.botaoTexto}>Cadastrar</Text>
-                    </TouchableOpacity>
-                </View>
+        <ScrollView style={stylesSingLog.container}>
+            <View style={stylesSingLog.containerTitleOther}>
+                <Text style={stylesSingLog.Title}>Cadastro de Cliente</Text>
+            </View>
+            <View style={stylesSingLog.containerInput}>
+                {inputs.map((input, index) => (
+                    <View
+                        key={index}
+                        style={[
+                            stylesSingLog.inputContainerOneInput,
+                            { backgroundColor: 'transparent' },
+                            stylesSingLog.inpuitDeBaixo
+                        ]}
+                    >
+                        <Text style={{ color: '#00C20A' }}>{input.label}</Text>
+                        <TextInput
+                            style={[stylesSingLog.input, { backgroundColor: 'transparent' }]}
+                            placeholder=""
+                            placeholderTextColor="#ccc"
+                            value={input.value}
+                            onChangeText={input.set}
+                            secureTextEntry={input.secure}
+                        />
+                    </View>
+                ))}
+                <TouchableOpacity style={stylesSingLog.botaoCadastro} onPress={handleCadastro}>
+                    <Text style={stylesSingLog.botaoTexto}>Cadastrar</Text>
+                </TouchableOpacity>
             </View>
         </ScrollView>
     );

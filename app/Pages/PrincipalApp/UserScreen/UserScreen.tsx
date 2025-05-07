@@ -1,4 +1,4 @@
-import React from "react"; // Certifique-se de importar React
+import React, { useEffect, useState } from "react";
 import { ScrollView, View, Text, Image, TouchableOpacity } from "react-native";
 import HomeNavBar from "@/components/HomeNavBar";
 import UserScreenStyle from "./UserScreenStyle";
@@ -8,6 +8,8 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "expo-router";
 import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext";
 import lapisImg from "../../../../assets/images/lapis.png";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import StartFirebase from "@/app/crud/firebaseConfig";
 
 type RootStackParamList = {
   ClienteConfig: undefined;
@@ -18,6 +20,8 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const UserScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const db = StartFirebase();
+  const [userData, setUserData] = useState<any>(null);
   const {
     nome: nomeGlobal,
     senha: senhaGlobal,
@@ -28,6 +32,27 @@ const UserScreen: React.FC = () => {
     numeroTelefone: telefoneGlobal,
     email: emailGlobal,
   } = useUserGlobalContext();
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const usersRef = collection(db, "users");
+        const userQuery = await getDocs(query(usersRef, where("email", "==", emailGlobal)));
+        
+        if (!userQuery.empty) {
+          const userDoc = userQuery.docs[0];
+          const data = userDoc.data();
+          setUserData(data);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar dados do usuário:", error);
+      }
+    };
+
+    if (emailGlobal) {
+      fetchUserData();
+    }
+  }, [emailGlobal]);
 
   const handleClickEngrenagem = () => {
     if (usuarioGlobal === "Cliente") {
@@ -90,7 +115,7 @@ const UserScreen: React.FC = () => {
                 <Text style={UserScreenStyle.userInfo}>Endereço:</Text>
                 <View style={UserScreenStyle.userInfoBox}>
                   <Text style={UserScreenStyle.userInfoDentro}>
-                    {enderecoGlobal} {numeroGlobal} - {cidadeGlobal}
+                    {userData?.endereco?.rua} {userData?.endereco?.numero} - {userData?.endereco?.cidade}
                   </Text>
                 </View>
               </View>
@@ -98,7 +123,7 @@ const UserScreen: React.FC = () => {
                 <Text style={UserScreenStyle.userInfo}>Celular:</Text>
                 <View style={UserScreenStyle.userInfoBox}>
                   <Text style={UserScreenStyle.userInfoDentro}>
-                    {telefoneGlobal}
+                    {userData?.telefone || telefoneGlobal}
                   </Text>
                 </View>
               </View>

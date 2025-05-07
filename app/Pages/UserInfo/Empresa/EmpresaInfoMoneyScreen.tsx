@@ -86,7 +86,10 @@ const EmpresaInfoMoneyScreen = () => {
                                         mode="date"
                                         display="default"
                                         onChange={onChange}
+                                        textColor="red"
+                                        style={{zIndex: 1000}}
                                     />
+                                    <View style={{ backgroundColor: 'white', width: 110, height: 30, position: 'relative', top: 0, left: -113, borderRadius:4}} />
                                 </View>
                             </View>
                             <View style={[EmpresaInfoMoneyScreenStyle.containerFilterDireita, { alignItems: 'flex-end', justifyContent: 'center' }]}>
@@ -150,7 +153,9 @@ const EmpresaInfoMoneyScreen = () => {
                                         display="default"
                                         onChange={onChange}
                                         textColor="red"
+                                        style={{zIndex: 1000}}
                                     />
+                                    <View style={{ backgroundColor: 'white', width: 110, height: 30, position: 'relative', top: 0, left: -113, borderRadius:4}} />
                                 </View>
                             </View>
                             <View style={[EmpresaInfoMoneyScreenStyle.containerFilterDireita, { alignItems: 'flex-end', justifyContent: 'center' }]}>

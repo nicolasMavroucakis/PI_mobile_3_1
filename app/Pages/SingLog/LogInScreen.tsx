@@ -9,8 +9,7 @@ import {
 } from "react-native";
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { SafeAreaView } from "react-native-safe-area-context";
-import { doc, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import StartFirebase from "@/app/crud/firebaseConfig";
 import stylesSingLog from "./SignLogStyle";
 import { useUserGlobalContext } from '@/app/GlobalContext/UserGlobalContext';
@@ -34,16 +33,15 @@ const LogInScreen = () => {
     const db = StartFirebase();
 
     const {
-                setNome: setNomeGlobal,
-                setSenha: setSenhaGlobal,
-                setUsuarioGlobal,
-                setCidade: setCidadeGlobal,
-                setEndereco: setEnderecoGlobal,
-                setNumero: setNumeroGlobal,
-                setNumeroTelefone: setTelefoneGlobal,
-                setEmail: setEmailGlobal,
-            } = useUserGlobalContext();
-    
+        setNome: setNomeGlobal,
+        setSenha: setSenhaGlobal,
+        setUsuarioGlobal,
+        setCidade: setCidadeGlobal,
+        setEndereco: setEnderecoGlobal,
+        setNumero: setNumeroGlobal,
+        setNumeroTelefone: setTelefoneGlobal,
+        setEmail: setEmailGlobal,
+    } = useUserGlobalContext();
 
     const handleCadastro = () => {
         navigation.navigate("SignIn");
@@ -59,23 +57,26 @@ const LogInScreen = () => {
         console.log("Senha digitada:", password);
     
         try {
-            const docRef = doc(db, "InfoUsuaEmpresaFuncionario", normalizedEmail);
-            const docSnap = await getDoc(docRef);
+            const usersRef = collection(db, "users");
+            const q = query(usersRef, where("email", "==", normalizedEmail));
+            const querySnapshot = await getDocs(q);
     
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                console.log("Documento encontrado no Firestore:", data);
-                if (data.Senha === password) {
+            if (!querySnapshot.empty) {
+                const userDoc = querySnapshot.docs[0];
+                const userData = userDoc.data();
+                console.log("Documento encontrado no Firestore:", userData);
+                
+                if (userData.senha === password) {
                     console.log("Senha correta. Redirecionando...");
     
                     // Setando os dados no contexto global
-                    setNomeGlobal(data.Nome || '');
-                    setSenhaGlobal(data.Senha || '');
-                    setUsuarioGlobal(normalizedEmail); // ou data.Usuario, se houver
-                    setCidadeGlobal(data.Cidade || '');
-                    setEnderecoGlobal(data.Endereco || '');
-                    setNumeroGlobal(data.Numero || '');
-                    setTelefoneGlobal(data.Telefone || '');
+                    setNomeGlobal(userData.nome || '');
+                    setSenhaGlobal(userData.senha || '');
+                    setUsuarioGlobal(userData.tipoUsuario);
+                    setCidadeGlobal(userData.endereco?.cidade || '');
+                    setEnderecoGlobal(userData.endereco?.rua || '');
+                    setNumeroGlobal(userData.endereco?.numero || '');
+                    setTelefoneGlobal(userData.telefone || '');
                     setEmailGlobal(email);
     
                     navigation.navigate("HomeApp");
@@ -140,7 +141,7 @@ const LogInScreen = () => {
                 <TouchableOpacity style={stylesSingLog.botaoCadastro} onPress={handleLogin}>
                     <Text style={stylesSingLog.botaoTexto}>Entre</Text>
                 </TouchableOpacity>
-                <TouchableOpacity  onPress={() => navigation.navigate('HomeApp')}>
+                <TouchableOpacity onPress={() => navigation.navigate('HomeApp')}>
                     <Text>
                         Dev
                     </Text>    
