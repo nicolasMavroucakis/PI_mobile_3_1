@@ -20,6 +20,8 @@ interface UserGlobalContextType {
     setComplemento: Dispatch<SetStateAction<string>>
     numeroTelefone: string;
     setNumeroTelefone: Dispatch<SetStateAction<string>>;
+    id: string;
+    setId: Dispatch<SetStateAction<string>>;
 }
 
 export const UserGlobalContext = createContext<UserGlobalContextType>({
@@ -40,7 +42,9 @@ export const UserGlobalContext = createContext<UserGlobalContextType>({
     complemento: '',
     setComplemento: () => {},
     numeroTelefone: '',
-    setNumeroTelefone: () => {}
+    setNumeroTelefone: () => {},
+    id: '',
+    setId: () => {}
 });
 
 export const UserGlobalContextProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -53,6 +57,7 @@ export const UserGlobalContextProvider: React.FC<{ children: ReactNode }> = ({ c
     const [complemento, setComplemento] = useState<string>('')
     const [numeroTelefone, setNumeroTelefone] = useState<string>('');
     const [email, setEmail] = useState<string>('');
+    const [id, setId] = useState<string>('');
 
     useEffect(() => {
         const loadAsyncData = async () => {
@@ -79,6 +84,7 @@ export const UserGlobalContextProvider: React.FC<{ children: ReactNode }> = ({ c
         console.log(complemento)
         console.log(numeroTelefone)
         console.log(email)
+        console.log(id)
     }, [endereco]);
 
     return (
@@ -101,6 +107,8 @@ export const UserGlobalContextProvider: React.FC<{ children: ReactNode }> = ({ c
             setNumeroTelefone,
             email,
             setEmail,
+            id,
+            setId
         }}>
             {children}
         </UserGlobalContext.Provider>

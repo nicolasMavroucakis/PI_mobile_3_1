@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { ScrollView, View, Text, Image, TouchableOpacity } from "react-native";
 import HomeNavBar from "@/components/HomeNavBar";
 import UserScreenStyle from "./UserScreenStyle";
-import UserImg from "../../../../assets/images/user.jpeg";
 import EngrenagemImg from "../../../../assets/images/engrenage.png";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "expo-router";
@@ -10,6 +9,8 @@ import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext";
 import lapisImg from "../../../../assets/images/lapis.png";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import StartFirebase from "@/app/crud/firebaseConfig";
+import defaultProfileImg from "../../../../assets/images/user.jpeg";
+import ProfileImage from "@/components/ProfileImage";
 
 type RootStackParamList = {
   ClienteConfig: undefined;
@@ -19,8 +20,8 @@ type RootStackParamList = {
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const UserScreen: React.FC = () => {
+  const { db } = StartFirebase();
   const navigation = useNavigation<NavigationProp>();
-  const db = StartFirebase();
   const [userData, setUserData] = useState<any>(null);
   const {
     nome: nomeGlobal,
@@ -31,24 +32,25 @@ const UserScreen: React.FC = () => {
     numero: numeroGlobal,
     numeroTelefone: telefoneGlobal,
     email: emailGlobal,
+    id: userId
   } = useUserGlobalContext();
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const usersRef = collection(db, "users");
-        const userQuery = await getDocs(query(usersRef, where("email", "==", emailGlobal)));
-        
-        if (!userQuery.empty) {
-          const userDoc = userQuery.docs[0];
-          const data = userDoc.data();
-          setUserData(data);
-        }
-      } catch (error) {
-        console.error("Erro ao buscar dados do usuário:", error);
+  const fetchUserData = async () => {
+    try {
+      const usersRef = collection(db, "users");
+      const userQuery = await getDocs(query(usersRef, where("email", "==", emailGlobal)));
+      
+      if (!userQuery.empty) {
+        const userDoc = userQuery.docs[0];
+        const data = userDoc.data();
+        setUserData({ ...data, id: userDoc.id });
       }
-    };
+    } catch (error) {
+      console.error("Erro ao buscar dados do usuário:", error);
+    }
+  };
 
+  useEffect(() => {
     if (emailGlobal) {
       fetchUserData();
     }
@@ -72,10 +74,21 @@ const UserScreen: React.FC = () => {
         <View style={UserScreenStyle.containerRest}>
           <View style={UserScreenStyle.userBox}>
             <View style={UserScreenStyle.userImage}>
-              <Image
-                source={UserImg}
-                style={{ width: 65, height: 65, borderRadius: "50%" }}
-              />
+              {userId ? (
+                <ProfileImage 
+                  userId={userId}
+                  size={65}
+                  onImageUpdate={fetchUserData}
+                />
+              ) : (
+                <Image 
+                  source={defaultProfileImg}
+                  style={[
+                    UserScreenStyle.userImage,
+                    { width: 65, height: 65, borderRadius: 32.5 }
+                  ]}
+                />
+              )}
             </View>
             <View>
               <Text style={UserScreenStyle.userName}>{nomeGlobal}</Text>
@@ -115,7 +128,7 @@ const UserScreen: React.FC = () => {
                 <Text style={UserScreenStyle.userInfo}>Endereço:</Text>
                 <View style={UserScreenStyle.userInfoBox}>
                   <Text style={UserScreenStyle.userInfoDentro}>
-                    {userData?.endereco?.rua} {userData?.endereco?.numero} - {userData?.endereco?.cidade}
+                    {enderecoGlobal} {numeroGlobal} - {cidadeGlobal}
                   </Text>
                 </View>
               </View>
@@ -143,31 +156,31 @@ const UserScreen: React.FC = () => {
                 >
                   <View style={UserScreenStyle.viewImageFavoritos}>
                     <Image
-                      source={UserImg}
+                      source={defaultProfileImg}
                       style={UserScreenStyle.imageFavoritos}
                     />
                   </View>
                   <View style={UserScreenStyle.viewImageFavoritos}>
                     <Image
-                      source={UserImg}
+                      source={defaultProfileImg}
                       style={UserScreenStyle.imageFavoritos}
                     />
                   </View>
                   <View style={UserScreenStyle.viewImageFavoritos}>
                     <Image
-                      source={UserImg}
+                      source={defaultProfileImg}
                       style={UserScreenStyle.imageFavoritos}
                     />
                   </View>
                   <View style={UserScreenStyle.viewImageFavoritos}>
                     <Image
-                      source={UserImg}
+                      source={defaultProfileImg}
                       style={UserScreenStyle.imageFavoritos}
                     />
                   </View>
                   <View style={UserScreenStyle.viewImageFavoritos}>
                     <Image
-                      source={UserImg}
+                      source={defaultProfileImg}
                       style={UserScreenStyle.imageFavoritos}
                     />
                   </View>

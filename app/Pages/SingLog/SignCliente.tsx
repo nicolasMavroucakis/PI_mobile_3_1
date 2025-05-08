@@ -16,7 +16,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const SignCliente = () => {
     const navigation = useNavigation<NavigationProp>();
-    const db = StartFirebase();
+    const {db} = StartFirebase();
     const [nome, setNome] = useState('');
     const [senha, setSenha] = useState('');
     const [email, setEmail] = useState('');

@@ -30,7 +30,7 @@ const LogInScreen = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigation = useNavigation<NavigationProp>();
-    const db = StartFirebase();
+    const { db } = StartFirebase();
 
     const {
         setNome: setNomeGlobal,
@@ -41,6 +41,7 @@ const LogInScreen = () => {
         setNumero: setNumeroGlobal,
         setNumeroTelefone: setTelefoneGlobal,
         setEmail: setEmailGlobal,
+        setId: setIdGlobal,
     } = useUserGlobalContext();
 
     const handleCadastro = () => {
@@ -55,38 +56,34 @@ const LogInScreen = () => {
         const normalizedEmail = email.trim().toLowerCase();
         console.log("Email consultado:", normalizedEmail);
         console.log("Senha digitada:", password);
-    
+
         try {
+            // Buscar usuário no Firestore por email e senha
             const usersRef = collection(db, "users");
-            const q = query(usersRef, where("email", "==", normalizedEmail));
+            const q = query(
+                usersRef,
+                where("email", "==", normalizedEmail),
+                where("senha", "==", password)
+            );
             const querySnapshot = await getDocs(q);
-    
+
             if (!querySnapshot.empty) {
                 const userDoc = querySnapshot.docs[0];
                 const userData = userDoc.data();
-                console.log("Documento encontrado no Firestore:", userData);
-                
-                if (userData.senha === password) {
-                    console.log("Senha correta. Redirecionando...");
-    
-                    // Setando os dados no contexto global
-                    setNomeGlobal(userData.nome || '');
-                    setSenhaGlobal(userData.senha || '');
-                    setUsuarioGlobal(userData.tipoUsuario);
-                    setCidadeGlobal(userData.endereco?.cidade || '');
-                    setEnderecoGlobal(userData.endereco?.rua || '');
-                    setNumeroGlobal(userData.endereco?.numero || '');
-                    setTelefoneGlobal(userData.telefone || '');
-                    setEmailGlobal(email);
-    
-                    navigation.navigate("HomeApp");
-                } else {
-                    console.warn("Senha incorreta.");
-                    Alert.alert("Erro", "Senha incorreta.");
-                }
+                // Setando os dados no contexto global
+                setNomeGlobal(userData.nome || '');
+                setSenhaGlobal(userData.senha || '');
+                setUsuarioGlobal(userData.tipoUsuario);
+                setCidadeGlobal(userData.endereco?.cidade || '');
+                setEnderecoGlobal(userData.endereco?.rua || '');
+                setNumeroGlobal(userData.endereco?.numero || '');
+                setTelefoneGlobal(userData.telefone || '');
+                setEmailGlobal(email);
+                setIdGlobal(userDoc.id);
+                console.log("ID do usuário definido:", userDoc.id);
+                navigation.navigate("HomeApp");
             } else {
-                console.warn("Documento não encontrado para:", normalizedEmail);
-                Alert.alert("Erro", "Usuário não encontrado.");
+                Alert.alert("Erro", "Usuário ou senha incorretos.");
             }
         } catch (error) {
             console.error("Erro ao fazer login:", error);

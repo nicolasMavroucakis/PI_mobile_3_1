@@ -1,178 +1,197 @@
-import { collection, doc, setDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
-import StartFirebase from './firebaseConfig';
+import { collection, addDoc, getFirestore, serverTimestamp, Timestamp } from "firebase/firestore";
 
-const db = StartFirebase();
+const seedDatabase = async () => {
+    const { db } = StartFirebase();
 
-export const seedDatabase = async () => {
+    const users = [
+        {
+            nome: "João Silva",
+            email: "joao@email.com",
+            senha: "123456",
+            tipoUsuario: "Cliente",
+            telefone: "11999999999",
+            endereco: {
+                rua: "Rua das Flores",
+                numero: "123",
+                cidade: "São Paulo",
+                cep: "12345-678",
+                complemento: "Apto 45"
+            },
+            fotoPerfil: "",
+            createdAt: Timestamp.fromDate(new Date()),
+            updatedAt: Timestamp.fromDate(new Date())
+        },
+        {
+            nome: "Maria Santos",
+            email: "maria@email.com",
+            senha: "123456",
+            tipoUsuario: "Funcionario",
+            telefone: "11988888888",
+            endereco: {
+                rua: "Avenida Principal",
+                numero: "456",
+                cidade: "São Paulo",
+                cep: "87654-321",
+                complemento: "Sala 10"
+            },
+            fotoPerfil: "",
+            createdAt: Timestamp.fromDate(new Date()),
+            updatedAt: Timestamp.fromDate(new Date())
+        },
+        {
+            nome: "Barbearia do Zé",
+            email: "ze@email.com",
+            senha: "123456",
+            tipoUsuario: "Empresa",
+            telefone: "11977777777",
+            endereco: {
+                rua: "Rua do Comércio",
+                numero: "789",
+                cidade: "São Paulo",
+                cep: "54321-987",
+                complemento: "Loja 5"
+            },
+            fotoPerfil: "",
+            createdAt: Timestamp.fromDate(new Date()),
+            updatedAt: Timestamp.fromDate(new Date())
+        }
+    ];
+
+    const empresas = [
+        {
+            nome: "Barbearia do Zé",
+            endereco: {
+                rua: "Rua do Comércio",
+                numero: "789",
+                cidade: "São Paulo",
+                cep: "54321-987",
+                complemento: "Loja 5"
+            },
+            telefone: "11977777777",
+            email: "ze@email.com",
+            fotoPerfil: "",
+            servicos: [
+                {
+                    nome: "Corte de cabelo",
+                    preco: 30.00,
+                    duracao: 30,
+                    createdAt: Timestamp.fromDate(new Date()),
+                    updatedAt: Timestamp.fromDate(new Date())
+                },
+                {
+                    nome: "Barba",
+                    preco: 20.00,
+                    duracao: 20,
+                    createdAt: Timestamp.fromDate(new Date()),
+                    updatedAt: Timestamp.fromDate(new Date())
+                }
+            ],
+            funcionarios: [],
+            createdAt: Timestamp.fromDate(new Date()),
+            updatedAt: Timestamp.fromDate(new Date())
+        }
+    ];
+
+    const funcionarios = [
+        {
+            nome: "Maria Santos",
+            email: "maria@email.com",
+            telefone: "11988888888",
+            endereco: {
+                rua: "Avenida Principal",
+                numero: "456",
+                cidade: "São Paulo",
+                cep: "87654-321",
+                complemento: "Sala 10"
+            },
+            fotoPerfil: "",
+            empresaId: "",
+            servicos: [],
+            horarios: {
+                segunda: { inicio: "09:00", fim: "18:00" },
+                terca: { inicio: "09:00", fim: "18:00" },
+                quarta: { inicio: "09:00", fim: "18:00" },
+                quinta: { inicio: "09:00", fim: "18:00" },
+                sexta: { inicio: "09:00", fim: "18:00" },
+                sabado: { inicio: "09:00", fim: "13:00" },
+                domingo: { inicio: "", fim: "" }
+            },
+            createdAt: Timestamp.fromDate(new Date()),
+            updatedAt: Timestamp.fromDate(new Date())
+        }
+    ];
+
+    const agendamentos = [
+        {
+            clienteId: "",
+            empresaId: "",
+            funcionarioId: "",
+            servico: {
+                nome: "Corte de cabelo",
+                preco: 30.00,
+                duracao: 30
+            },
+            data: Timestamp.fromDate(new Date()),
+            status: "agendado",
+            createdAt: Timestamp.fromDate(new Date()),
+            updatedAt: Timestamp.fromDate(new Date())
+        }
+    ];
+
     try {
-        // 1. Create Users
-        const users = [
-            {
-                id: 'user1',
-                data: {
-                    nome: 'João Silva',
-                    email: 'joao@email.com',
-                    senha: '123456',
-                    tipoUsuario: 'Cliente',
-                    telefone: '11999999999',
-                    endereco: {
-                        cep: '12345-678',
-                        cidade: 'São Paulo',
-                        rua: 'Rua das Flores',
-                        numero: '123',
-                        complemento: 'Apto 45'
-                    },
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp()
-                }
-            },
-            {
-                id: 'user2',
-                data: {
-                    nome: 'Maria Santos',
-                    email: 'maria@email.com',
-                    senha: '123456',
-                    tipoUsuario: 'Empresa',
-                    telefone: '11988888888',
-                    endereco: {
-                        cep: '87654-321',
-                        cidade: 'São Paulo',
-                        rua: 'Avenida Principal',
-                        numero: '456',
-                        complemento: 'Sala 10'
-                    },
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp()
-                }
-            },
-            {
-                id: 'user3',
-                data: {
-                    nome: 'Pedro Oliveira',
-                    email: 'pedro@email.com',
-                    senha: '123456',
-                    tipoUsuario: 'Funcionario',
-                    telefone: '11977777777',
-                    endereco: {
-                        cep: '54321-876',
-                        cidade: 'São Paulo',
-                        rua: 'Rua dos Funcionários',
-                        numero: '789',
-                        complemento: 'Casa'
-                    },
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp()
-                }
-            }
-        ];
+        console.log("Iniciando seed do banco de dados...");
 
-        // 2. Create Companies
-        const empresas = [
-            {
-                id: 'empresa1',
-                data: {
-                    userId: 'user2',
-                    nome: 'Salão da Maria',
-                    categoria: 'Beleza',
-                    horarioFuncionamento: {
-                        inicio: '09:00',
-                        fim: '18:00'
-                    },
-                    diasFuncionamento: ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'],
-                    servicos: [
-                        {
-                            servicoId: 'servico1',
-                            nome: 'Corte de Cabelo',
-                            descricao: 'Corte de cabelo feminino',
-                            preco: 50.00,
-                            duracao: 60,
-                            createdAt: serverTimestamp(),
-                            updatedAt: serverTimestamp()
-                        },
-                        {
-                            servicoId: 'servico2',
-                            nome: 'Manicure',
-                            descricao: 'Manicure completa',
-                            preco: 35.00,
-                            duracao: 45,
-                            createdAt: serverTimestamp(),
-                            updatedAt: serverTimestamp()
-                        }
-                    ],
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp()
-                }
-            }
-        ];
-
-        // 3. Create Employees
-        const funcionarios = [
-            {
-                id: 'funcionario1',
-                data: {
-                    userId: 'user3',
-                    empresaId: 'empresa1',
-                    nome: 'Pedro Oliveira',
-                    especialidades: ['Corte de Cabelo', 'Manicure'],
-                    horarioTrabalho: {
-                        inicio: '09:00',
-                        fim: '18:00'
-                    },
-                    diasTrabalho: ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'],
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp()
-                }
-            }
-        ];
-
-        // 4. Create Appointments
-        const agendamentos = [
-            {
-                id: 'agendamento1',
-                data: {
-                    clienteId: 'user1',
-                    empresaId: 'empresa1',
-                    funcionarioId: 'funcionario1',
-                    servicoId: 'servico1',
-                    data: Timestamp.fromDate(new Date('2024-03-20')),
-                    horario: '10:00',
-                    status: 'pendente',
-                    valor: 50.00,
-                    observacoes: 'Cliente preferencial',
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp()
-                }
-            }
-        ];
-
-        // Insert Users
         for (const user of users) {
-            await setDoc(doc(db, 'users', user.id), user.data);
-            console.log(`User ${user.id} created successfully`);
+            try {
+                console.log(`Criando usuário no Firestore: ${user.email}`);
+                const userDoc = await addDoc(collection(db, "users"), user);
+                console.log(`Usuário criado no Firestore com ID: ${userDoc.id}`);
+
+                if (user.tipoUsuario === "Empresa") {
+                    const empresa = empresas.find(e => e.email === user.email);
+                    if (empresa) {
+                        console.log(`Criando empresa: ${empresa.nome}`);
+                        const empresaDoc = await addDoc(collection(db, "empresas"), {
+                            ...empresa,
+                            userId: userDoc.id
+                        });
+                        console.log(`Empresa criada com ID: ${empresaDoc.id}`);
+
+                        const funcionario = funcionarios[0];
+                        console.log(`Criando funcionário: ${funcionario.nome}`);
+                        const funcionarioDoc = await addDoc(collection(db, "funcionarios"), {
+                            ...funcionario,
+                            empresaId: empresaDoc.id
+                        });
+                        console.log(`Funcionário criado com ID: ${funcionarioDoc.id}`);
+
+                        const agendamento = agendamentos[0];
+                        console.log("Criando agendamento");
+                        await addDoc(collection(db, "agendamentos"), {
+                            ...agendamento,
+                            clienteId: userDoc.id,
+                            empresaId: empresaDoc.id,
+                            funcionarioId: funcionarioDoc.id
+                        });
+                        console.log("Agendamento criado");
+                    }
+                }
+            } catch (error) {
+                console.error(`Erro ao criar usuário ${user.email}:`, error);
+            }
         }
 
-        // Insert Companies
-        for (const empresa of empresas) {
-            await setDoc(doc(db, 'empresas', empresa.id), empresa.data);
-            console.log(`Company ${empresa.id} created successfully`);
-        }
-
-        // Insert Employees
-        for (const funcionario of funcionarios) {
-            await setDoc(doc(db, 'funcionarios', funcionario.id), funcionario.data);
-            console.log(`Employee ${funcionario.id} created successfully`);
-        }
-
-        // Insert Appointments
-        for (const agendamento of agendamentos) {
-            await setDoc(doc(db, 'agendamentos', agendamento.id), agendamento.data);
-            console.log(`Appointment ${agendamento.id} created successfully`);
-        }
-
-        console.log('Database seeded successfully!');
-        return true;
+        console.log("Seed do banco de dados concluído com sucesso!");
     } catch (error) {
-        console.error('Error seeding database:', error);
-        return false;
+        console.error("Erro ao fazer seed do banco de dados:", error);
+        throw error;
     }
-}; 
+};
+
+seedDatabase().then(() => {
+    console.log('Seeding completed');
+    process.exit(0);
+}).catch((error) => {
+    console.error('Seeding failed:', error);
+    process.exit(1);
+}); 
