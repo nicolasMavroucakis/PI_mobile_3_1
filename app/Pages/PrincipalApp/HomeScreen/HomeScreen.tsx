@@ -18,6 +18,7 @@ import EmpresaInfoScreen from "../EmpresaInfoScreen/EmpresaInfoScreen";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "expo-router";
 import { RFPercentage } from "react-native-responsive-fontsize";
+import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext";
 
 type RootStackParamList = {
     UserScreen: undefined;
@@ -30,16 +31,26 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 const HomeScreen = () => {
     const navigation = useNavigation<NavigationProp>();
 
+    const {
+        nome: nomeGlobal,
+        usuarioGlobal: usuarioGlobal,
+        cidade: cidadeGlobal,
+        endereco: enderecoGlobal,
+        numero: numeroGlobal,
+    } = useUserGlobalContext();
+    const primeiroNome = nomeGlobal.split(' ')[0];
+
+
     return(
         <View style={{ flex: 1 }}>
             <ScrollView contentContainerStyle={HomeScreenStyle.container}>
                 <View style={HomeScreenStyle.topNav}>
                     <View style={[HomeScreenStyle.itensTop, {alignItems: 'flex-start'}]}>
-                        <Text style={[HomeScreenStyle.text, {fontSize: 15, marginLeft: 10}]}>Ola Nicolas</Text>
+                        <Text style={[HomeScreenStyle.text, {fontSize: 15, marginLeft: 10}]}>Ola {primeiroNome}</Text>
                     </View>
                     <View style={[HomeScreenStyle.itensTop, {alignItems: 'center'}]}>
                         <TouchableOpacity style={{flexDirection: 'row', alignItems: 'center'}}>
-                            <Text style={[HomeScreenStyle.text]}>R. Santo Egídio, 137</Text>
+                            <Text style={[HomeScreenStyle.text]}>{enderecoGlobal}, {numeroGlobal}</Text>
                             <AntDesign name="down" size={20} color="white" style={{marginLeft: 5, fontWeight: 'bold'}} />
                         </TouchableOpacity>
                     </View>

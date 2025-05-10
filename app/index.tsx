@@ -14,6 +14,13 @@ import EmpresaInfoScreen from "./Pages/PrincipalApp/EmpresaInfoScreen/EmpresaInf
 import CategoriaScreen from "./Pages/PrincipalApp/CategoriaScreen/CategoriaScreen";
 import AdicionarCategoriaScreen from "./Pages/PrincipalApp/CategoriaScreen/AdicionarCategoriaScreen";
 import AdicionarServico from "./Pages/PrincipalApp/CategoriaScreen/AdicionarServico";
+import DetalhesAgendamento from "./Pages/PrincipalApp/AgendamentosScreen/DetalhesAgendamento";
+import EmpresaInfoMoneyScreen from "./Pages/UserInfo/Empresa/EmpresaInfoMoneyScreen";
+import EmpresaInfoFuncionariosScreen from "./Pages/UserInfo/Empresa/EmpresaInfoFuncionariosScreen";
+import EmpresaInfoAgendamentoScreen from "./Pages/UserInfo/Empresa/EmpresaInfoAgendamentoScreen";
+import EmpresaMinhaPaginaScreen from "./Pages/UserInfo/Empresa/EmpresaMinhaPaginaScreen";
+
+import { UserGlobalContextProvider } from "./GlobalContext/UserGlobalContext";
 
 type RootStackParamList = {
   Login: undefined;
@@ -30,18 +37,24 @@ type RootStackParamList = {
   EmpresaInfoScreen: undefined;
   AdicionarCategoriaScreen: undefined;
   AdicionarServico:undefined;
+  DetalhesAgendamento: undefined;
+  EmpresaInfoMoneyScreen: undefined;
+  EmpresaInfoFuncionariosScreen: undefined;
+  EmpresaInfoAgendamentoScreen: undefined;
+  EmpresaMinhaPaginaScreen: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function Page() {
   return (
+    <UserGlobalContextProvider>
       <Stack.Navigator initialRouteName="Login">
         <Stack.Screen name="Login" component={LogInScreen} options={{ headerShown: false }} />
         <Stack.Screen name="SignIn" component={SignIn} options={{ headerShown: false }} />
         <Stack.Screen name="SignCliente" component={SignCliente} options={{ headerShown: false }} />
-        <Stack.Screen name="SignFuncionario" component={SignEmpresa} options={{ headerShown: false }} />
-        <Stack.Screen name="SignEmpresa" component={SignFuncionario} options={{ headerShown: false }} />
+        <Stack.Screen name="SignFuncionario" component={SignFuncionario} options={{ headerShown: false }} />
+        <Stack.Screen name="SignEmpresa" component={SignEmpresa} options={{ headerShown: false }} />
         <Stack.Screen name="HomeApp" component={HomeScreen} options={{ headerShown: false }} />
         <Stack.Screen name="SearchScreen" component={SearchScreen} options={{ headerShown: false }} />
         <Stack.Screen name="AgendamentoScreen" component={AgendamentoScreen} options={{ headerShown: false }} />
@@ -51,7 +64,13 @@ export default function Page() {
         <Stack.Screen name="EmpresaInfoScreen" component={EmpresaInfoScreen} options={{ headerShown: false }} />
         <Stack.Screen name="AdicionarCategoriaScreen" component={AdicionarCategoriaScreen} options={{ headerShown: false }} />
         <Stack.Screen name="AdicionarServico" component={AdicionarServico} options={{ headerShown: false }} />
+        <Stack.Screen name="DetalhesAgendamento" component={DetalhesAgendamento} options={{ headerShown: false }} />
+        <Stack.Screen name="EmpresaInfoMoneyScreen" component={EmpresaInfoMoneyScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="EmpresaInfoFuncionariosScreen" component={EmpresaInfoFuncionariosScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="EmpresaInfoAgendamentoScreen" component={EmpresaInfoAgendamentoScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="EmpresaMinhaPaginaScreen" component={EmpresaMinhaPaginaScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
+    </UserGlobalContextProvider>
   );
 }
 

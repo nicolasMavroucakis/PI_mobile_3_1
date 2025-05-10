@@ -8,7 +8,7 @@ const stylesSingLog = StyleSheet.create({
         backgroundColor: '#717171',
         display: 'flex',
         flexDirection: 'column',
-        height: 1100
+        height: 1200
     },
     containerImage: {
         width: '100%',

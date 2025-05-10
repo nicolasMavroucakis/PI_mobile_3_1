@@ -2,20 +2,31 @@ import HomeNavBar from "@/components/HomeNavBar";
 import { ScrollView, View, Text, Image, TouchableOpacity } from "react-native";
 import ImgExemplo from "../../../../assets/images/imageExemplo.png";
 import ImgComp from "../../../../assets/images/compartilhar.png";
-import ImgCoracaoVermelho from "../../../../assets/images/coracaoVermelho.png"; // talvez não vai precisar
 import EmpresaInfoScreenStyle from "./EmpresaInfoScreenStyle";
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import { useState } from "react";
 import EmpresaServicos from "@/components/EmpresaInfoComponents/EmpresaServicos";
 import EmpresaCartaoPresente from "@/components/EmpresaInfoComponents/EmpresaCartaoPresente";
 import EmpresaDetalhes from "@/components/EmpresaInfoComponents/EmpresaDetalhes";
+import EmpresaAvaliacao from "@/components/EmpresaInfoComponents/EmpresaAvaliacao";
+import { calcularMediaEAvaliacoes } from "@/components/utils/avaliacaoUtils";
 
 const EmpresaInfoScreen = () => {
-    const [favoritado, setFavoritado] = useState(false); // Corrigido aqui
+    const [favoritado, setFavoritado] = useState(false); 
     const [servico, setServico] = useState(true)
     const [avaliacao, setAvaliacao] = useState(false)
     const [cartaoPresente, setCartaoPresente] = useState(false)
     const [detalhes, setDetalhes] = useState(false)
+
+    const ratingsData: { [key: number]: number } = {
+        5: 66,
+        4: 10,
+        3: 100,
+        2: 110,
+        1: 0,
+    };
+
+    const { average, total, formattedTotal } = calcularMediaEAvaliacoes(ratingsData);
 
     const toggleFavorito = () => {
         setFavoritado(!favoritado);
@@ -57,10 +68,10 @@ const EmpresaInfoScreen = () => {
                     />
                     <View style={EmpresaInfoScreenStyle.containerAvaliacao}>
                         <Text style={EmpresaInfoScreenStyle.avaliacaoNota}>
-                            4.9
+                            {average}
                         </Text>
                         <Text style={EmpresaInfoScreenStyle.avaliacaoTexto}>
-                            56 Avaliações
+                            {formattedTotal} Avaliações
                         </Text>
                     </View>
                 </View>
@@ -112,6 +123,7 @@ const EmpresaInfoScreen = () => {
                     {servico === true && <EmpresaServicos />}
                     {cartaoPresente === true && <EmpresaCartaoPresente />}
                     {detalhes === true && <EmpresaDetalhes/>}
+                    {avaliacao === true && <EmpresaAvaliacao ratingsData={ratingsData} average={average} total={total} formattedTotal={formattedTotal} />}
                 </View>
             </ScrollView>
             <HomeNavBar/>

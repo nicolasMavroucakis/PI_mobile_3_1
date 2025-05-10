@@ -20,11 +20,11 @@ const SearchScreen = () => {
                     </View>
                     <View style={SearchScreenStyle.containerSmallInputs}>
                         <View style={[SearchScreenStyle.inputBox, SearchScreenStyle.inputBoxSmall]}>
-                            <Image source={CalendarioImg} style={SearchScreenStyle.ImagesTextInput}/>
+                            <Image source={LocationImg} style={SearchScreenStyle.ImagesTextInput}/>
                             <TextInput style={{flex: 1}} placeholder="A onde?" placeholderTextColor="#4F4F4F"/>
                         </View>
                         <View style={[SearchScreenStyle.inputBox, SearchScreenStyle.inputBoxSmall]}>
-                            <Image source={LocationImg} style={SearchScreenStyle.ImagesTextInput}/>
+                            <Image source={CalendarioImg} style={SearchScreenStyle.ImagesTextInput}/>
                             <TextInput style={{flex: 1}} placeholder="Quando?" placeholderTextColor="#4F4F4F"/>
                         </View>
                     </View>
