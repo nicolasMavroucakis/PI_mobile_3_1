@@ -108,6 +108,7 @@ const SignEmpresa = () => {
                 },
                 diasFuncionamento: ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"],
                 servicos: [],
+                fotoPerfil: "",
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp()
             };

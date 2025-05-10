@@ -19,6 +19,9 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "expo-router";
 import { RFPercentage } from "react-native-responsive-fontsize";
 import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext";
+import { useEffect, useState } from "react";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import StartFirebase from "@/app/crud/firebaseConfig";
 
 type RootStackParamList = {
     UserScreen: undefined;
@@ -37,9 +40,24 @@ const HomeScreen = () => {
         cidade: cidadeGlobal,
         endereco: enderecoGlobal,
         numero: numeroGlobal,
+        id: userId
     } = useUserGlobalContext();
     const primeiroNome = nomeGlobal.split(' ')[0];
 
+    const { db } = StartFirebase();
+    const [meusAgendamentos, setMeusAgendamentos] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchAgendamentos = async () => {
+            if (!userId) return;
+            const agendamentosRef = collection(db, "agendamentos");
+            const q = query(agendamentosRef, where("clienteId", "==", userId));
+            const querySnapshot = await getDocs(q);
+            const agendamentos = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setMeusAgendamentos(agendamentos);
+        };
+        fetchAgendamentos();
+    }, [userId]);
 
     return(
         <View style={{ flex: 1 }}>
@@ -119,99 +137,43 @@ const HomeScreen = () => {
                         Meus Agendamentos
                     </Text>
                     <ScrollView style={HomeScreenStyle.containerMeusAgendamentos}>
-                        <TouchableOpacity style={HomeScreenStyle.MeusAgendamentosInput}>
-                            <View style={HomeScreenStyle.MeusAgendamentosInputDentro}>
-                                <View style={[HomeScreenStyle.containersDentroAgendamento, {alignItems: 'flex-start'}]}>
-                                    <Text style={{fontWeight: 'bold', fontSize: 25, paddingLeft: 10, color: '#B10000'}}>
-                                        Qua
-                                    </Text>
-                                    <Text style={{fontWeight: 'bold', fontSize: 25, paddingLeft: 20, color: '#B10000'}}>
-                                        19
-                                    </Text>
-                                </View>
-                                <View style={[HomeScreenStyle.containersDentroAgendamento, {alignItems: 'center'}]}>
-                                    <View style={HomeScreenStyle.containersDentroAgendamentoLocHora}>
-                                        <Image source={ClockImg}/>
-                                        <Text style={{fontWeight: 'bold', fontSize: 15}}>
-                                            10:00 - 12:00
-                                        </Text>
+                        {meusAgendamentos.length === 0 ? (
+                            <Text style={{ color: "#fff", marginLeft: 10 }}>Nenhum agendamento encontrado.</Text>
+                        ) : (
+                            meusAgendamentos.map((agendamento) => (
+                                <TouchableOpacity key={agendamento.id} style={HomeScreenStyle.MeusAgendamentosInput}>
+                                    <View style={HomeScreenStyle.MeusAgendamentosInputDentro}>
+                                        <View style={[HomeScreenStyle.containersDentroAgendamento, {alignItems: 'flex-start'}]}>
+                                            <Text style={{fontWeight: 'bold', fontSize: 25, paddingLeft: 10, color: '#B10000'}}>
+                                                {agendamento.data && agendamento.data.seconds ? new Date(agendamento.data.seconds * 1000).toLocaleDateString('pt-BR', { weekday: 'short' }) : ''}
+                                            </Text>
+                                            <Text style={{fontWeight: 'bold', fontSize: 25, paddingLeft: 20, color: '#B10000'}}>
+                                                {agendamento.data && agendamento.data.seconds ? new Date(agendamento.data.seconds * 1000).getDate() : ''}
+                                            </Text>
+                                        </View>
+                                        <View style={[HomeScreenStyle.containersDentroAgendamento, {alignItems: 'center'}]}>
+                                            <View style={HomeScreenStyle.containersDentroAgendamentoLocHora}>
+                                                <Image source={ClockImg}/>
+                                                <Text style={{fontWeight: 'bold', fontSize: 15}}>
+                                                    {agendamento.data && agendamento.data.seconds ? new Date(agendamento.data.seconds * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''}
+                                                </Text>
+                                            </View>
+                                            <View style={HomeScreenStyle.containersDentroAgendamentoLocHora}>
+                                                <Image source={Location}/>
+                                                <Text style={{fontWeight: 'bold', fontSize: 15}}>
+                                                    Atendimento a Residencia
+                                                </Text>
+                                            </View>
+                                        </View>
+                                        <View style={[HomeScreenStyle.containersDentroAgendamento, {alignItems: 'flex-end'}]}>
+                                            <Text style={{fontWeight: 'bold', fontSize: 15, paddingRight: 10}}>
+                                                {agendamento.servico?.nome || "Serviço"}
+                                            </Text>
+                                        </View>
                                     </View>
-                                    <View style={HomeScreenStyle.containersDentroAgendamentoLocHora}>
-                                        <Image source={Location}/>
-                                        <Text style={{fontWeight: 'bold', fontSize: 15}}>
-                                            Atendimento a Residencia
-                                        </Text>
-                                    </View>
-                                </View>
-                                <View style={[HomeScreenStyle.containersDentroAgendamento, {alignItems: 'flex-end'}]}>
-                                    <Text style={{fontWeight: 'bold', fontSize: 15, paddingRight: 10}}>
-                                        Encanador
-                                    </Text>
-                                </View>
-                            </View>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={HomeScreenStyle.MeusAgendamentosInput}>
-                            <View style={HomeScreenStyle.MeusAgendamentosInputDentro}>
-                                <View style={[HomeScreenStyle.containersDentroAgendamento, {alignItems: 'flex-start'}]}>
-                                    <Text style={{fontWeight: 'bold', fontSize: 25, paddingLeft: 10}}>
-                                        Qua
-                                    </Text>
-                                    <Text style={{fontWeight: 'bold', fontSize: 25, paddingLeft: 20}}>
-                                        19
-                                    </Text>
-                                </View>
-                                <View style={[HomeScreenStyle.containersDentroAgendamento, {alignItems: 'center'}]}>
-                                    <View style={HomeScreenStyle.containersDentroAgendamentoLocHora}>
-                                        <Image source={ClockImg}/>
-                                        <Text style={{fontWeight: 'bold', fontSize: 15}}>
-                                            10:00 - 12:00
-                                        </Text>
-                                    </View>
-                                    <View style={HomeScreenStyle.containersDentroAgendamentoLocHora}>
-                                        <Image source={Location}/>
-                                        <Text style={{fontWeight: 'bold', fontSize: 15}}>
-                                            Atendimento a Residencia
-                                        </Text>
-                                    </View>
-                                </View>
-                                <View style={[HomeScreenStyle.containersDentroAgendamento, {alignItems: 'flex-end'}]}>
-                                    <Text style={{fontWeight: 'bold', fontSize: 15, paddingRight: 10}}>
-                                        Encanador
-                                    </Text>
-                                </View>
-                            </View>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={HomeScreenStyle.MeusAgendamentosInput}>
-                            <View style={HomeScreenStyle.MeusAgendamentosInputDentro}>
-                                <View style={[HomeScreenStyle.containersDentroAgendamento, {alignItems: 'flex-start'}]}>
-                                    <Text style={{fontWeight: 'bold', fontSize: 25, paddingLeft: 10}}>
-                                        Qua
-                                    </Text>
-                                    <Text style={{fontWeight: 'bold', fontSize: 25, paddingLeft: 20}}>
-                                        19
-                                    </Text>
-                                </View>
-                                <View style={[HomeScreenStyle.containersDentroAgendamento, {alignItems: 'center'}]}>
-                                    <View style={[HomeScreenStyle.containersDentroAgendamentoLocHora]}>
-                                        <Image source={ClockImg}/>
-                                        <Text style={{fontWeight: 'bold', fontSize: 15}}>
-                                            10:00 - 12:00
-                                        </Text>
-                                    </View>
-                                    <View style={HomeScreenStyle.containersDentroAgendamentoLocHora}>
-                                        <Image source={Location}/>
-                                        <Text style={{fontWeight: 'bold', fontSize: 15}}>
-                                            Atendimento a Residencia
-                                        </Text>
-                                    </View>
-                                </View>
-                                <View style={[HomeScreenStyle.containersDentroAgendamento, {alignItems: 'flex-end'}]}>
-                                    <Text style={{fontWeight: 'bold', fontSize: 15, paddingRight: 10}}>
-                                        Encanador
-                                    </Text>
-                                </View>
-                            </View>
-                        </TouchableOpacity>
+                                </TouchableOpacity>
+                            ))
+                        )}
                     </ScrollView>
                 </View>
                 <View>

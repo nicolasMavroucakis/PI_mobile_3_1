@@ -90,6 +90,7 @@ const SignCliente = () => {
                     numero,
                     complemento: complemento || ""
                 },
+                fotoPerfil: "",
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp()
             };

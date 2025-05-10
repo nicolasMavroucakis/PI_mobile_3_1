@@ -91,7 +91,13 @@ const UserScreen: React.FC = () => {
               )}
             </View>
             <View>
-              <Text style={UserScreenStyle.userName}>{nomeGlobal}</Text>
+            <Text style={UserScreenStyle.userName}>
+              {nomeGlobal
+                ? nomeGlobal.split(' ').length > 1
+                  ? nomeGlobal.split(' ')[0] + ' ' + nomeGlobal.split(' ').slice(-1)
+                  : nomeGlobal
+                : ''}
+            </Text>
               <Text style={UserScreenStyle.userEmail}>
                 {emailGlobal}
               </Text>
