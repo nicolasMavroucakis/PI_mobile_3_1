@@ -51,7 +51,7 @@ const AdicionarCategoriaScreen = () => {
                 </View>
     
                 <TouchableOpacity style={[stylesSingLog.botaoCadastro,{ margin:'auto', marginTop:20, marginBottom:0} ]} onPress={handleLogin}>
-                    <Text style={stylesSingLog.botaoTexto}>Entre</Text>
+                    <Text style={stylesSingLog.botaoTexto}>Confirmar</Text>
                 </TouchableOpacity>
     </View>
   );
