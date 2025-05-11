@@ -9,10 +9,11 @@ import {
 } from "react-native";
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, updateDoc } from "firebase/firestore";
 import StartFirebase from "@/app/crud/firebaseConfig";
 import stylesSingLog from "./SignLogStyle";
 import { useUserGlobalContext } from '@/app/GlobalContext/UserGlobalContext';
+import { getProfileImage } from '@/app/crud/imageStorage';
 
 type RootStackParamList = {
     Login: undefined;
@@ -42,6 +43,7 @@ const LogInScreen = () => {
         setNumeroTelefone: setTelefoneGlobal,
         setEmail: setEmailGlobal,
         setId: setIdGlobal,
+        setFotoPerfil: setFotoPerfilGlobal,
     } = useUserGlobalContext();
 
     const handleCadastro = () => {
@@ -81,6 +83,23 @@ const LogInScreen = () => {
                 setEmailGlobal(email);
                 setIdGlobal(userDoc.id);
                 console.log("ID do usuário definido:", userDoc.id);
+
+                // Carregar a foto de perfil imediatamente após o login
+                try {
+                    const profileImageUrl = await getProfileImage(userDoc.id);
+                    if (profileImageUrl) {
+                        // Salvar a URL da foto no contexto global
+                        setFotoPerfilGlobal(profileImageUrl);
+                        // Atualizar o documento do usuário com a URL da foto de perfil
+                        await updateDoc(doc(db, 'users', userDoc.id), {
+                            fotoPerfil: profileImageUrl
+                        });
+                    }
+                } catch (error) {
+                    console.error("Erro ao carregar foto de perfil:", error);
+                    // Não interrompe o fluxo de login se houver erro ao carregar a foto
+                }
+
                 navigation.navigate("HomeApp");
             } else {
                 Alert.alert("Erro", "Usuário ou senha incorretos.");

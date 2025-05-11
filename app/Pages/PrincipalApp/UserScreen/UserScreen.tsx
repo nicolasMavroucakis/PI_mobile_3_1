@@ -32,7 +32,8 @@ const UserScreen: React.FC = () => {
     numero: numeroGlobal,
     numeroTelefone: telefoneGlobal,
     email: emailGlobal,
-    id: userId
+    id: userId,
+    fotoPerfil: fotoPerfilGlobal
   } = useUserGlobalContext();
 
   const fetchUserData = async () => {
@@ -79,6 +80,7 @@ const UserScreen: React.FC = () => {
                   userId={userId}
                   size={65}
                   onImageUpdate={fetchUserData}
+                  initialImageUrl={fotoPerfilGlobal}
                 />
               ) : (
                 <Image 
@@ -91,13 +93,13 @@ const UserScreen: React.FC = () => {
               )}
             </View>
             <View>
-            <Text style={UserScreenStyle.userName}>
-              {nomeGlobal
-                ? nomeGlobal.split(' ').length > 1
-                  ? nomeGlobal.split(' ')[0] + ' ' + nomeGlobal.split(' ').slice(-1)
-                  : nomeGlobal
-                : ''}
-            </Text>
+              <Text style={UserScreenStyle.userName}>
+                {nomeGlobal
+                  ? nomeGlobal.split(' ').length > 1
+                    ? nomeGlobal.split(' ')[0] + ' ' + nomeGlobal.split(' ').slice(-1)
+                    : nomeGlobal
+                  : ''}
+              </Text>
               <Text style={UserScreenStyle.userEmail}>
                 {emailGlobal}
               </Text>

@@ -22,6 +22,8 @@ interface UserGlobalContextType {
     setNumeroTelefone: Dispatch<SetStateAction<string>>;
     id: string;
     setId: Dispatch<SetStateAction<string>>;
+    fotoPerfil: string;
+    setFotoPerfil: Dispatch<SetStateAction<string>>;
 }
 
 export const UserGlobalContext = createContext<UserGlobalContextType>({
@@ -44,7 +46,9 @@ export const UserGlobalContext = createContext<UserGlobalContextType>({
     numeroTelefone: '',
     setNumeroTelefone: () => {},
     id: '',
-    setId: () => {}
+    setId: () => {},
+    fotoPerfil: '',
+    setFotoPerfil: () => {}
 });
 
 export const UserGlobalContextProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -58,6 +62,7 @@ export const UserGlobalContextProvider: React.FC<{ children: ReactNode }> = ({ c
     const [numeroTelefone, setNumeroTelefone] = useState<string>('');
     const [email, setEmail] = useState<string>('');
     const [id, setId] = useState<string>('');
+    const [fotoPerfil, setFotoPerfil] = useState<string>('');
 
     useEffect(() => {
         const loadAsyncData = async () => {
@@ -108,7 +113,9 @@ export const UserGlobalContextProvider: React.FC<{ children: ReactNode }> = ({ c
             email,
             setEmail,
             id,
-            setId
+            setId,
+            fotoPerfil,
+            setFotoPerfil
         }}>
             {children}
         </UserGlobalContext.Provider>

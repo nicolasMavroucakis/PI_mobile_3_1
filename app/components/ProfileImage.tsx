@@ -9,21 +9,29 @@ import defaultProfileImg from '../../assets/images/user.jpeg';
 
 const { db } = StartFirebase();
 
-interface ProfileImageProps {
+export interface ProfileImageProps {
     userId: string;
     size?: number;
     onImageUpdate?: () => void;
+    initialImageUrl?: string;
 }
 
-const ProfileImage: React.FC<ProfileImageProps> = ({ userId, size = 100, onImageUpdate }) => {
-    const [imageUrl, setImageUrl] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+const ProfileImage: React.FC<ProfileImageProps> = ({ 
+    userId, 
+    size = 100, 
+    onImageUpdate, 
+    initialImageUrl 
+}) => {
+    const [imageUrl, setImageUrl] = useState<string | null>(initialImageUrl || null);
+    const [isLoading, setIsLoading] = useState(!initialImageUrl);
 
     useEffect(() => {
-        if (userId) {
+        if (userId && !initialImageUrl) {
             loadImage();
+        } else if (initialImageUrl) {
+            setImageUrl(initialImageUrl);
         }
-    }, [userId]);
+    }, [userId, initialImageUrl]);
 
     const loadImage = async () => {
         if (!userId) return;
@@ -47,7 +55,6 @@ const ProfileImage: React.FC<ProfileImageProps> = ({ userId, size = 100, onImage
         }
 
         try {
-            // Solicitar permissão para acessar a galeria
             const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
             
             if (status !== 'granted') {
@@ -55,7 +62,6 @@ const ProfileImage: React.FC<ProfileImageProps> = ({ userId, size = 100, onImage
                 return;
             }
 
-            // Abrir o seletor de imagens
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
                 allowsEditing: true,
@@ -65,18 +71,14 @@ const ProfileImage: React.FC<ProfileImageProps> = ({ userId, size = 100, onImage
 
             if (!result.canceled && result.assets && result.assets[0]) {
                 setIsLoading(true);
-                // Fazer upload da nova imagem
                 const newImageUrl = await uploadProfileImage(userId, result.assets[0].uri);
                 
-                // Atualizar o documento do usuário no Firestore
                 await updateDoc(doc(db, 'users', userId), {
                     fotoPerfil: newImageUrl
                 });
 
-                // Atualizar o estado local
                 setImageUrl(newImageUrl);
                 
-                // Notificar componente pai se necessário
                 if (onImageUpdate) {
                     onImageUpdate();
                 }

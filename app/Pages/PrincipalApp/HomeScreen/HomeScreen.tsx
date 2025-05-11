@@ -20,7 +20,7 @@ import { useNavigation } from "expo-router";
 import { RFPercentage } from "react-native-responsive-fontsize";
 import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext";
 import { useEffect, useState } from "react";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
 import StartFirebase from "@/app/crud/firebaseConfig";
 
 type RootStackParamList = {
@@ -46,6 +46,7 @@ const HomeScreen = () => {
 
     const { db } = StartFirebase();
     const [meusAgendamentos, setMeusAgendamentos] = useState<any[]>([]);
+    const [ultimasEmpresas, setUltimasEmpresas] = useState<any[]>([]);
 
     useEffect(() => {
         const fetchAgendamentos = async () => {
@@ -57,6 +58,46 @@ const HomeScreen = () => {
             setMeusAgendamentos(agendamentos);
         };
         fetchAgendamentos();
+    }, [userId]);
+
+    useEffect(() => {
+        const fetchFinalizados = async () => {
+            if (!userId) return;
+    
+            try {
+                const agendamentosRef = collection(db, "agendamentos");
+                const q = query(
+                    agendamentosRef,
+                    where("clienteId", "==", userId),
+                    where("status", "==", "finalizado"),
+                    orderBy("data", "desc"),
+                    limit(10)
+                );
+    
+                const querySnapshot = await getDocs(q);
+                const empresaIds = querySnapshot.docs.map(doc => doc.data().empresaId);
+    
+                if (empresaIds.length > 1) {
+                    const empresasRef = collection(db, "empresas");
+                    const empresasQuery = query(empresasRef, where("__name__", "in", empresaIds));
+                    const empresasSnapshot = await getDocs(empresasQuery);
+                    const userIds = empresasSnapshot.docs.map(doc => doc.data().userId);
+                    const usersRef = collection(db, "users");
+                    const usersQuery = query(usersRef, where("__name__", "in", userIds));
+                    const usersSnapshot = await getDocs(usersQuery);
+                    const empresasInfo = usersSnapshot.docs.map(doc => ({
+                        nome: doc.data().nome,
+                        fotoPerfil: doc.data().fotoPerfil,
+                    }));
+                    console.log("Informações das empresas:", empresasInfo);
+                    setUltimasEmpresas(empresasInfo);
+                }
+            } catch (error) {
+                console.error("Erro ao buscar agendamentos finalizados e informações das empresas:", error);
+            }
+        };
+    
+        fetchFinalizados();
     }, [userId]);
 
     return(
@@ -178,72 +219,33 @@ const HomeScreen = () => {
                 </View>
                 <View>
                     <Text style={{color: '#fff', fontSize: 20, fontWeight: 'bold', marginBottom: 20, marginTop: 20, marginLeft: 10}}>
-                        Ultimos Serviços
+                        Últimos Serviços
                     </Text>
                     <ScrollView style={HomeScreenStyle.containerUltimosServicos} horizontal={true}>
-                        <TouchableOpacity 
-                            style={HomeScreenStyle.containerUltimosServicosDentro} 
-                            onPress={() => navigation.navigate('EmpresaInfoScreen')}
-                        >
-                            <View style={HomeScreenStyle.ImgUltServiView}>
-                                <Image source={ImgExemplo} style={HomeScreenStyle.ImgUltServi}/>
-                            </View>
-                            <View style={HomeScreenStyle.ImgUltServiView}>
-                                <Text style={{fontSize: RFPercentage(1) , fontWeight: 'bold', color: '#fff'}}>
-                                    Mecanico
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={HomeScreenStyle.containerUltimosServicosDentro}>
-                            <View style={HomeScreenStyle.ImgUltServiView}>
-                                <Image source={ImgExemplo} style={HomeScreenStyle.ImgUltServi}/>
-                            </View>
-                            <View style={HomeScreenStyle.ImgUltServiView}>
-                                <Text style={{fontSize: RFPercentage(1) , fontWeight: 'bold', color: '#fff'}}>
-                                    Mecanico
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={HomeScreenStyle.containerUltimosServicosDentro}>
-                            <View style={HomeScreenStyle.ImgUltServiView}>
-                                <Image source={ImgExemplo} style={HomeScreenStyle.ImgUltServi}/>
-                            </View>
-                            <View style={HomeScreenStyle.ImgUltServiView}>
-                                <Text style={{fontSize: RFPercentage(1) , fontWeight: 'bold', color: '#fff'}}>
-                                    Mecanico
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={HomeScreenStyle.containerUltimosServicosDentro}>
-                            <View style={HomeScreenStyle.ImgUltServiView}>
-                                <Image source={ImgExemplo} style={HomeScreenStyle.ImgUltServi}/>
-                            </View>
-                            <View style={HomeScreenStyle.ImgUltServiView}>
-                                <Text style={{fontSize: RFPercentage(1) , fontWeight: 'bold', color: '#fff'}}>
-                                    Mecanico
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={HomeScreenStyle.containerUltimosServicosDentro}>
-                            <View style={HomeScreenStyle.ImgUltServiView}>
-                                <Image source={ImgExemplo} style={HomeScreenStyle.ImgUltServi}/>
-                            </View>
-                            <View style={HomeScreenStyle.ImgUltServiView}>
-                                <Text style={{fontSize: RFPercentage(1) , fontWeight: 'bold', color: '#fff'}}>
-                                    Mecanico
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={HomeScreenStyle.containerUltimosServicosDentro}>
-                            <View style={HomeScreenStyle.ImgUltServiView}>
-                                <Image source={ImgExemplo} style={HomeScreenStyle.ImgUltServi}/>
-                            </View>
-                            <View style={HomeScreenStyle.ImgUltServiView}>
-                                <Text style={{fontSize: RFPercentage(1) , fontWeight: 'bold', color: '#fff'}}>
-                                    Mecanico
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
+                        {ultimasEmpresas.length === 0 ? (
+                            <Text style={{ color: "#fff", marginLeft: 10 }}>Nenhuma empresa encontrada.</Text>
+                        ) : (
+                            ultimasEmpresas.map((empresa, index) => (
+                                <TouchableOpacity 
+                                    key={index} 
+                                    style={HomeScreenStyle.containerUltimosServicosDentro} 
+                                    onPress={() => navigation.navigate('EmpresaInfoScreen')}
+                                >
+                                    <View style={HomeScreenStyle.ImgUltServiView}>
+                                        <Image 
+                                            source={{ uri: empresa.fotoPerfil }} 
+                                            style={HomeScreenStyle.ImgUltServi} 
+                                            resizeMode="cover" 
+                                        />
+                                    </View>
+                                    <View style={HomeScreenStyle.ImgUltServiView}>
+                                        <Text style={{fontSize: RFPercentage(1), fontWeight: 'bold', color: '#fff'}}>
+                                            {empresa.nome}
+                                        </Text>
+                                    </View>
+                                </TouchableOpacity>
+                            ))
+                        )}
                     </ScrollView>
                 </View>
                 <View>
