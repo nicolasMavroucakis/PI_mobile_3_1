@@ -32,7 +32,7 @@ const SearchScreenStyle = StyleSheet.create({
     },
     containerAllInputs: {
         width: width, 
-        height: 130,
+        height: 180,
         gap: 10,
         justifyContent: 'center',
         alignItems: 'center'
@@ -71,6 +71,14 @@ const SearchScreenStyle = StyleSheet.create({
         textAlign: 'center', 
         fontWeight: 'bold',
         fontSize: 15
+    },
+    TouchableOpacityPesquisa: {
+        width: width * 0.95,
+        height: 50,
+        backgroundColor: '#00C20A',
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
     }
 })
 

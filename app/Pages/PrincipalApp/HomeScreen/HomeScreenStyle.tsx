@@ -109,8 +109,9 @@ const HomeScreenStyle = StyleSheet.create({
         width: width * 0.95,
         flexDirection: 'row',
         flexWrap: 'wrap', // <-- ESSENCIAL para quebrar linha
-        justifyContent: 'space-between',
+        justifyContent: 'space-around',
         alignSelf: 'center', // ou marginHorizontal: 'auto' pra centralizar
+        paddingBottom: 200
     },
     containerDescontoDentro: {
         width: width * 0.43,
