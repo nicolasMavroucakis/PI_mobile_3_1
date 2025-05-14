@@ -108,9 +108,9 @@ const HomeScreenStyle = StyleSheet.create({
     containerDesconto: {
         width: width * 0.95,
         flexDirection: 'row',
-        flexWrap: 'wrap', // <-- ESSENCIAL para quebrar linha
+        flexWrap: 'wrap',
         justifyContent: 'space-around',
-        alignSelf: 'center', // ou marginHorizontal: 'auto' pra centralizar
+        alignSelf: 'center', 
         paddingBottom: 200
     },
     containerDescontoDentro: {
@@ -120,8 +120,8 @@ const HomeScreenStyle = StyleSheet.create({
     },
     containerDescontoDentroImg: {
         width: width * 0.40,
-        aspectRatio: 0.9, // exemplo: largura 1.5x maior que a altura
-        resizeMode: 'cover', // opcional, para o ajuste da imagem
+        aspectRatio: 0.9, 
+        resizeMode: 'cover', 
         borderRadius: 10,
         display: 'flex',
         alignItems: 'center',

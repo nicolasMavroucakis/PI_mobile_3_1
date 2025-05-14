@@ -47,6 +47,7 @@ const HomeScreen = () => {
     const { db } = StartFirebase();
     const [meusAgendamentos, setMeusAgendamentos] = useState<any[]>([]);
     const [ultimasEmpresas, setUltimasEmpresas] = useState<any[]>([]);
+    const [empresasRecomendadas, setEmpresasRecomendadas] = useState<any[]>([]);
 
     useEffect(() => {
         const fetchAgendamentos = async () => {
@@ -99,6 +100,43 @@ const HomeScreen = () => {
     
         fetchFinalizados();
     }, [userId]);
+
+    useEffect(() => {
+        const fetchEmpresasRecomendadas = async () => {
+            try {
+                const empresasRef = collection(db, "empresas");
+                const empresasQuery = query(empresasRef, limit(10));
+                const empresasSnapshot = await getDocs(empresasQuery);
+
+                const empresas = empresasSnapshot.docs.map((doc) => ({
+                    id: doc.id,
+                    nome: doc.data().nome,
+                    userId: doc.data().userId,
+                }));
+
+                const userIds = empresas.map((empresa) => empresa.userId);
+                const usersRef = collection(db, "users");
+                const usersQuery = query(usersRef);
+                const usersSnapshot = await getDocs(usersRef);
+
+                const usersMap = usersSnapshot.docs.reduce<Record<string, string | null>>((acc, doc) => {
+                    acc[doc.id] = doc.data().fotoPerfil;
+                    return acc;
+                }, {});
+
+                const empresasComFotos = empresas.map((empresa) => ({
+                    ...empresa,
+                    fotoPerfil: usersMap[empresa.userId] || null,
+                }));
+
+                setEmpresasRecomendadas(empresasComFotos);
+            } catch (error) {
+                console.error("Erro ao buscar empresas recomendadas:", error);
+            }
+        };
+
+        fetchEmpresasRecomendadas();
+    }, [db]);
 
     return(
         <View style={{ flex: 1 }}>
@@ -249,11 +287,41 @@ const HomeScreen = () => {
                     </ScrollView>
                 </View>
                 <View>
+                    <Text style={{ color: "#fff", fontSize: 20, fontWeight: "bold", marginBottom: 20, marginTop: 20, marginLeft: 10 }}>
+                        Empresas Recomendadas
+                    </Text>
+                    <ScrollView style={HomeScreenStyle.containerUltimosServicos} horizontal={true}>
+                        {empresasRecomendadas.length === 0 ? (
+                            <Text style={{ color: "#fff", marginLeft: 10 }}>Nenhuma empresa encontrada.</Text>
+                        ) : (
+                            empresasRecomendadas.map((empresa, index) => (
+                                <TouchableOpacity
+                                    key={index}
+                                    style={HomeScreenStyle.containerUltimosServicosDentro}
+                                >
+                                    <View style={HomeScreenStyle.ImgUltServiView}>
+                                        <Image
+                                            source={empresa.fotoPerfil ? { uri: empresa.fotoPerfil } : require("../../../../assets/images/user.jpeg")}
+                                            style={HomeScreenStyle.ImgUltServi}
+                                            resizeMode="cover"
+                                        />
+                                    </View>
+                                    <View style={[HomeScreenStyle.ImgUltServiView, {width: '80%', alignItems: 'center', margin: 'auto'}]}>
+                                        <Text style={{ fontSize: RFPercentage(1), fontWeight: "bold", color: "#fff", textAlign: 'center' }}>
+                                            {empresa.nome}
+                                        </Text>
+                                    </View>
+                                </TouchableOpacity>
+                            ))
+                        )}
+                    </ScrollView>
+                </View>
+                <View>
                     <Text style={{color: '#fff', fontSize: 20, fontWeight: 'bold', marginBottom: 20, marginTop: 20, marginLeft: 10}}>
                         Descontos
                     </Text>
                     <View style={HomeScreenStyle.containerDesconto}>
-                        <TouchableOpacity style={HomeScreenStyle.containerDescontoDentro}>
+                        <TouchableOpacity style={HomeScreenStyle.containerDescontoDentro} onPress={() => navigation.navigate('EmpresaInfoScreen')}>
                             <Image
                                 source={ImgExemplo}
                                 style={HomeScreenStyle.containerDescontoDentroImg}
