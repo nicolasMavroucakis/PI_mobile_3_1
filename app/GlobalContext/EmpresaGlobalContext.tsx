@@ -8,7 +8,7 @@ import React, {
     useContext,
 } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { UserGlobalContext } from "./UserGlobalContext";
+import { UserGlobalContext, useUserGlobalContext } from "./UserGlobalContext";
 
 // Firebase
 import { collection, query, where, getDocs, updateDoc, doc } from "firebase/firestore";
@@ -16,8 +16,10 @@ import StartFirebase from "../crud/firebaseConfig";
 import { start } from "repl";
 
 interface EmpresaGlobalContextType {
-    categorias: any[];
-    setCategorias: Dispatch<SetStateAction<any[]>>;
+    categorias: string[];
+    setCategorias: Dispatch<SetStateAction<string[]>>;
+    addCategoria: (categoria: string) => void;
+    deleteCategoria: (categoria: string) => void;
     servicos: any[];
     setServicos: Dispatch<SetStateAction<any[]>>;
     funcionarios: any[];
@@ -27,6 +29,8 @@ interface EmpresaGlobalContextType {
 export const EmpresaGlobalContext = createContext<EmpresaGlobalContextType>({
     categorias: [],
     setCategorias: () => {},
+    addCategoria: () => {},
+    deleteCategoria: () => {},
     servicos: [],
     setServicos: () => {},
     funcionarios: [],
@@ -34,52 +38,66 @@ export const EmpresaGlobalContext = createContext<EmpresaGlobalContextType>({
 });
 
 export const EmpresaGlobalContextProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [categorias, setCategorias] = useState<any[]>([]);
+    const [categorias, setCategorias] = useState<string[]>([]);
     const [servicos, setServicos] = useState<any[]>([]);
     const [funcionarios, setFuncionarios] = useState<any[]>([]);
-    const { id: userId } = useContext(UserGlobalContext);
+    const { id: userId } = useUserGlobalContext();
     const { db } = StartFirebase();
 
-    useEffect(() => {
-        const syncCategoriaComFirestore = async () => {
-            if (categorias.length === 0 || !userId) return;
+    const addCategoria = async (categoria: string) => {
+        if (!userId) return;
 
-            const novaCategoria = categorias[categorias.length - 1];
+        const novaCategoria = categoria.trim();
+        if (!novaCategoria || categorias.includes(novaCategoria)) return;
 
-            try {
-                const empresasRef = collection(db, "empresas");
-                const q = query(empresasRef, where("userId", "==", userId));
-                const querySnapshot = await getDocs(q);
+        setCategorias((prev) => [...prev, novaCategoria]);
 
-                if (!querySnapshot.empty) {
-                    const empresaDoc = querySnapshot.docs[0];
-                    const empresaRef = doc(db, "empresas", empresaDoc.id);
-                    const empresaData = empresaDoc.data();
+        try {
+            const empresasRef = collection(db, "empresas");
+            const q = query(empresasRef, where("userId", "==", userId));
+            const querySnapshot = await getDocs(q);
 
-                    const categoriasAtuais = empresaData.categorias || [];
-
-                    if (!categoriasAtuais.includes(novaCategoria)) {
-                        await updateDoc(empresaRef, {
-                            categorias: [...categoriasAtuais, novaCategoria],
-                        });
-                        console.log("Categoria sincronizada com Firestore.");
-                    }
-                } else {
-                    console.warn("Empresa não encontrada.");
-                }
-            } catch (error) {
-                console.error("Erro ao sincronizar categoria:", error);
+            if (!querySnapshot.empty) {
+                const empresaDoc = querySnapshot.docs[0];
+                const empresaRef = doc(db, "empresas", empresaDoc.id);
+                const categoriasAtuais = empresaDoc.data().categorias || [];
+                await updateDoc(empresaRef, { categorias: [...categoriasAtuais, novaCategoria] });
+                console.log("Categoria adicionada ao Firestore.");
             }
-        };
+        } catch (error) {
+            console.error("Erro ao adicionar categoria:", error);
+        }
+    };
 
-        syncCategoriaComFirestore();
-    }, [categorias]);
+    const deleteCategoria = async (categoria: string) => {
+        if (!userId) return;
+
+        const novasCategorias = categorias.filter((cat) => cat !== categoria);
+        setCategorias(novasCategorias);
+
+        try {
+            const empresasRef = collection(db, "empresas");
+            const q = query(empresasRef, where("userId", "==", userId));
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                const empresaDoc = querySnapshot.docs[0];
+                const empresaRef = doc(db, "empresas", empresaDoc.id);
+                await updateDoc(empresaRef, { categorias: novasCategorias });
+                console.log("Categoria removida do Firestore.");
+            }
+        } catch (error) {
+            console.error("Erro ao remover categoria:", error);
+        }
+    };
 
     return (
         <EmpresaGlobalContext.Provider
             value={{
                 categorias,
                 setCategorias,
+                addCategoria,
+                deleteCategoria,
                 servicos,
                 setServicos,
                 funcionarios,

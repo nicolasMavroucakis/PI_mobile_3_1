@@ -46,9 +46,7 @@ const AdicionarServicoStyle = StyleSheet.create({
 
   linha: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 10,
-    marginBottom: 10,
+    justifyContent: "space-between"
   },
 
   metade: {
@@ -80,6 +78,58 @@ const AdicionarServicoStyle = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     fontSize: 25,
+  },
+  containerTituloPagina: {
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  inputContainerTwoInputs: {
+    width: width * 0.43,
+    height: 70,
+    borderRadius: 10,
+    borderWidth: 3,
+    borderColor: '#00C20A',
+    backgroundColor: '#717171',
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    paddingLeft: 10, 
+    color: '#717171'
+  },
+  containerTipoServico: {
+    width: width * 0.9,
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    height: 110,
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  botaoTipoServico: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: 'trasparent',
+  },
+  containerTipoServicoMetade: {
+    width: width * 0.43,
+    height: 80,
+    alignItems: 'center',
+    gap: 20
+  },
+  inputContainerBig: {
+    width: width * 0.9, // Garante que o container ocupe toda a largura disponível
+    height: 170,
+    borderRadius: 10,
+    borderWidth: 3,
+    borderColor: "#00C20A",
+    backgroundColor: "#717171",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden", // Garante que o conteúdo não ultrapasse os limites
   },
 });
 

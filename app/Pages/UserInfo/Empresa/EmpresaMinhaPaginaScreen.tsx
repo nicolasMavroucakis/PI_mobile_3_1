@@ -15,6 +15,7 @@ import { useEmpresaGlobalContext } from "@/app/GlobalContext/EmpresaGlobalContex
 type RootStackParamList = {
     UserScreen: undefined;
     AdicionarCategoriaScreen: undefined;
+    AdicionarServico: undefined;
 };
 
 
@@ -22,11 +23,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const EmpresaMinhaPaginaScreen = () => {
     const navigation = useNavigation<NavigationProp>();
-    const { 
-        categorias: categorias, setCategorias: setCategorias
-        , servicos: servicos, setServicos: setServicos,
-        funcionarios: funcionarios, setFuncionarios: setFuncionarios
-    } = useEmpresaGlobalContext();
+    const { categorias, deleteCategoria } = useEmpresaGlobalContext();
 
     return(
         <View style={{ flex: 1, backgroundColor: "#000" }}>
@@ -56,72 +53,20 @@ const EmpresaMinhaPaginaScreen = () => {
                             </TouchableOpacity>
                         </View>
                         <View style={EmpresaInfoMoneyScreenStyle.containerItens}>
-                            <View style={EmpresaInfoMoneyScreenStyle.item}>
-                                <Text style={EmpresaInfoMoneyScreenStyle.textTitleServicos}>Trocas</Text>
-                                <TouchableOpacity>
-                                    <Image source={deleteImg} style={EmpresaInfoMoneyScreenStyle.iconesAddDeleteActionsMinhaPagina} />
-                                </TouchableOpacity>
-                            </View>
-                            <View style={EmpresaInfoMoneyScreenStyle.item}>
-                                <Text style={EmpresaInfoMoneyScreenStyle.textTitleServicos}>Trocas</Text>
-                                <TouchableOpacity>
-                                    <Image source={deleteImg} style={EmpresaInfoMoneyScreenStyle.iconesAddDeleteActionsMinhaPagina} />
-                                </TouchableOpacity>
-                            </View>
-                            <View style={EmpresaInfoMoneyScreenStyle.item}>
-                                <Text style={EmpresaInfoMoneyScreenStyle.textTitleServicos}>Trocas</Text>
-                                <TouchableOpacity>
-                                    <Image source={deleteImg} style={EmpresaInfoMoneyScreenStyle.iconesAddDeleteActionsMinhaPagina} />
-                                </TouchableOpacity>
-                            </View>
-                            <View style={EmpresaInfoMoneyScreenStyle.item}>
-                                <Text style={EmpresaInfoMoneyScreenStyle.textTitleServicos}>Trocas</Text>
-                                <TouchableOpacity>
-                                    <Image source={deleteImg} style={EmpresaInfoMoneyScreenStyle.iconesAddDeleteActionsMinhaPagina} />
-                                </TouchableOpacity>
-                            </View>
-                            <View style={EmpresaInfoMoneyScreenStyle.item}>
-                                <Text style={EmpresaInfoMoneyScreenStyle.textTitleServicos}>Trocas</Text>
-                                <TouchableOpacity>
-                                    <Image source={deleteImg} style={EmpresaInfoMoneyScreenStyle.iconesAddDeleteActionsMinhaPagina} />
-                                </TouchableOpacity>
-                            </View>
-                            <View style={EmpresaInfoMoneyScreenStyle.item}>
-                                <Text style={EmpresaInfoMoneyScreenStyle.textTitleServicos}>Trocas</Text>
-                                <TouchableOpacity>
-                                    <Image source={deleteImg} style={EmpresaInfoMoneyScreenStyle.iconesAddDeleteActionsMinhaPagina} />
-                                </TouchableOpacity>
-                            </View>
-                            <View style={EmpresaInfoMoneyScreenStyle.item}>
-                                <Text style={EmpresaInfoMoneyScreenStyle.textTitleServicos}>Trocas</Text>
-                                <TouchableOpacity>
-                                    <Image source={deleteImg} style={EmpresaInfoMoneyScreenStyle.iconesAddDeleteActionsMinhaPagina} />
-                                </TouchableOpacity>
-                            </View>
-                            <View style={EmpresaInfoMoneyScreenStyle.item}>
-                                <Text style={EmpresaInfoMoneyScreenStyle.textTitleServicos}>Trocas</Text>
-                                <TouchableOpacity>
-                                    <Image source={deleteImg} style={EmpresaInfoMoneyScreenStyle.iconesAddDeleteActionsMinhaPagina} />
-                                </TouchableOpacity>
-                            </View>
-                            <View style={EmpresaInfoMoneyScreenStyle.item}>
-                                <Text style={EmpresaInfoMoneyScreenStyle.textTitleServicos}>Verificações</Text>
-                                <TouchableOpacity>
-                                    <Image source={deleteImg} style={EmpresaInfoMoneyScreenStyle.iconesAddDeleteActionsMinhaPagina} />
-                                </TouchableOpacity>
-                            </View>
-                            <View style={EmpresaInfoMoneyScreenStyle.item}>
-                                <Text style={EmpresaInfoMoneyScreenStyle.textTitleServicos}>Concertos</Text>
-                                <TouchableOpacity>
-                                    <Image source={deleteImg} style={EmpresaInfoMoneyScreenStyle.iconesAddDeleteActionsMinhaPagina} />
-                                </TouchableOpacity>
-                            </View>
+                            {categorias.map((categoria, index) => (
+                                <View key={index} style={EmpresaInfoMoneyScreenStyle.item}>
+                                    <Text style={EmpresaInfoMoneyScreenStyle.textTitleServicos}>{categoria}</Text>
+                                    <TouchableOpacity onPress={() => deleteCategoria(categoria)}>
+                                        <Image source={deleteImg} style={EmpresaInfoMoneyScreenStyle.iconesAddDeleteActionsMinhaPagina} />
+                                    </TouchableOpacity>
+                                </View>
+                            ))}
                         </View>
                     </View>
                     <View style={EmpresaInfoMoneyScreenStyle.containerServicos}>
                         <View style={EmpresaInfoMoneyScreenStyle.containerCategoriaServicosAdd}>
                             <Text style={UserScreenStyle.textTitle}>Serviços</Text>
-                            <TouchableOpacity>
+                            <TouchableOpacity onPress={() => navigation.navigate("AdicionarServico")}>
                                 <Image source={addImg} style={EmpresaInfoMoneyScreenStyle.iconesAddDeleteActionsMinhaPagina} />
                             </TouchableOpacity>
                         </View>
