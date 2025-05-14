@@ -68,7 +68,6 @@ const SignEmpresa = () => {
         }
 
         try {
-            // Check if user already exists
             const usersRef = collection(db, "users");
             const userQuery = await getDocs(query(usersRef, where("email", "==", emailId)));
             
@@ -77,7 +76,6 @@ const SignEmpresa = () => {
                 return;
             }
 
-            // Create user document
             const userData = {
                 nome,
                 email: emailId,
@@ -97,7 +95,6 @@ const SignEmpresa = () => {
 
             const userRef = await addDoc(usersRef, userData);
 
-            // Create company document
             const empresaData = {
                 userId: userRef.id,
                 nome,
@@ -115,7 +112,6 @@ const SignEmpresa = () => {
 
             const empresaRef = await addDoc(collection(db, "empresas"), empresaData);
 
-            // Update global context
             setNomeGlobal(nome);
             setSenhaGlobal(senha);
             setUsuarioGlobal(emailId);

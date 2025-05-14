@@ -9,15 +9,25 @@ import deleteImg from "../../../../assets/images/deleteImg.png"
 import lapisImg from "../../../../assets/images/lapis.png"
 import { useNavigation } from "expo-router";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useEmpresaGlobalContext } from "@/app/GlobalContext/EmpresaGlobalContext";
+
 
 type RootStackParamList = {
     UserScreen: undefined;
+    AdicionarCategoriaScreen: undefined;
 };
+
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const EmpresaMinhaPaginaScreen = () => {
     const navigation = useNavigation<NavigationProp>();
+    const { 
+        categorias: categorias, setCategorias: setCategorias
+        , servicos: servicos, setServicos: setServicos,
+        funcionarios: funcionarios, setFuncionarios: setFuncionarios
+    } = useEmpresaGlobalContext();
+
     return(
         <View style={{ flex: 1, backgroundColor: "#000" }}>
             <View style={[EmpresaInfoMoneyScreenStyle.containerTitle]}>
@@ -41,7 +51,7 @@ const EmpresaMinhaPaginaScreen = () => {
                     <View style={EmpresaInfoMoneyScreenStyle.containerCategorias}>
                         <View style={EmpresaInfoMoneyScreenStyle.containerCategoriaServicosAdd}>
                             <Text style={UserScreenStyle.textTitle}>Categorias</Text>
-                            <TouchableOpacity>
+                            <TouchableOpacity onPress={() => navigation.navigate("AdicionarCategoriaScreen")}>
                                 <Image source={addImg} style={EmpresaInfoMoneyScreenStyle.iconesAddDeleteActionsMinhaPagina} />
                             </TouchableOpacity>
                         </View>

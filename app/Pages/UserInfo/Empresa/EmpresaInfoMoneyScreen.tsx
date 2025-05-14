@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ScrollView, View, Text, TouchableOpacity, Image, Modal, StyleSheet } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
@@ -11,6 +11,9 @@ import calendarioImg from "../../../../components/assets/Images/Calendario.png";
 import ferramentaImg from "../../../../assets/images/ferramenta.png";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "expo-router";
+import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext";
+import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
+import StartFirebase from "@/app/crud/firebaseConfig";
 
 type RootStackParamList = {
     UserScreen: undefined;
@@ -20,16 +23,206 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const EmpresaInfoMoneyScreen = () => {
     const navigation = useNavigation<NavigationProp>();
-    const [date, setDate] = useState(new Date());
+    const [dateServicosRealizados, setDateServicosRealizados] = useState(new Date());
+    const [dateServicosReservados, setDateServicosReservados] = useState(new Date());
+    const { db } = StartFirebase();
     const [selectedService, setSelectedService] = useState("Corte de cabelo");
     const [modalVisible, setModalVisible] = useState(false);
 
     const servicos = ["Corte de cabelo", "Barba", "Manicure", "Massagem"];
+    const [empresaData, setEmpresaData] = useState<any>(null); 
+    const { id: userId } = useUserGlobalContext();
 
-    const onChange = (event: any, selectedDate: any) => {
-        const currentDate = selectedDate || date;
-        setDate(currentDate);
+    const onChangeServicosRealizados = (event: any, selectedDate: any) => {
+        const currentDate = selectedDate || Date;
+        setDateServicosRealizados(currentDate);
     };
+
+    const onChangeServicosReservados = (event: any, selectedDate: any) => {
+        const currentDate = selectedDate || Date;
+        setDateServicosReservados(currentDate);
+    };
+
+    const [agendamentos, setAgendamentos] = useState<{ id: string; data: any; status: string | undefined }[]>([]);
+    const [agendamentosFinalizadosHoje, setAgendamentosFinalizadosHoje] = useState(0); 
+    const [agendamentosAindaParaHoje, setAgendamentosAindaParaHoje] = useState(0);
+    const [loading, setLoading] = useState(true);
+
+    const [quantidadeServicosReservados, setQuantidadeServicosReservados] = useState(0);
+    const [valorTotalServicosReservados, setValorTotalServicosReservados] = useState(0);
+
+    const [quantidadeServicosRealizados, setQuantidadeServicosRealizados] = useState(0);
+    const [valorTotalServicosRealizados, setValorTotalServicosRealizados] = useState(0);
+
+    useEffect(() => {
+        const carregarAgendamentos = async () => {
+            try {
+                const empresasRef = collection(db, "empresas");
+                const qEmpresas = query(empresasRef, where("userId", "==", userId));
+                const empresasSnapshot = await getDocs(qEmpresas);
+    
+                if (empresasSnapshot.empty) {
+                    console.log("Nenhuma empresa encontrada para o usuário.");
+                    setLoading(false);
+                    return;
+                }
+    
+                const empresaDoc = empresasSnapshot.docs[0];
+                const empresaId = empresaDoc.id;
+    
+                const agendamentosRef = collection(db, "agendamentos");
+                const qAgendamentos = query(agendamentosRef, where("empresaId", "==", empresaId));
+                const agendamentosSnapshot = await getDocs(qAgendamentos);
+    
+                const agendamentosList = agendamentosSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        data: data.data,
+                        status: data.status || undefined, 
+                        ...data,
+                    };
+                });
+    
+                const today = new Date().toISOString().split("T")[0];
+    
+                const agendamentosHoje = agendamentosList.filter(agendamento => {
+                    const agendamentoData = agendamento.data.toDate().toISOString().split("T")[0];
+                    return agendamentoData === today;
+                });
+    
+                const finalizadosHoje = agendamentosHoje.filter(agendamento => agendamento.status && agendamento.status === "finalizado");
+    
+                console.log("Agendamentos para hoje:", agendamentosHoje.length);
+                console.log("Agendamentos finalizados hoje:", finalizadosHoje.length);
+    
+                setAgendamentos(agendamentosList);
+                console.log("Agendamentos:", agendamentosList);
+                setAgendamentosFinalizadosHoje(finalizadosHoje.length); 
+                setAgendamentosAindaParaHoje(agendamentosHoje.length); 
+            } catch (error) {
+                console.error("Erro ao carregar agendamentos:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        carregarAgendamentos();
+    }, [userId]);
+    
+    useEffect(() => {
+        const carregarServicosReservados = async () => {
+            try {
+                const empresasRef = collection(db, "empresas");
+                const qEmpresas = query(empresasRef, where("userId", "==", userId));
+                const empresasSnapshot = await getDocs(qEmpresas);
+    
+                if (empresasSnapshot.empty) {
+                    console.log("Nenhuma empresa encontrada para o usuário.");
+                    return;
+                }
+    
+                const empresaDoc = empresasSnapshot.docs[0];
+                const empresaId = empresaDoc.id;
+    
+                const agendamentosRef = collection(db, "agendamentos");
+                const qAgendamentos = query(agendamentosRef, where("empresaId", "==", empresaId));
+                const agendamentosSnapshot = await getDocs(qAgendamentos);
+    
+                const agendamentosList = agendamentosSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        data: data.data,
+                        servico: data.servico,
+                        ...data,
+                    };
+                });
+    
+                const selectedDate = dateServicosReservados.toISOString().split("T")[0];
+    
+                const agendamentosNaData = agendamentosList.filter(agendamento => {
+                    const agendamentoData = agendamento.data.toDate().toISOString().split("T")[0];
+                    return agendamentoData === selectedDate;
+                });
+    
+                const quantidade = agendamentosNaData.length;
+    
+                const valor = agendamentosNaData.reduce((total, agendamento) => {
+                    return total + (agendamento.servico?.preco || 0);
+                }, 0);
+    
+                console.log("Quantidade de serviços reservados:", quantidade);
+                console.log("Valor total dos serviços reservados:", valor);
+    
+                setQuantidadeServicosReservados(quantidade);
+                setValorTotalServicosReservados(valor);
+            } catch (error) {
+                console.error("Erro ao carregar serviços reservados:", error);
+            }
+        };
+    
+        carregarServicosReservados();
+    }, [dateServicosReservados]);
+
+    useEffect(() => {
+        const carregarServicosRealizados = async () => {
+            try {
+                const empresasRef = collection(db, "empresas");
+                const qEmpresas = query(empresasRef, where("userId", "==", userId));
+                const empresasSnapshot = await getDocs(qEmpresas);
+    
+                if (empresasSnapshot.empty) {
+                    console.log("Nenhuma empresa encontrada para o usuário.");
+                    return;
+                }
+    
+                const empresaDoc = empresasSnapshot.docs[0];
+                const empresaId = empresaDoc.id;
+    
+                const agendamentosRef = collection(db, "agendamentos");
+                const qAgendamentos = query(agendamentosRef, where("empresaId", "==", empresaId));
+                const agendamentosSnapshot = await getDocs(qAgendamentos);
+    
+                const agendamentosList = agendamentosSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        data: data.data,
+                        servico: data.servico,
+                        status: data.status,
+                        ...data,
+                    };
+                });
+    
+                const selectedDate = dateServicosRealizados.toISOString().split("T")[0];
+    
+                // Filtrar agendamentos para a data selecionada e com status "finalizado"
+                const agendamentosNaData = agendamentosList.filter(agendamento => {
+                    const agendamentoData = agendamento.data.toDate().toISOString().split("T")[0];
+                    return agendamentoData === selectedDate && agendamento.status === "finalizado";
+                });
+    
+                // Calcular a quantidade total de serviços realizados
+                const quantidade = agendamentosNaData.length;
+    
+                // Somar os valores dos serviços realizados
+                const valor = agendamentosNaData.reduce((total, agendamento) => {
+                    return total + (agendamento.servico?.preco || 0);
+                }, 0);
+    
+                console.log("Quantidade de serviços realizados:", quantidade);
+                console.log("Valor total dos serviços realizados:", valor);
+    
+                // Atualizar os estados
+                setQuantidadeServicosRealizados(quantidade);
+                setValorTotalServicosRealizados(valor);
+            } catch (error) {
+                console.error("Erro ao carregar serviços realizados:", error);
+            }
+        };
+    
+        carregarServicosRealizados();
+    }, [dateServicosRealizados]); 
 
     return (
         <View style={{ flex: 1, backgroundColor: "#000" }}>
@@ -56,7 +249,7 @@ const EmpresaInfoMoneyScreen = () => {
                                 Total de agendamentos para hoje
                             </Text>
                             <Text style={[EmpresaInfoMoneyScreenStyle.textAgendamentos, { color: '#0057C2' }]}>
-                                29
+                                {agendamentosAindaParaHoje}
                             </Text>
                         </View>
                         <View style={EmpresaInfoMoneyScreenStyle.continerAgendamentosMetade}>
@@ -64,7 +257,7 @@ const EmpresaInfoMoneyScreen = () => {
                                 Agendamentos realizados no dia de hoje
                             </Text>
                             <Text style={[EmpresaInfoMoneyScreenStyle.textAgendamentos, { color: '#00C20A' }]}>
-                                34
+                                {agendamentosFinalizadosHoje}
                             </Text>
                         </View>
                     </View>
@@ -82,10 +275,10 @@ const EmpresaInfoMoneyScreen = () => {
                                 <View style={EmpresaInfoMoneyScreenStyle.containerFilterFiltrosEsquerda}>
                                     <Image source={calendarioImg} style={EmpresaInfoMoneyScreenStyle.imgFiltros} />
                                     <DateTimePicker
-                                        value={date}
+                                        value={dateServicosReservados}
                                         mode="date"
                                         display="default"
-                                        onChange={onChange}
+                                        onChange={onChangeServicosReservados}
                                         textColor="red"
                                         style={{zIndex: 1000}}
                                     />
@@ -122,12 +315,12 @@ const EmpresaInfoMoneyScreen = () => {
                                 <View style={EmpresaInfoMoneyScreenStyle.tabelaValorResultadoFiltrosMenor}>
                                     <View style={[EmpresaInfoMoneyScreenStyle.tabelaValorResultadoFiltrosMenorMenor, { borderBottomLeftRadius: 10}]}>
                                         <Text style={[EmpresaInfoMoneyScreenStyle.textFiltros, {fontWeight: 'bold'}]}>
-                                            105
+                                            {quantidadeServicosReservados}
                                         </Text>
                                     </View>
                                     <View style={[EmpresaInfoMoneyScreenStyle.tabelaValorResultadoFiltrosMenorMenor, { borderBottomRightRadius: 10}]}>
                                         <Text style={[EmpresaInfoMoneyScreenStyle.textFiltros, {fontWeight: 'bold'}]}>
-                                            R$ 105,00
+                                            R$ {valorTotalServicosReservados.toFixed(2)}
                                         </Text>
                                     </View>
                                 </View>
@@ -148,10 +341,10 @@ const EmpresaInfoMoneyScreen = () => {
                                 <View style={EmpresaInfoMoneyScreenStyle.containerFilterFiltrosEsquerda}>
                                     <Image source={calendarioImg} style={EmpresaInfoMoneyScreenStyle.imgFiltros} />
                                     <DateTimePicker
-                                        value={date}
+                                        value={dateServicosReservados}
                                         mode="date"
                                         display="default"
-                                        onChange={onChange}
+                                        onChange={onChangeServicosRealizados}
                                         textColor="red"
                                         style={{zIndex: 1000}}
                                     />
@@ -188,12 +381,12 @@ const EmpresaInfoMoneyScreen = () => {
                                 <View style={EmpresaInfoMoneyScreenStyle.tabelaValorResultadoFiltrosMenor}>
                                     <View style={[EmpresaInfoMoneyScreenStyle.tabelaValorResultadoFiltrosMenorMenor, { borderBottomLeftRadius: 10}]}>
                                         <Text style={[EmpresaInfoMoneyScreenStyle.textFiltros, {fontWeight: 'bold'}]}>
-                                            105
+                                            {quantidadeServicosRealizados}
                                         </Text>
                                     </View>
                                     <View style={[EmpresaInfoMoneyScreenStyle.tabelaValorResultadoFiltrosMenorMenor, { borderBottomRightRadius: 10}]}>
                                         <Text style={[EmpresaInfoMoneyScreenStyle.textFiltros, {fontWeight: 'bold'}]}>
-                                            R$ 105,00
+                                            {valorTotalServicosRealizados}
                                         </Text>
                                     </View>
                                 </View>

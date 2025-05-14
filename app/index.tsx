@@ -13,6 +13,7 @@ import ClienteConfigPage from "./Pages/UserInfo/Cliente/ClienteConfigPage";
 import EmpresaInfoScreen from "./Pages/PrincipalApp/EmpresaInfoScreen/EmpresaInfoScreen";
 import CategoriaScreen from "./Pages/PrincipalApp/CategoriaScreen/CategoriaScreen";
 import AdicionarCategoriaScreen from "./Pages/PrincipalApp/CategoriaScreen/AdicionarCategoriaScreen";
+import AdicionarServico from "./Pages/PrincipalApp/CategoriaScreen/AdicionarServico";
 import DetalhesAgendamento from "./Pages/PrincipalApp/AgendamentosScreen/DetalhesAgendamento";
 import EmpresaInfoMoneyScreen from "./Pages/UserInfo/Empresa/EmpresaInfoMoneyScreen";
 import EmpresaInfoFuncionariosScreen from "./Pages/UserInfo/Empresa/EmpresaInfoFuncionariosScreen";
@@ -20,6 +21,7 @@ import EmpresaInfoAgendamentoScreen from "./Pages/UserInfo/Empresa/EmpresaInfoAg
 import EmpresaMinhaPaginaScreen from "./Pages/UserInfo/Empresa/EmpresaMinhaPaginaScreen";
 
 import { UserGlobalContextProvider } from "./GlobalContext/UserGlobalContext";
+import { EmpresaGlobalContextProvider } from "./GlobalContext/EmpresaGlobalContext";
 
 type RootStackParamList = {
   Login: undefined;
@@ -35,6 +37,7 @@ type RootStackParamList = {
   CategoriaScreen: undefined;
   EmpresaInfoScreen: undefined;
   AdicionarCategoriaScreen: undefined;
+  AdicionarServico:undefined;
   DetalhesAgendamento: undefined;
   EmpresaInfoMoneyScreen: undefined;
   EmpresaInfoFuncionariosScreen: undefined;
@@ -47,26 +50,29 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function Page() {
   return (
     <UserGlobalContextProvider>
-      <Stack.Navigator initialRouteName="Login">
-        <Stack.Screen name="Login" component={LogInScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="SignIn" component={SignIn} options={{ headerShown: false }} />
-        <Stack.Screen name="SignCliente" component={SignCliente} options={{ headerShown: false }} />
-        <Stack.Screen name="SignFuncionario" component={SignFuncionario} options={{ headerShown: false }} />
-        <Stack.Screen name="SignEmpresa" component={SignEmpresa} options={{ headerShown: false }} />
-        <Stack.Screen name="HomeApp" component={HomeScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="SearchScreen" component={SearchScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="AgendamentoScreen" component={AgendamentoScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="UserScreen" component={UserScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="ClienteConfig" component={ClienteConfigPage} options={{ headerShown: false }} />
-        <Stack.Screen name="CategoriaScreen" component={CategoriaScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="EmpresaInfoScreen" component={EmpresaInfoScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="AdicionarCategoriaScreen" component={AdicionarCategoriaScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="DetalhesAgendamento" component={DetalhesAgendamento} options={{ headerShown: false }} />
-        <Stack.Screen name="EmpresaInfoMoneyScreen" component={EmpresaInfoMoneyScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="EmpresaInfoFuncionariosScreen" component={EmpresaInfoFuncionariosScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="EmpresaInfoAgendamentoScreen" component={EmpresaInfoAgendamentoScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="EmpresaMinhaPaginaScreen" component={EmpresaMinhaPaginaScreen} options={{ headerShown: false }} />
-      </Stack.Navigator>
+      <EmpresaGlobalContextProvider>
+        <Stack.Navigator initialRouteName="Login">
+          <Stack.Screen name="Login" component={LogInScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="SignIn" component={SignIn} options={{ headerShown: false }} />
+          <Stack.Screen name="SignCliente" component={SignCliente} options={{ headerShown: false }} />
+          <Stack.Screen name="SignFuncionario" component={SignFuncionario} options={{ headerShown: false }} />
+          <Stack.Screen name="SignEmpresa" component={SignEmpresa} options={{ headerShown: false }} />
+          <Stack.Screen name="HomeApp" component={HomeScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="SearchScreen" component={SearchScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="AgendamentoScreen" component={AgendamentoScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="UserScreen" component={UserScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="ClienteConfig" component={ClienteConfigPage} options={{ headerShown: false }} />
+          <Stack.Screen name="CategoriaScreen" component={CategoriaScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="EmpresaInfoScreen" component={EmpresaInfoScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="AdicionarCategoriaScreen" component={AdicionarCategoriaScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="AdicionarServico" component={AdicionarServico} options={{ headerShown: false }} />
+          <Stack.Screen name="DetalhesAgendamento" component={DetalhesAgendamento} options={{ headerShown: false }} />
+          <Stack.Screen name="EmpresaInfoMoneyScreen" component={EmpresaInfoMoneyScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="EmpresaInfoFuncionariosScreen" component={EmpresaInfoFuncionariosScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="EmpresaInfoAgendamentoScreen" component={EmpresaInfoAgendamentoScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="EmpresaMinhaPaginaScreen" component={EmpresaMinhaPaginaScreen} options={{ headerShown: false }} />
+        </Stack.Navigator>
+      </EmpresaGlobalContextProvider>
     </UserGlobalContextProvider>
   );
 }
