@@ -24,6 +24,8 @@ interface EmpresaGlobalContextType {
     setServicos: Dispatch<SetStateAction<any[]>>;
     funcionarios: any[];
     setFuncionarios: Dispatch<SetStateAction<any[]>>;
+    carregarServicos: (categoria: string) => void;
+    deleteServico: (servicos: string) => void;
 }
 
 export const EmpresaGlobalContext = createContext<EmpresaGlobalContextType>({
@@ -35,6 +37,8 @@ export const EmpresaGlobalContext = createContext<EmpresaGlobalContextType>({
     setServicos: () => {},
     funcionarios: [],
     setFuncionarios: () => {},
+    carregarServicos: () => {},
+    deleteServico: () => {},
 });
 
 export const EmpresaGlobalContextProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -71,7 +75,6 @@ export const EmpresaGlobalContextProvider: React.FC<{ children: ReactNode }> = (
 
     const deleteCategoria = async (categoria: string) => {
         if (!userId) return;
-
         const novasCategorias = categorias.filter((cat) => cat !== categoria);
         setCategorias(novasCategorias);
 
@@ -91,6 +94,80 @@ export const EmpresaGlobalContextProvider: React.FC<{ children: ReactNode }> = (
         }
     };
 
+    const carregarCategorias = async () => {
+        if (!userId) return;
+        try {
+            const empresasRef = collection(db, "empresas");
+            const q = query(empresasRef, where("userId", "==", userId));
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                const empresaDoc = querySnapshot.docs[0];
+                const categoriasAtuais = empresaDoc.data().categorias || [];
+                setCategorias(categoriasAtuais); 
+                console.log("Categorias carregadas:", categoriasAtuais);
+            } else {
+                console.log("Nenhuma empresa encontrada para o usuário.");
+            }
+        } catch (error) {
+            console.error("Erro ao carregar categorias:", error);
+        }
+    };
+
+    const carregarServicos = async () => {
+        if (!userId) return;
+        try {
+            const empresasRef = collection(db, "empresas");
+            const q = query(empresasRef, where("userId", "==", userId));
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                const empresaDoc = querySnapshot.docs[0];
+                const servicosAtuais = empresaDoc.data().servicos || [];
+                setServicos(servicosAtuais); 
+                console.log("Serviços carregados:", servicosAtuais);
+            } else {
+                console.log("Nenhuma empresa encontrada para o usuário.");
+            }
+        } catch (error) {
+            console.error("Erro ao carregar serviços:", error);
+        }
+    };
+
+    const deleteServico = async (servicoId: string) => {
+        if (!userId) return;
+    
+        try {
+            const empresasRef = collection(db, "empresas");
+            const q = query(empresasRef, where("userId", "==", userId));
+            const querySnapshot = await getDocs(q);
+    
+            if (!querySnapshot.empty) {
+                const empresaDoc = querySnapshot.docs[0];
+                const empresaRef = doc(db, "empresas", empresaDoc.id);
+                const servicosAtuais = empresaDoc.data().servicos || [];
+                const novosServicos = servicosAtuais.filter((servico: any) => servico.id !== servicoId);
+    
+                // Atualiza o Firestore
+                await updateDoc(empresaRef, { servicos: novosServicos });
+    
+                // Atualiza o estado local
+                setServicos(novosServicos);
+    
+                console.log(`Serviço com ID ${servicoId} removido com sucesso.`);
+            } else {
+                console.log("Nenhuma empresa encontrada para o usuário.");
+            }
+        } catch (error) {
+            console.error("Erro ao remover serviço:", error);
+        }
+    };
+    
+    useEffect(() => {
+        carregarCategorias();
+        carregarServicos();
+    }, [userId]);
+
     return (
         <EmpresaGlobalContext.Provider
             value={{
@@ -102,6 +179,8 @@ export const EmpresaGlobalContextProvider: React.FC<{ children: ReactNode }> = (
                 setServicos,
                 funcionarios,
                 setFuncionarios,
+                carregarServicos, 
+                deleteServico
             }}
         >
             {children}

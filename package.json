@@ -51,6 +51,7 @@
     "react-native": "0.79.2",
     "react-native-dropdown-picker": "^5.4.6",
     "react-native-gesture-handler": "~2.24.0",
+    "react-native-get-random-values": "^1.11.0",
     "react-native-maps": "1.20.1",
     "react-native-reanimated": "~3.17.4",
     "react-native-responsive-fontsize": "^0.5.1",
@@ -59,7 +60,8 @@
     "react-native-svg": "15.11.2",
     "react-native-vector-icons": "^10.2.0",
     "react-native-web": "^0.20.0",
-    "react-native-webview": "13.13.5"
+    "react-native-webview": "13.13.5",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
