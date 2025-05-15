@@ -65,6 +65,9 @@ const AgendamentoScreenStyle = StyleSheet.create({
         shadowOpacity: 0.5,
         shadowRadius: 4.65,
         elevation: 8,
+        margin: 'auto',
+        marginTop: 10,
+        marginBottom: 10
     },
     AgendamentoContainerBoxes: {
         flexDirection: 'column',

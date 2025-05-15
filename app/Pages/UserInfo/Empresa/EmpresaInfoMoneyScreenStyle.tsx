@@ -202,7 +202,8 @@ const EmpresaInfoMoneyScreenStyle = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         margin: 'auto',
-        marginBottom: 20
+        marginBottom: 20,
+        minHeight: 50,
     },
     textTitleServicos: {
         fontSize: 14,
@@ -212,15 +213,18 @@ const EmpresaInfoMoneyScreenStyle = StyleSheet.create({
     containerCategorias: {
         marginBottom: 20,
         marginTop: 20,
-        flexGrow: 1,
+        //flexGrow: 1,
+        minHeight: 10
     },
     containerServicos: {
         marginBottom: 20,
         marginTop: 20,
-        flexGrow: 1,
+        //flexGrow: 1,
+        minHeight: 10
     },
     containerItens: {
         gap: 10,
+        minHeight: 0
     },
     item: {
         flexDirection: 'row',
