@@ -19,6 +19,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "expo-router";
 import { RFPercentage } from "react-native-responsive-fontsize";
 import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext";
+import { useEmpresaContext } from "@/app/GlobalContext/EmpresaReservaGlobalContext";
 import { useEffect, useState } from "react";
 import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
 import StartFirebase from "@/app/crud/firebaseConfig";
@@ -48,6 +49,8 @@ const HomeScreen = () => {
     const [meusAgendamentos, setMeusAgendamentos] = useState<any[]>([]);
     const [ultimasEmpresas, setUltimasEmpresas] = useState<any[]>([]);
     const [empresasRecomendadas, setEmpresasRecomendadas] = useState<any[]>([]);
+
+    const { setAll } = useEmpresaContext();
 
     useEffect(() => {
         const fetchAgendamentos = async () => {
@@ -137,6 +140,48 @@ const HomeScreen = () => {
 
         fetchEmpresasRecomendadas();
     }, [db]);
+
+    const handleEmpresaClick = async (empresa: any) => {
+        try {
+            const empresasRef = collection(db, "empresas");
+            const empresaDoc = await getDocs(query(empresasRef, where("userId", "==", empresa.userId)));
+            
+            if (!empresaDoc.empty) {
+                const empresaData = empresaDoc.docs[0].data();
+                const enderecoData = empresaData.endereco || {};
+                
+                console.log("Dados brutos do Firebase:", empresaData);
+                console.log("Dados do endereço:", enderecoData);
+
+                const dadosAtualizados = {
+                    id: empresaDoc.docs[0].id,
+                    nome: empresaData.nome || '',
+                    email: empresaData.email || '',
+                    endereco: {
+                        cep: enderecoData.cep || '',
+                        cidade: enderecoData.cidade || '',
+                        complemento: enderecoData.complemento || '',
+                        numero: enderecoData.numero || '',
+                        rua: enderecoData.rua || ''
+            },
+                    funcionarios: empresaData.funcionarios || [],
+                    servicos: empresaData.servicos || [],
+                    telefone: empresaData.telefone || '',
+                    createdAt: empresaData.createdAt ? new Date(empresaData.createdAt.seconds * 1000) : null,
+                    updatedAt: empresaData.updatedAt ? new Date(empresaData.updatedAt.seconds * 1000) : null,
+                    userId: empresaData.userId || '',
+                };
+
+                console.log("Dados que serão enviados para o contexto:", dadosAtualizados);
+                setAll(dadosAtualizados);
+        navigation.navigate('EmpresaInfoScreen');
+            } else {
+                console.error("Empresa não encontrada");
+            }
+        } catch (error) {
+            console.error("Erro ao buscar dados da empresa:", error);
+        }
+    };
 
     return(
         <View style={{ flex: 1 }}>
@@ -267,7 +312,7 @@ const HomeScreen = () => {
                                 <TouchableOpacity 
                                     key={index} 
                                     style={HomeScreenStyle.containerUltimosServicosDentro} 
-                                    onPress={() => navigation.navigate('EmpresaInfoScreen')}
+                                    onPress={() => handleEmpresaClick(empresa)}
                                 >
                                     <View style={HomeScreenStyle.ImgUltServiView}>
                                         <Image 
@@ -276,8 +321,8 @@ const HomeScreen = () => {
                                             resizeMode="cover" 
                                         />
                                     </View>
-                                    <View style={HomeScreenStyle.ImgUltServiView}>
-                                        <Text style={{fontSize: RFPercentage(1), fontWeight: 'bold', color: '#fff'}}>
+                                    <View style={[HomeScreenStyle.ImgUltServiView, {width: '80%', alignItems: 'center', margin: 'auto'}]}>
+                                        <Text style={{ fontSize: RFPercentage(1), fontWeight: "bold", color: "#fff", textAlign: 'center' }}>
                                             {empresa.nome}
                                         </Text>
                                     </View>
@@ -298,6 +343,7 @@ const HomeScreen = () => {
                                 <TouchableOpacity
                                     key={index}
                                     style={HomeScreenStyle.containerUltimosServicosDentro}
+                                    onPress={() => handleEmpresaClick(empresa)}
                                 >
                                     <View style={HomeScreenStyle.ImgUltServiView}>
                                         <Image

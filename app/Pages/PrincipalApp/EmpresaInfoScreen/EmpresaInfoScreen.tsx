@@ -10,6 +10,7 @@ import EmpresaCartaoPresente from "@/components/EmpresaInfoComponents/EmpresaCar
 import EmpresaDetalhes from "@/components/EmpresaInfoComponents/EmpresaDetalhes";
 import EmpresaAvaliacao from "@/components/EmpresaInfoComponents/EmpresaAvaliacao";
 import { calcularMediaEAvaliacoes } from "@/components/utils/avaliacaoUtils";
+import { useEmpresaContext } from "@/app/GlobalContext/EmpresaReservaGlobalContext";
 
 const EmpresaInfoScreen = () => {
     const [favoritado, setFavoritado] = useState(false); 
@@ -17,6 +18,7 @@ const EmpresaInfoScreen = () => {
     const [avaliacao, setAvaliacao] = useState(false)
     const [cartaoPresente, setCartaoPresente] = useState(false)
     const [detalhes, setDetalhes] = useState(false)
+    const empresa = useEmpresaContext();
 
     const ratingsData: { [key: number]: number } = {
         5: 66,
@@ -54,7 +56,6 @@ const EmpresaInfoScreen = () => {
             setCartaoPresente(false)
             setDetalhes(true)
         }
-
     }
 
     return (
@@ -79,10 +80,10 @@ const EmpresaInfoScreen = () => {
                     <View style={EmpresaInfoScreenStyle.containerFavoritoCompText}>
                         <View>
                             <Text style={EmpresaInfoScreenStyle.empresa}>
-                                Mecanico do seu Zé
+                                {empresa.nome}
                             </Text>
                             <Text style={EmpresaInfoScreenStyle.empresaMenor}>
-                                Rua das Bananas, 107, São Paulo
+                                {empresa.endereco.rua}, {empresa.endereco.numero}, {empresa.endereco.cidade}
                             </Text>
                         </View>
                         <View style={EmpresaInfoScreenStyle.containerFavoritoComp}>

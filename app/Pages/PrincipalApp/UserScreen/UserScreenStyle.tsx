@@ -22,7 +22,7 @@ const UserScreenStyle = StyleSheet.create({
         borderTopLeftRadius: 16,
         borderTopRightRadius: 16,
         backgroundColor: '#323232',
-        paddingBottom: 30
+        paddingBottom: 200
     }, 
     userBox: {
         width: width,

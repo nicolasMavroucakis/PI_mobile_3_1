@@ -23,6 +23,7 @@ type RootStackParamList = {
     SignCliente: undefined;
     HomeApp: undefined;
     AdicionarCategoriaScreen: undefined;
+    ReservaScreen: undefined;
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
@@ -60,7 +61,6 @@ const LogInScreen = () => {
         console.log("Senha digitada:", password);
 
         try {
-            // Buscar usuário no Firestore por email e senha
             const usersRef = collection(db, "users");
             const q = query(
                 usersRef,
@@ -84,20 +84,16 @@ const LogInScreen = () => {
                 setIdGlobal(userDoc.id);
                 console.log("ID do usuário definido:", userDoc.id);
 
-                // Carregar a foto de perfil imediatamente após o login
                 try {
                     const profileImageUrl = await getProfileImage(userDoc.id);
                     if (profileImageUrl) {
-                        // Salvar a URL da foto no contexto global
                         setFotoPerfilGlobal(profileImageUrl);
-                        // Atualizar o documento do usuário com a URL da foto de perfil
                         await updateDoc(doc(db, 'users', userDoc.id), {
                             fotoPerfil: profileImageUrl
                         });
                     }
                 } catch (error) {
                     console.error("Erro ao carregar foto de perfil:", error);
-                    // Não interrompe o fluxo de login se houver erro ao carregar a foto
                 }
 
                 navigation.navigate("HomeApp");
@@ -149,7 +145,7 @@ const LogInScreen = () => {
                         <Text style={{ color: '#fff', fontSize: 18, marginLeft: 10 }}>Esqueceu</Text>
                     </View>
                     <View>
-                        <TouchableOpacity onPress={() => navigation.navigate('AdicionarCategoriaScreen')} style={stylesSingLog.buttonSenha}>
+                        <TouchableOpacity onPress={() => navigation.navigate('ReservaScreen')} style={stylesSingLog.buttonSenha}>
                             <Text style={stylesSingLog.buttonText}>a sua Senha?</Text>
                         </TouchableOpacity>
                     </View>

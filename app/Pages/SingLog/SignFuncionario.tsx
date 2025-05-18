@@ -3,7 +3,7 @@ import stylesSingLog from "./SignLogStyle";
 import { useState } from "react";
 import { useNavigation } from "expo-router";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, getDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, updateDoc, arrayUnion } from "firebase/firestore";
 import StartFirebase from "@/app/crud/firebaseConfig";
 import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext";
 
@@ -16,6 +16,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const SignFuncionario = () => {
     const navigation = useNavigation<NavigationProp>();
+    const { id: userId } = useUserGlobalContext();
     const {db} = StartFirebase();
     const [nome, setNome] = useState('');
     const [senha, setSenha] = useState('');
@@ -25,8 +26,7 @@ const SignFuncionario = () => {
     const [rua, setRua] = useState('');
     const [numero, setNumero] = useState('');
     const [complemento, setComplemento] = useState('');
-    const [categoria, setCategoria] = useState('');
-    const [empresaId, setEmpresaId] = useState('');
+    const [telefone, setTelefone] = useState('');
 
     const {
         setNome: setNomeGlobal,
@@ -41,12 +41,13 @@ const SignFuncionario = () => {
 
     const handleCadastro = async () => {
         const emailId = email.trim().toLowerCase();
-        if (!email || !senha || !nome || !cep || !cidade || !rua || !numero || !empresaId) {
+        if (!email || !senha || !nome || !cep || !cidade || !rua || !numero || !telefone) {
             Alert.alert("Erro", "Preencha todos os campos obrigatórios.");
             return;
         }
 
         try {
+            // Verificar se o email já existe
             const usersRef = collection(db, "users");
             const userQuery = await getDocs(query(usersRef, where("email", "==", emailId)));
             
@@ -55,48 +56,43 @@ const SignFuncionario = () => {
                 return;
             }
 
-            const empresaRef = doc(db, "empresas", empresaId);
-            const empresaDoc = await getDoc(empresaRef);
-            
-            if (!empresaDoc.exists()) {
+            // Buscar a empresa pelo userId do contexto global
+            const empresasRef = collection(db, "empresas");
+            const empresaQuery = await getDocs(query(empresasRef, where("userId", "==", userId)));
+
+            if (empresaQuery.empty) {
                 Alert.alert("Erro", "Empresa não encontrada.");
                 return;
             }
 
+            const empresaDoc = empresaQuery.docs[0];
+            const empresaId = empresaDoc.id;
+
+            // Criar documento do funcionário
             const userData = {
-                nome,
+                createdAt: serverTimestamp(),
                 email: emailId,
-                senha,
-                tipoUsuario: "Funcionario",
-                telefone: "",
                 endereco: {
                     cep,
                     cidade,
-                    rua,
+                    complemento: complemento || "",
                     numero,
-                    complemento: complemento || ""
+                    rua,
                 },
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp()
-            };
-
-            const userRef = await addDoc(usersRef, userData);
-
-            const funcionarioData = {
-                userId: userRef.id,
-                empresaId,
+                fotoPerfil: "",
                 nome,
-                especialidades: [categoria || "Geral"],
-                horarioTrabalho: {
-                    inicio: "09:00",
-                    fim: "18:00"
-                },
-                diasTrabalho: ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"],
-                createdAt: serverTimestamp(),
+                senha,
+                telefone,
+                tipoUsuario: "Funcionario",
                 updatedAt: serverTimestamp()
             };
 
-            const funcionarioRef = await addDoc(collection(db, "funcionarios"), funcionarioData);
+            const userDocRef = await addDoc(usersRef, userData);
+
+            // Adicionar o funcionário ao array de funcionários da empresa
+            await updateDoc(doc(db, "empresas", empresaId), {
+                funcionarios: arrayUnion(userDocRef.id)
+            });
 
             setNomeGlobal(nome);
             setSenhaGlobal(senha);
@@ -105,6 +101,7 @@ const SignFuncionario = () => {
             setEnderecoGlobal(true);
             setNumeroGlobal(numero);
             setComplementoGlobal(complemento);
+            setTelefoneGlobal(telefone);
 
             Alert.alert("Sucesso", "Cadastro realizado com sucesso.");
             navigation.navigate("HomeApp");
@@ -116,7 +113,7 @@ const SignFuncionario = () => {
 
     return (
         <ScrollView style={{flex: 1}}>
-            <View style={stylesSingLog.container}>
+            <View style={[stylesSingLog.container, {height: 1100}]}>
                 <View style={stylesSingLog.containerTitleOther}>
                     <Text style={stylesSingLog.Title}>
                         Adicione suas Informações
@@ -127,13 +124,12 @@ const SignFuncionario = () => {
                         { label: 'Email', value: email, set: setEmail },
                         { label: 'Senha', value: senha, set: setSenha, secure: true },
                         { label: 'Nome', value: nome, set: setNome },
+                        { label: 'Telefone', value: telefone, set: setTelefone },
                         { label: 'CEP', value: cep, set: setCep },
                         { label: 'Cidade', value: cidade, set: setCidade },
                         { label: 'Rua', value: rua, set: setRua },
                         { label: 'Numero', value: numero, set: setNumero },
-                        { label: 'Complemento', value: complemento, set: setComplemento },
-                        { label: 'Categoria', value: categoria, set: setCategoria },
-                        { label: 'ID da Empresa', value: empresaId, set: setEmpresaId },
+                        { label: 'Complemento', value: complemento, set: setComplemento }
                     ].map((input, index) => (
                         <View
                             key={index}

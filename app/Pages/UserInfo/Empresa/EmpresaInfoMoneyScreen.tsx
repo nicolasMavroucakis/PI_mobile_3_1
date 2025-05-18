@@ -21,27 +21,22 @@ type RootStackParamList = {
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
+interface Servico {
+    id: string;
+    nome: string;
+    preco: number;
+    categoria: string;
+}
+
 const EmpresaInfoMoneyScreen = () => {
     const navigation = useNavigation<NavigationProp>();
     const [dateServicosRealizados, setDateServicosRealizados] = useState(new Date());
     const [dateServicosReservados, setDateServicosReservados] = useState(new Date());
     const { db } = StartFirebase();
-    const [selectedService, setSelectedService] = useState("Corte de cabelo");
-    const [modalVisible, setModalVisible] = useState(false);
-
-    const servicos = ["Corte de cabelo", "Barba", "Manicure", "Massagem"];
-    const [empresaData, setEmpresaData] = useState<any>(null); 
+    const [selectedServico, setSelectedServico] = useState<string>("");
+    const [servicos, setServicos] = useState<Servico[]>([]);
+    const [modalServicoVisible, setModalServicoVisible] = useState(false);
     const { id: userId } = useUserGlobalContext();
-
-    const onChangeServicosRealizados = (event: any, selectedDate: any) => {
-        const currentDate = selectedDate || Date;
-        setDateServicosRealizados(currentDate);
-    };
-
-    const onChangeServicosReservados = (event: any, selectedDate: any) => {
-        const currentDate = selectedDate || Date;
-        setDateServicosReservados(currentDate);
-    };
 
     const [agendamentos, setAgendamentos] = useState<{ id: string; data: any; status: string | undefined }[]>([]);
     const [agendamentosFinalizadosHoje, setAgendamentosFinalizadosHoje] = useState(0); 
@@ -53,6 +48,16 @@ const EmpresaInfoMoneyScreen = () => {
 
     const [quantidadeServicosRealizados, setQuantidadeServicosRealizados] = useState(0);
     const [valorTotalServicosRealizados, setValorTotalServicosRealizados] = useState(0);
+
+    const onChangeServicosRealizados = (event: any, selectedDate: any) => {
+        const currentDate = selectedDate || dateServicosRealizados;
+        setDateServicosRealizados(currentDate);
+    };
+
+    const onChangeServicosReservados = (event: any, selectedDate: any) => {
+        const currentDate = selectedDate || dateServicosReservados;
+        setDateServicosReservados(currentDate);
+    };
 
     useEffect(() => {
         const carregarAgendamentos = async () => {
@@ -125,7 +130,11 @@ const EmpresaInfoMoneyScreen = () => {
                 const empresaId = empresaDoc.id;
     
                 const agendamentosRef = collection(db, "agendamentos");
-                const qAgendamentos = query(agendamentosRef, where("empresaId", "==", empresaId));
+                const qAgendamentos = query(
+                    agendamentosRef, 
+                    where("empresaId", "==", empresaId),
+                    where("servicoId", "==", selectedServico)
+                );
                 const agendamentosSnapshot = await getDocs(qAgendamentos);
     
                 const agendamentosList = agendamentosSnapshot.docs.map(doc => {
@@ -162,7 +171,7 @@ const EmpresaInfoMoneyScreen = () => {
         };
     
         carregarServicosReservados();
-    }, [dateServicosReservados]);
+    }, [dateServicosReservados, selectedServico]);
 
     useEffect(() => {
         const carregarServicosRealizados = async () => {
@@ -180,7 +189,11 @@ const EmpresaInfoMoneyScreen = () => {
                 const empresaId = empresaDoc.id;
     
                 const agendamentosRef = collection(db, "agendamentos");
-                const qAgendamentos = query(agendamentosRef, where("empresaId", "==", empresaId));
+                const qAgendamentos = query(
+                    agendamentosRef, 
+                    where("empresaId", "==", empresaId),
+                    where("servicoId", "==", selectedServico)
+                );
                 const agendamentosSnapshot = await getDocs(qAgendamentos);
     
                 const agendamentosList = agendamentosSnapshot.docs.map(doc => {
@@ -196,16 +209,13 @@ const EmpresaInfoMoneyScreen = () => {
     
                 const selectedDate = dateServicosRealizados.toISOString().split("T")[0];
     
-                // Filtrar agendamentos para a data selecionada e com status "finalizado"
                 const agendamentosNaData = agendamentosList.filter(agendamento => {
                     const agendamentoData = agendamento.data.toDate().toISOString().split("T")[0];
                     return agendamentoData === selectedDate && agendamento.status === "finalizado";
                 });
     
-                // Calcular a quantidade total de serviços realizados
                 const quantidade = agendamentosNaData.length;
     
-                // Somar os valores dos serviços realizados
                 const valor = agendamentosNaData.reduce((total, agendamento) => {
                     return total + (agendamento.servico?.preco || 0);
                 }, 0);
@@ -213,7 +223,6 @@ const EmpresaInfoMoneyScreen = () => {
                 console.log("Quantidade de serviços realizados:", quantidade);
                 console.log("Valor total dos serviços realizados:", valor);
     
-                // Atualizar os estados
                 setQuantidadeServicosRealizados(quantidade);
                 setValorTotalServicosRealizados(valor);
             } catch (error) {
@@ -222,7 +231,39 @@ const EmpresaInfoMoneyScreen = () => {
         };
     
         carregarServicosRealizados();
-    }, [dateServicosRealizados]); 
+    }, [dateServicosRealizados, selectedServico]); 
+
+    useEffect(() => {
+        const carregarServicos = async () => {
+            try {
+                const empresasRef = collection(db, "empresas");
+                const qEmpresas = query(empresasRef, where("userId", "==", userId));
+                const empresasSnapshot = await getDocs(qEmpresas);
+
+                if (empresasSnapshot.empty) return;
+
+                const empresaDoc = empresasSnapshot.docs[0];
+                const empresaData = empresaDoc.data();
+                const servicosData = empresaData.servicos || [];
+
+                const servicosList = servicosData.map((servico: any) => ({
+                    id: servico.id,
+                    nome: servico.nome,
+                    preco: servico.preco,
+                    categoria: servico.categoria
+                }));
+
+                setServicos(servicosList);
+                if (servicosList.length > 0) {
+                    setSelectedServico(servicosList[0].id);
+                }
+            } catch (error) {
+                console.error("Erro ao carregar serviços:", error);
+            }
+        };
+
+        carregarServicos();
+    }, [userId]);
 
     return (
         <View style={{ flex: 1, backgroundColor: "#000" }}>
@@ -290,10 +331,12 @@ const EmpresaInfoMoneyScreen = () => {
                                     Serviços
                                 </Text>
                                 <TouchableOpacity
-                                    onPress={() => setModalVisible(true)}
+                                    onPress={() => setModalServicoVisible(true)}
                                     style={[EmpresaInfoMoneyScreenStyle.containerFilterFiltrosEsquerda, { backgroundColor: "rgba(50, 50, 50, 0.8)", padding: 10, borderRadius: 8, justifyContent: 'flex-end', }]}
                                 >
-                                    <Text style={{ color: "white" }}>{selectedService}</Text>
+                                    <Text style={{ color: "white" }}>
+                                        {servicos.find(s => s.id === selectedServico)?.nome || "Selecione um serviço"}
+                                    </Text>
                                     <Image source={ferramentaImg} style={[EmpresaInfoMoneyScreenStyle.imgFiltros, { marginLeft: 10 }]} />
                                 </TouchableOpacity>
                             </View>
@@ -356,10 +399,12 @@ const EmpresaInfoMoneyScreen = () => {
                                     Serviços
                                 </Text>
                                 <TouchableOpacity
-                                    onPress={() => setModalVisible(true)}
+                                    onPress={() => setModalServicoVisible(true)}
                                     style={[EmpresaInfoMoneyScreenStyle.containerFilterFiltrosEsquerda, { backgroundColor: "rgba(50, 50, 50, 0.8)", padding: 10, borderRadius: 8, justifyContent: 'flex-end' }]}
                                 >
-                                    <Text style={{ color: "white" }}>{selectedService}</Text>
+                                    <Text style={{ color: "white" }}>
+                                        {servicos.find(s => s.id === selectedServico)?.nome || "Selecione um serviço"}
+                                    </Text>
                                     <Image source={ferramentaImg} style={[EmpresaInfoMoneyScreenStyle.imgFiltros, { marginLeft: 10 }]} />
                                 </TouchableOpacity>
                             </View>
@@ -396,23 +441,33 @@ const EmpresaInfoMoneyScreen = () => {
                 </View>
             </ScrollView>
             <EmpresaNavBar />
-            <Modal visible={modalVisible} transparent animationType="slide">
+            <Modal visible={modalServicoVisible} transparent animationType="slide">
                 <View style={EmpresaInfoMoneyScreenStyle.modalContainer}>
                     <View style={EmpresaInfoMoneyScreenStyle.modalContent}>
                         <Text style={EmpresaInfoMoneyScreenStyle.modalTitle}>Selecione o serviço</Text>
                         <View style={{ backgroundColor: "#f0f0f0", borderRadius: 8, width: "100%" }}>
-                            <Picker
-                                selectedValue={selectedService}
-                                onValueChange={(itemValue) => setSelectedService(itemValue)}
-                                itemStyle={{ color: "black", fontSize: 16 }}
-                                dropdownIconColor="black"
-                            >
-                                {servicos.map((servico) => (
-                                <Picker.Item key={servico} label={servico} value={servico} />
-                                ))}
-                            </Picker>
+                            {servicos.length > 0 ? (
+                                <Picker
+                                    selectedValue={selectedServico}
+                                    onValueChange={(itemValue) => setSelectedServico(itemValue)}
+                                    itemStyle={{ color: "black", fontSize: 16 }}
+                                    dropdownIconColor="black"
+                                >
+                                    {servicos.map((servico) => (
+                                        <Picker.Item 
+                                            key={servico.id} 
+                                            label={`${servico.nome} - R$ ${servico.preco.toFixed(2)}`}
+                                            value={servico.id}
+                                        />
+                                    ))}
+                                </Picker>
+                            ) : (
+                                <Text style={{ padding: 10, textAlign: 'center' }}>
+                                    Nenhum serviço encontrado
+                                </Text>
+                            )}
                         </View>
-                        <TouchableOpacity onPress={() => setModalVisible(false)} style={EmpresaInfoMoneyScreenStyle.modalButton}>
+                        <TouchableOpacity onPress={() => setModalServicoVisible(false)} style={EmpresaInfoMoneyScreenStyle.modalButton}>
                             <Text style={{ color: "white" }}>Fechar</Text>
                         </TouchableOpacity>
                     </View>

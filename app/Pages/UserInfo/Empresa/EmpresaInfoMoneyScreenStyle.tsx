@@ -213,13 +213,11 @@ const EmpresaInfoMoneyScreenStyle = StyleSheet.create({
     containerCategorias: {
         marginBottom: 20,
         marginTop: 20,
-        //flexGrow: 1,
         minHeight: 10
     },
     containerServicos: {
         marginBottom: 20,
         marginTop: 20,
-        //flexGrow: 1,
         minHeight: 10
     },
     containerItens: {
@@ -232,7 +230,7 @@ const EmpresaInfoMoneyScreenStyle = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 10,
         paddingHorizontal: 15,
-        backgroundColor: '#333', // Fundo para destacar os itens
+        backgroundColor: '#333', 
         borderRadius: 8,
         width: '90%',
         alignSelf: 'center',
@@ -242,6 +240,21 @@ const EmpresaInfoMoneyScreenStyle = StyleSheet.create({
         height: 25,
         flexDirection: 'row',
         justifyContent: 'space-between'
+    },
+    containerAdd: {
+        width: width,
+        alignItems: 'center',
+        marginTop: 20,
+    },
+    touchableOpacityAdd: {
+        width: width * 0.9,
+        height: 50,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#00C20A',
+        borderRadius: 10,
+        marginTop: 20,
+        margin:'auto'
     }
 });
 

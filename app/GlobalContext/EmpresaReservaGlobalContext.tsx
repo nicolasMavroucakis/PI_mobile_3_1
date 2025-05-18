@@ -47,60 +47,73 @@ interface EmpresaProviderProps {
   children: ReactNode;
 }
 
+interface EmpresaState {
+  id: string;
+  createdAt: Date | null;
+  email: string;
+  endereco: Endereco;
+  funcionarios: string[];
+  nome: string;
+  servicos: Servico[];
+  telefone: string;
+  updatedAt: Date | null;
+  userId: string;
+}
+
 export const EmpresaProvider: React.FC<EmpresaProviderProps> = ({ children }) => {
-  const [id, setId] = useState<string>('');
-  const [createdAt, setCreatedAt] = useState<Date | null>(null);
-  const [email, setEmail] = useState<string>('');
-  const [endereco, setEndereco] = useState<Endereco>({
+  const [state, setState] = useState<EmpresaState>({
+    id: '',
+    createdAt: null,
+    email: '',
+    endereco: {
     cep: '',
     cidade: '',
     complemento: '',
     numero: '',
     rua: '',
+    },
+    funcionarios: [],
+    nome: '',
+    servicos: [],
+    telefone: '',
+    updatedAt: null,
+    userId: ''
   });
-  const [funcionarios, setFuncionarios] = useState<string[]>([]);
-  const [nome, setNome] = useState<string>('');
-  const [servicos, setServicos] = useState<Servico[]>([]);
-  const [telefone, setTelefone] = useState<string>('');
-  const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
-  const [userId, setUserId] = useState<string>('');
 
   const setAll = (data: Partial<EmpresaContextData>) => {
-    if (data.id !== undefined) setId(data.id);
-    if (data.createdAt !== undefined) setCreatedAt(data.createdAt);
-    if (data.email !== undefined) setEmail(data.email);
-    if (data.endereco !== undefined) setEndereco(data.endereco);
-    if (data.funcionarios !== undefined) setFuncionarios(data.funcionarios);
-    if (data.nome !== undefined) setNome(data.nome);
-    if (data.servicos !== undefined) setServicos(data.servicos);
-    if (data.telefone !== undefined) setTelefone(data.telefone);
-    if (data.updatedAt !== undefined) setUpdatedAt(data.updatedAt);
-    if (data.userId !== undefined) setUserId(data.userId);
+    console.log("Dados recebidos no setAll:", data);
+    setState(prevState => {
+      const newState = { ...prevState };
+      if (data.id !== undefined) newState.id = data.id;
+      if (data.createdAt !== undefined) newState.createdAt = data.createdAt;
+      if (data.email !== undefined) newState.email = data.email;
+      if (data.endereco !== undefined) newState.endereco = data.endereco;
+      if (data.funcionarios !== undefined) newState.funcionarios = data.funcionarios;
+      if (data.nome !== undefined) newState.nome = data.nome;
+      if (data.servicos !== undefined) newState.servicos = data.servicos;
+      if (data.telefone !== undefined) newState.telefone = data.telefone;
+      if (data.updatedAt !== undefined) newState.updatedAt = data.updatedAt;
+      if (data.userId !== undefined) newState.userId = data.userId;
+      
+      console.log('Estado atualizado:', newState);
+      return newState;
+    });
   };
 
   return (
     <EmpresaContext.Provider
       value={{
-        id,
-        createdAt,
-        email,
-        endereco,
-        funcionarios,
-        nome,
-        servicos,
-        telefone,
-        updatedAt,
-        userId,
-        setId,
-        setCreatedAt,
-        setEmail,
-        setEndereco,
-        setFuncionarios,
-        setNome,
-        setServicos,
-        setTelefone,
-        setUpdatedAt,
-        setUserId,
+        ...state,
+        setId: (id) => setState(prev => ({ ...prev, id })),
+        setCreatedAt: (createdAt) => setState(prev => ({ ...prev, createdAt })),
+        setEmail: (email) => setState(prev => ({ ...prev, email })),
+        setEndereco: (endereco) => setState(prev => ({ ...prev, endereco })),
+        setFuncionarios: (funcionarios) => setState(prev => ({ ...prev, funcionarios })),
+        setNome: (nome) => setState(prev => ({ ...prev, nome })),
+        setServicos: (servicos) => setState(prev => ({ ...prev, servicos })),
+        setTelefone: (telefone) => setState(prev => ({ ...prev, telefone })),
+        setUpdatedAt: (updatedAt) => setState(prev => ({ ...prev, updatedAt })),
+        setUserId: (userId) => setState(prev => ({ ...prev, userId })),
         setAll,
       }}
     >
