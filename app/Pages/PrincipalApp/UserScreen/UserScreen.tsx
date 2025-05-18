@@ -15,6 +15,7 @@ import ProfileImage from "@/components/ProfileImage";
 type RootStackParamList = {
   ClienteConfig: undefined;
   EmpresaInfoMoneyScreen: undefined;
+  ChangeEmpresaInfo: undefined;
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -125,7 +126,7 @@ const UserScreen: React.FC = () => {
               <Text style={UserScreenStyle.textTitle}>Meus Dados:</Text>
               {usuarioGlobal === "Empresa" && (
                 <TouchableOpacity
-                  onPress={() => console.log("Editar Meus Dados")}
+                  onPress={() => navigation.navigate("ChangeEmpresaInfo")}
                 >
                   <Image source={lapisImg} style={UserScreenStyle.lapisImg} />
                 </TouchableOpacity>

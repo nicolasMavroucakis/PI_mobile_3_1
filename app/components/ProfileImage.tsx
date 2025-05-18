@@ -9,19 +9,21 @@ import defaultProfileImg from '../../assets/images/user.jpeg';
 
 const { db } = StartFirebase();
 
-export interface ProfileImageProps {
+interface IProfileImageProps {
     userId: string;
     size?: number;
     onImageUpdate?: () => void;
     initialImageUrl?: string;
 }
 
-const ProfileImage: React.FC<ProfileImageProps> = ({ 
-    userId, 
-    size = 100, 
-    onImageUpdate, 
-    initialImageUrl 
-}) => {
+const ProfileImage = (props: IProfileImageProps) => {
+    const { 
+        userId, 
+        size = 100, 
+        onImageUpdate, 
+        initialImageUrl 
+    } = props;
+
     const [imageUrl, setImageUrl] = useState<string | null>(initialImageUrl || null);
     const [isLoading, setIsLoading] = useState(!initialImageUrl);
 

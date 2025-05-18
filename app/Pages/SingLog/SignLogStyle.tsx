@@ -61,7 +61,8 @@ const stylesSingLog = StyleSheet.create({
         backgroundColor: '#00C20A',
         justifyContent: 'center',
         alignItems: 'center',
-        marginTop: 20
+        marginTop: 20,
+        marginBottom: 20
     },
     botaoTexto: {
         color: '#fff',
@@ -166,7 +167,48 @@ const stylesSingLog = StyleSheet.create({
         justifyContent: 'center',
         alignContent: 'center', 
         marginTop: '20%' 
-    }
+    },
+    inputContainerTwoInputs: {
+        width: width * 0.43,
+        height: 70,
+        borderRadius: 10,
+        borderWidth: 3,
+        borderColor: '#00C20A',
+        backgroundColor: '#717171',
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        paddingLeft: 10, 
+        color: '#717171'
+      },
+      containerTwoInputs: {
+        width: width * 0.9,
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      },
+      containerAbertoFechado: {
+        width: width * 0.9,
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      },
+      TouchableOpacityAbertoFechado: {
+        width: 30,
+        height: 30,
+        borderRadius: 5,
+        borderColor: '#00C20A',
+        borderWidth: 3
+      },
+      containerAbertoFechadoMenor: {
+        width: 100,
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }
   });
 
 export default stylesSingLog

@@ -20,6 +20,7 @@ import EmpresaInfoFuncionariosScreen from "./Pages/UserInfo/Empresa/EmpresaInfoF
 import EmpresaInfoAgendamentoScreen from "./Pages/UserInfo/Empresa/EmpresaInfoAgendamentoScreen";
 import EmpresaMinhaPaginaScreen from "./Pages/UserInfo/Empresa/EmpresaMinhaPaginaScreen";
 import ReservaScreen from "./Pages/ReservaScreen/ReservaScreen";
+import ChangeEmpresaInfo from "./Pages/SingLog/ChangeEmpresaInfo";
 
 import { UserGlobalContextProvider } from "./GlobalContext/UserGlobalContext";
 import { EmpresaGlobalContextProvider } from "./GlobalContext/EmpresaGlobalContext";
@@ -47,6 +48,7 @@ type RootStackParamList = {
   EmpresaInfoAgendamentoScreen: undefined;
   EmpresaMinhaPaginaScreen: undefined;
   ReservaScreen: undefined;
+  ChangeEmpresaInfo: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -78,6 +80,7 @@ export default function Page() {
               <Stack.Screen name="EmpresaInfoAgendamentoScreen" component={EmpresaInfoAgendamentoScreen} options={{ headerShown: false }} />
               <Stack.Screen name="EmpresaMinhaPaginaScreen" component={EmpresaMinhaPaginaScreen} options={{ headerShown: false }} />
               <Stack.Screen name="ReservaScreen" component={ReservaScreen} options={{ headerShown: false }} />
+              <Stack.Screen name="ChangeEmpresaInfo" component={ChangeEmpresaInfo} options={{ headerShown: false }} />
             </Stack.Navigator>
           </AgendamentoServicosProvider>
         </EmpresaProvider>
