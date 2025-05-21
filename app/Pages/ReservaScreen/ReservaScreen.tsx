@@ -400,6 +400,33 @@ const ReservaScreen = () => {
         return novoAgendamento;
     };
 
+    const encontrarFuncionarioDisponivel = (
+        agendamentosNoDia: Agendamento[], 
+        horaInicio: string, 
+        horaFim: string
+    ): string | null => {
+        // Lista de funcionários disponíveis
+        const funcionariosDisponiveis = funcionarios.filter(funcionario => {
+            // Verifica se o funcionário já tem agendamento neste horário
+            const temAgendamento = agendamentosNoDia.some(agendamento => {
+                if (agendamento.funcionarioId !== funcionario.id) return false;
+
+                const inicioAntes = horaInicio < agendamento.horaFim;
+                const fimDepois = horaFim > agendamento.horaInicio;
+
+                return inicioAntes && fimDepois;
+            });
+
+            return !temAgendamento;
+        });
+
+        if (funcionariosDisponiveis.length === 0) return null;
+
+        // Seleciona um funcionário aleatório entre os disponíveis
+        const indiceAleatorio = Math.floor(Math.random() * funcionariosDisponiveis.length);
+        return funcionariosDisponiveis[indiceAleatorio].id;
+    };
+
     const verificarDisponibilidadeHorarioSelecionado = async () => {
         if (!dataAgendamento) {
             Alert.alert("Atenção", "Por favor, selecione uma data para o agendamento.");
@@ -407,6 +434,16 @@ const ReservaScreen = () => {
         }
 
         try {
+            const horaInicioSelecionada = horaAgendamento.getHours().toString().padStart(2, '0') + ":" + 
+                                        horaAgendamento.getMinutes().toString().padStart(2, '0');
+
+            // Calcula hora fim baseado no tempo total do serviço
+            const tempoTotal = calcularTempoTotal();
+            const duracaoTotal = tempoTotal.horas * 60 + tempoTotal.minutos;
+            const minutosTotal = horaAgendamento.getHours() * 60 + horaAgendamento.getMinutes() + duracaoTotal;
+            const horaFimSelecionada = Math.floor(minutosTotal / 60).toString().padStart(2, '0') + ":" +
+                                     (minutosTotal % 60).toString().padStart(2, '0');
+
             const inicioDia = new Date(dataAgendamento);
             inicioDia.setHours(0, 0, 0, 0);
             const timestampInicio = Timestamp.fromDate(inicioDia);
@@ -415,28 +452,63 @@ const ReservaScreen = () => {
             fimDia.setHours(23, 59, 59, 999);
             const timestampFim = Timestamp.fromDate(fimDia);
 
-            let q;
-            if (funcionarioSelecionado) {
-                q = query(
-                    collection(db, "agendamentos"),
-                    where("data", ">=", timestampInicio),
-                    where("data", "<=", timestampFim),
-                    where("funcionarioId", "==", funcionarioSelecionado.id)
-                );
-            } else {
-                q = query(
-                    collection(db, "agendamentos"),
-                    where("data", ">=", timestampInicio),
-                    where("data", "<=", timestampFim),
-                    where("empresaId", "==", empresa.id)
-                );
-            }
+            // Busca todos os agendamentos do dia para a empresa
+            const agendamentosRef = collection(db, "agendamentos");
+            const q = query(
+                agendamentosRef,
+                where("data", ">=", timestampInicio),
+                where("data", "<=", timestampFim),
+                where("empresaId", "==", empresa.id)
+            );
 
             const querySnapshot = await getDocs(q);
             const agendamentosNoDia = querySnapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             })) as Agendamento[];
+
+            // Se um funcionário específico foi selecionado
+            if (funcionarioSelecionado && funcionarioSelecionado.id !== "sem preferencia") {
+                // Verifica sobreposição para o funcionário específico
+                const temSobreposicao = agendamentosNoDia.some(agendamento => {
+                    if (agendamento.funcionarioId !== funcionarioSelecionado.id) return false;
+
+                    const horaInicioAgendamento = agendamento.horaInicio;
+                    const horaFimAgendamento = agendamento.horaFim;
+
+                    const inicioAntes = horaInicioSelecionada < horaFimAgendamento;
+                    const fimDepois = horaFimSelecionada > horaInicioAgendamento;
+
+                    return inicioAntes && fimDepois;
+                });
+
+                if (temSobreposicao) {
+                    Alert.alert(
+                        "Horário Indisponível",
+                        "O profissional já possui um agendamento neste horário."
+                    );
+                    return false;
+                }
+            } else {
+                // Verifica número de agendamentos paralelos
+                const agendamentosParalelos = agendamentosNoDia.filter(agendamento => {
+                    const horaInicioAgendamento = agendamento.horaInicio;
+                    const horaFimAgendamento = agendamento.horaFim;
+
+                    const inicioAntes = horaInicioSelecionada < horaFimAgendamento;
+                    const fimDepois = horaFimSelecionada > horaInicioAgendamento;
+
+                    return inicioAntes && fimDepois;
+                });
+
+                if (agendamentosParalelos.length >= funcionarios.length) {
+                    Alert.alert(
+                        "Horário Indisponível",
+                        "Todos os profissionais já estão ocupados neste horário."
+                    );
+                    return false;
+                }
+            }
 
             setAgendamentos(agendamentosNoDia);
             console.log(`Encontrados ${agendamentosNoDia.length} agendamentos para ${format(dataAgendamento, 'dd/MM/yyyy')}`);
@@ -497,6 +569,50 @@ const ReservaScreen = () => {
 
             const tempoTotal = calcularTempoTotal();
             const duracaoTotal = tempoTotal.horas * 60 + tempoTotal.minutos;
+            
+            // Calcula hora fim
+            const minutosTotal = horaAgendamento.getHours() * 60 + horaAgendamento.getMinutes() + duracaoTotal;
+            const horaFimSelecionada = Math.floor(minutosTotal / 60).toString().padStart(2, '0') + ":" +
+                                     (minutosTotal % 60).toString().padStart(2, '0');
+
+            // Se não tem funcionário específico, encontra um disponível
+            let funcionarioId = funcionarioSelecionado?.id;
+            if (funcionarioId === "sem preferencia" || !funcionarioId) {
+                // Busca agendamentos do dia para verificar disponibilidade
+                const inicioDia = new Date(dataAgendamento);
+                inicioDia.setHours(0, 0, 0, 0);
+                const timestampInicio = Timestamp.fromDate(inicioDia);
+
+                const fimDia = new Date(dataAgendamento);
+                fimDia.setHours(23, 59, 59, 999);
+                const timestampFim = Timestamp.fromDate(fimDia);
+
+                const q = query(
+                    collection(db, "agendamentos"),
+                    where("data", ">=", timestampInicio),
+                    where("data", "<=", timestampFim),
+                    where("empresaId", "==", empresa.id)
+                );
+
+                const querySnapshot = await getDocs(q);
+                const agendamentosNoDia = querySnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                })) as Agendamento[];
+
+                const funcionarioAleatorio = encontrarFuncionarioDisponivel(
+                    agendamentosNoDia,
+                    horaInicioSelecionada,
+                    horaFimSelecionada
+                );
+
+                if (!funcionarioAleatorio) {
+                    Alert.alert("Erro", "Não foi possível encontrar um profissional disponível");
+                    return;
+                }
+
+                funcionarioId = funcionarioAleatorio;
+            }
 
             const servicosNomes = servicosSelecionados.map(s => s.nome).join(" + ");
 
@@ -504,7 +620,7 @@ const ReservaScreen = () => {
                 clienteId: userId,
                 data: dataAgendamento,
                 empresaId: empresa.id,
-                funcionarioId: funcionarioSelecionado?.id || "sem preferencia",
+                funcionarioId: funcionarioId,
                 servico: {
                     nome: servicosNomes,
                     duracao: duracaoTotal,
@@ -516,9 +632,12 @@ const ReservaScreen = () => {
             const agendamentosRef = collection(db, "agendamentos");
             const docRef = await addDoc(agendamentosRef, novoAgendamento);
 
+            // Encontra o nome do funcionário para mostrar na mensagem
+            const funcionarioEscolhido = funcionarios.find(f => f.id === funcionarioId);
+            
             Alert.alert(
                 "Sucesso",
-                "Agendamento realizado com sucesso!",
+                `Agendamento realizado com sucesso!\n${funcionarioEscolhido ? `Profissional: ${funcionarioEscolhido.nome}` : ''}`,
                 [
                     {
                         text: "OK",
