@@ -56,6 +56,11 @@ const ReservaScreenStyle = StyleSheet.create({
         alignItems: 'center',
         textAlign: 'center',
     },
+    funcionarioSelecionado: {
+        backgroundColor: '#008B07',
+        borderRadius: 10,
+        padding: 5,
+    },
     linha: {
         width: 2,
         height: 100,

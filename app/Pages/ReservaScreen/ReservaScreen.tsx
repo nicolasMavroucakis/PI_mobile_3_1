@@ -1,12 +1,28 @@
 import { AntDesign } from "@expo/vector-icons";
-import { View, Text, ScrollView, TouchableOpacity, Image } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Image, Alert } from "react-native";
 import ReservaScreenStyle from "./ReservascreenStyle";
 import CalendarioImg from '../../../assets/images/Calendario.png'
 import RelogioImg from '../../../assets/images/relogio.png'
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useAgendamentoServicos } from "@/app/GlobalContext/AgendamentoServicosGlobalContext";
+import { collection, query, where, getDocs, Timestamp, doc, getDoc } from "firebase/firestore";
+import StartFirebase from "@/app/crud/firebaseConfig";
+import { format } from 'date-fns';
+import { useEffect, useState } from "react";
+import { useEmpresaContext } from "@/app/GlobalContext/EmpresaReservaGlobalContext";
+
+const { db } = StartFirebase();
+
+interface Funcionario {
+    id: string;
+    nome: string;
+    fotoPerfil: string;
+    especialidade?: string;
+}
 
 const ReservaScreen = () => {
+    const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
+    const empresa = useEmpresaContext();
     const { 
         dataAgendamento,
         definirData,
@@ -16,14 +32,123 @@ const ReservaScreen = () => {
         calcularTempoTotal
     } = useAgendamentoServicos();
 
-    const onChange = (event: any, selectedDate: any) => {
-        if (selectedDate) {
-            definirData(selectedDate);
+    const carregarFuncionarios = async () => {
+        console.log("IDs dos funcionários recebidos:", empresa.funcionarios);
+        if (!empresa.funcionarios?.length) return;
+        try {
+            // Buscar os detalhes de cada funcionário
+            const funcionariosPromises = empresa.funcionarios.map(async (funcionarioId) => {
+                try {
+                    console.log("Buscando funcionário com ID:", funcionarioId);
+                    const funcionarioDoc = await getDoc(doc(db, "users", funcionarioId));
+                    if (funcionarioDoc.exists()) {
+                        const funcionarioData = funcionarioDoc.data();
+                        console.log("Dados do funcionário encontrado:", funcionarioData);
+                        return {
+                            id: funcionarioId,
+                            nome: funcionarioData.nome || "Nome não disponível",
+                            fotoPerfil: funcionarioData.fotoPerfil || "",
+                            especialidade: funcionarioData.especialidade
+                        };
+                    }
+                    console.log("Funcionário não encontrado para o ID:", funcionarioId);
+                    return null;
+                } catch (error) {
+                    console.error(`Erro ao buscar funcionário ${funcionarioId}:`, error);
+                    return null;
+                }
+            });
+
+            const funcionariosDetalhados = await Promise.all(funcionariosPromises);
+            setFuncionarios(funcionariosDetalhados.filter((f): f is NonNullable<typeof f> => f !== null) as Funcionario[]);
+        } catch (error) {
+            console.error("Erro ao carregar funcionários:", error);
+            Alert.alert(
+                "Erro",
+                "Não foi possível carregar a lista de funcionários."
+            );
         }
     };
 
-    const handleSelecionarFuncionario = (funcionario: any) => {
+    useEffect(() => {
+        carregarFuncionarios();
+    }, [empresa.funcionarios]);
+
+    const verificarDisponibilidade = async (data: Date, funcionarioId: string | null) => {
+        try {
+            const inicioDia = new Date(data);
+            inicioDia.setHours(0, 0, 0, 0);
+            const timestampInicio = Timestamp.fromDate(inicioDia);
+
+            const fimDia = new Date(data);
+            fimDia.setHours(23, 59, 59, 999);
+            const timestampFim = Timestamp.fromDate(fimDia);
+
+            let q = query(
+                collection(db, "agendamentos"),
+                where("data", ">=", timestampInicio),
+                where("data", "<=", timestampFim)
+            );
+
+            if (funcionarioId) {
+                q = query(
+                    collection(db, "agendamentos"),
+                    where("data", ">=", timestampInicio),
+                    where("data", "<=", timestampFim),
+                    where("funcionarioId", "==", funcionarioId)
+                );
+            }
+
+            const querySnapshot = await getDocs(q);
+            const agendamentosNoDia = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+
+            if (agendamentosNoDia.length > 0) {
+                const dataFormatada = format(data, 'dd/MM/yyyy');
+                if (funcionarioId) {
+                    Alert.alert(
+                        "Atenção",
+                        `O funcionário selecionado já possui ${agendamentosNoDia.length} agendamento(s) para o dia ${dataFormatada}. Verifique outros horários disponíveis.`
+                    );
+                } else {
+                    Alert.alert(
+                        "Informação",
+                        `Existem ${agendamentosNoDia.length} agendamento(s) para o dia ${dataFormatada}.`
+                    );
+                }
+            }
+
+            return agendamentosNoDia;
+        } catch (error) {
+            console.error("Erro ao verificar disponibilidade:", error);
+            Alert.alert(
+                "Erro",
+                "Não foi possível verificar a disponibilidade. Tente novamente."
+            );
+            return [];
+        }
+    };
+
+    const onChange = async (event: any, selectedDate: any) => {
+        if (selectedDate) {
+            definirData(selectedDate);
+            await verificarDisponibilidade(
+                selectedDate,
+                funcionarioSelecionado?.id || null
+            );
+        }
+    };
+
+    const handleSelecionarFuncionario = async (funcionario: any) => {
         selecionarFuncionario(funcionario);
+        if (dataAgendamento) {
+            await verificarDisponibilidade(
+                dataAgendamento,
+                funcionario?.id || null
+            );
+        }
     };
 
     const valorTotal = calcularValorTotal();
@@ -48,7 +173,7 @@ const ReservaScreen = () => {
                     </View>
                     <View>
                         <Text style={{fontSize: 25, fontWeight: 'bold', color: '#00C20A'}}>
-                            Fazer uma Reserva
+                            {empresa.nome} - Reserva
                         </Text>
                     </View>
                 </View>
@@ -68,6 +193,7 @@ const ReservaScreen = () => {
                                 onChange={onChange}
                                 textColor="red"
                                 style={{zIndex: 1000}}
+                                minimumDate={new Date()}
                             />
                             <View style={{ backgroundColor: 'white', width: 110, height: 30, position: 'relative', top: 0, borderRadius:4, left: -113}} />
                         </View>
@@ -93,7 +219,10 @@ const ReservaScreen = () => {
                 >
                     <View style={ReservaScreenStyle.containerFuncionarios}>
                         <TouchableOpacity 
-                            style={ReservaScreenStyle.containerSelecionarFuncionarioImagemTexto}
+                            style={[
+                                ReservaScreenStyle.containerSelecionarFuncionarioImagemTexto,
+                                !funcionarioSelecionado && ReservaScreenStyle.funcionarioSelecionado
+                            ]}
                             onPress={() => handleSelecionarFuncionario(null)}
                         >
                             <Image source={require('../../../assets/images/user.jpeg')} style={{width: 50, height: 50, borderRadius: 50}}/>
@@ -102,45 +231,33 @@ const ReservaScreen = () => {
                             </Text>
                         </TouchableOpacity>
                         <View style={ReservaScreenStyle.linha}/>
-                        <TouchableOpacity 
-                            style={ReservaScreenStyle.containerSelecionarFuncionarioImagemTexto}
-                            onPress={() => handleSelecionarFuncionario({
-                                id: '1',
-                                nome: 'Zeca',
-                                foto: '../../../assets/images/user.jpeg'
-                            })}
-                        >
-                            <Image source={require('../../../assets/images/user.jpeg')} style={{width: 50, height: 50, borderRadius: 50}}/>
-                            <Text style={{fontSize: 15, color: '#fff', textAlign: 'center'}}>
-                                Zeca
-                            </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity 
-                            style={ReservaScreenStyle.containerSelecionarFuncionarioImagemTexto}
-                            onPress={() => handleSelecionarFuncionario({
-                                id: '2',
-                                nome: 'Jose',
-                                foto: '../../../assets/images/user.jpeg'
-                            })}
-                        >
-                            <Image source={require('../../../assets/images/user.jpeg')} style={{width: 50, height: 50, borderRadius: 50}}/>
-                            <Text style={{fontSize: 15, color: '#fff', textAlign: 'center'}}>
-                                Jose
-                            </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity 
-                            style={ReservaScreenStyle.containerSelecionarFuncionarioImagemTexto}
-                            onPress={() => handleSelecionarFuncionario({
-                                id: '3',
-                                nome: 'Pricles',
-                                foto: '../../../assets/images/user.jpeg'
-                            })}
-                        >
-                            <Image source={require('../../../assets/images/user.jpeg')} style={{width: 50, height: 50, borderRadius: 50}}/>
-                            <Text style={{fontSize: 15, color: '#fff', textAlign: 'center'}}>
-                                Pricles
-                            </Text>
-                        </TouchableOpacity>
+                        {funcionarios.map((funcionario) => (
+                            <TouchableOpacity 
+                                key={funcionario.id}
+                                style={[
+                                    ReservaScreenStyle.containerSelecionarFuncionarioImagemTexto,
+                                    funcionarioSelecionado?.id === funcionario.id && ReservaScreenStyle.funcionarioSelecionado
+                                ]}
+                                onPress={() => handleSelecionarFuncionario(funcionario)}
+                            >
+                                <Image 
+                                    source={
+                                        funcionario.fotoPerfil 
+                                            ? { uri: funcionario.fotoPerfil } 
+                                            : require('../../../assets/images/user.jpeg')
+                                    } 
+                                    style={{width: 50, height: 50, borderRadius: 50}}
+                                />
+                                <Text style={{fontSize: 15, color: '#fff', textAlign: 'center'}}>
+                                    {funcionario.nome}
+                                </Text>
+                                {funcionario.especialidade && (
+                                    <Text style={{fontSize: 12, color: 'rgba(255, 255, 255, 0.7)', textAlign: 'center'}}>
+                                        {funcionario.especialidade}
+                                    </Text>
+                                )}
+                            </TouchableOpacity>
+                        ))}
                     </View>
                 </ScrollView>
             </ScrollView>
