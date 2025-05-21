@@ -28,8 +28,6 @@ const ReservaScreenStyle = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         backgroundColor: '#323232',
-        borderTopLeftRadius: 15,
-        borderTopRightRadius: 15,
         paddingLeft: 20,
         paddingRight: 20,
     },
@@ -105,6 +103,61 @@ const ReservaScreenStyle = StyleSheet.create({
     textDataeHoraDireita: {
         textAlign: 'right',
         marginRight: width * 0.05
+    },
+    ContainerCalendario: {
+        width: width,
+        backgroundColor: '#f5f5f0',
+        marginTop: 20,
+        paddingBottom: 20
+    },
+    linhaEntreHorarios: {
+        height: 1,
+        width: width - 40,
+        backgroundColor: '#e0e0e0',
+        zIndex: 1,
+    },
+    containerHoraLinha: {
+        width: width,
+        height: 20,
+        display: 'flex',
+        flexDirection: 'row',
+        gap: 10,
+        alignItems: 'center',
+        zIndex: 1,
+    },
+    espacoParaAgendamentos: {
+        minHeight: 80,
+        marginLeft: 40,
+        flexDirection: 'row',
+        paddingRight: 10,
+        zIndex: 2,
+    },
+    boxAgendamento: {
+        width: width - 60,
+        backgroundColor: '#00C20A',
+        borderRadius: 8,
+        padding: 10,
+        marginRight: 10,
+        zIndex: 2,
+        elevation: 3, // Para Android
+        shadowColor: '#000', // Para iOS
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+    },
+    textAgendamento: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#fff',
+        textAlign: 'center',
+    },
+    containerTextAgendamento: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
     }
 })
 export default ReservaScreenStyle
