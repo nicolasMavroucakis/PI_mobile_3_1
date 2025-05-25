@@ -108,7 +108,9 @@ const ReservaScreenStyle = StyleSheet.create({
         width: width,
         backgroundColor: '#f5f5f0',
         marginTop: 20,
-        paddingBottom: 20
+        paddingBottom: 20,
+        flex: 1,
+        minHeight: height - 300
     },
     linhaEntreHorarios: {
         height: 1,
@@ -139,8 +141,8 @@ const ReservaScreenStyle = StyleSheet.create({
         padding: 10,
         marginRight: 10,
         zIndex: 2,
-        elevation: 3, // Para Android
-        shadowColor: '#000', // Para iOS
+        elevation: 3,
+        shadowColor: '#000',
         shadowOffset: {
             width: 0,
             height: 2,
@@ -149,10 +151,11 @@ const ReservaScreenStyle = StyleSheet.create({
         shadowRadius: 3.84,
     },
     textAgendamento: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: 'bold',
         color: '#fff',
         textAlign: 'center',
+        marginBottom: 4
     },
     containerTextAgendamento: {
         flex: 1,
@@ -160,4 +163,5 @@ const ReservaScreenStyle = StyleSheet.create({
         alignItems: 'center',
     }
 })
-export default ReservaScreenStyle
+
+export default ReservaScreenStyle;

@@ -19,6 +19,7 @@ import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext";
 type RootStackParamList = {
     UserScreen: undefined;
     SignFuncionario: undefined;
+    ConfigEmpresaInfo: undefined;
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -30,32 +31,45 @@ interface Funcionario {
 }
 
 interface Servico {
-    id: string;
+    id: string; 
     nome: string;
     preco: number;
     categoria: string;
 }
 
+interface AgendamentoDoc {
+    id: string; 
+    data: any; 
+    status?: string;
+    funcionarioId?: string; 
+    servico: { 
+        nome: string;
+        preco: number;
+        duracao: number;
+    };
+}
+
+
 const EmpresaInfoFuncionariosScreen = () => {
     const navigation = useNavigation<NavigationProp>();
     const { db } = StartFirebase();
     const { id: userId } = useUserGlobalContext();
-    
-    // Estados para funcionário
+
     const [selectedFuncionario, setSelectedFuncionario] = useState<string>("");
     const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
     const [modalFuncionarioVisible, setModalFuncionarioVisible] = useState(false);
-    
-    // Estados para serviço
+
     const [selectedServico, setSelectedServico] = useState<string>("");
     const [servicos, setServicos] = useState<Servico[]>([]);
     const [modalServicoVisible, setModalServicoVisible] = useState(false);
-    
+
     const [loading, setLoading] = useState(true);
     const [dateServicosReservados, setDateServicosReservados] = useState(new Date());
     const [dateServicosRealizados, setDateServicosRealizados] = useState(new Date());
 
-    const [agendamentos, setAgendamentos] = useState<{ id: string; data: any; status: string | undefined }[]>([]);
+    const [allAgendamentos, setAllAgendamentos] = useState<AgendamentoDoc[]>([]);
+    const [agendamentosDoFuncionario, setAgendamentosDoFuncionario] = useState<AgendamentoDoc[]>([]);
+
     const [agendamentosFinalizadosHoje, setAgendamentosFinalizadosHoje] = useState(0);
     const [agendamentosAindaParaHoje, setAgendamentosAindaParaHoje] = useState(0);
 
@@ -75,7 +89,6 @@ const EmpresaInfoFuncionariosScreen = () => {
         setDateServicosRealizados(currentDate);
     };
 
-    // Carregar funcionários
     useEffect(() => {
         const carregarFuncionarios = async () => {
             try {
@@ -85,6 +98,9 @@ const EmpresaInfoFuncionariosScreen = () => {
 
                 if (empresasSnapshot.empty) {
                     console.log("Nenhuma empresa encontrada para o usuário.");
+                    setFuncionarios([]);
+                    setSelectedFuncionario("");
+                    setLoading(false);
                     return;
                 }
 
@@ -94,13 +110,17 @@ const EmpresaInfoFuncionariosScreen = () => {
 
                 const funcionariosData: Funcionario[] = [];
 
-                for (const funcionarioId of funcionariosIds) {
-                    const funcionarioDoc = await getDocs(collection(db, "users"));
-                    funcionarioDoc.forEach((doc) => {
-                        if (doc.id === funcionarioId) {
+                if (funcionariosIds.length > 0) {
+                    const usersRef = collection(db, "users");
+                    const qUsers = query(usersRef, where("__name__", "in", funcionariosIds));
+
+                    const usersSnapshot = await getDocs(qUsers);
+                    usersSnapshot.forEach(doc => {
+                        const funcionarioId = doc.id;
+                        if (funcionariosIds.includes(funcionarioId)) {
                             const funcionarioData = doc.data();
                             funcionariosData.push({
-                                id: doc.id,
+                                id: funcionarioId,
                                 nome: funcionarioData.nome || "",
                                 email: funcionarioData.email || ""
                             });
@@ -108,9 +128,12 @@ const EmpresaInfoFuncionariosScreen = () => {
                     });
                 }
 
+
                 setFuncionarios(funcionariosData);
                 if (funcionariosData.length > 0) {
                     setSelectedFuncionario(funcionariosData[0].id);
+                } else {
+                    setSelectedFuncionario("");
                 }
             } catch (error) {
                 console.error("Erro ao carregar funcionários:", error);
@@ -118,9 +141,8 @@ const EmpresaInfoFuncionariosScreen = () => {
         };
 
         carregarFuncionarios();
-    }, [userId]);
+    }, [userId, db]);
 
-    // Carregar serviços
     useEffect(() => {
         const carregarServicos = async () => {
             try {
@@ -128,13 +150,17 @@ const EmpresaInfoFuncionariosScreen = () => {
                 const qEmpresas = query(empresasRef, where("userId", "==", userId));
                 const empresasSnapshot = await getDocs(qEmpresas);
 
-                if (empresasSnapshot.empty) return;
+                if (empresasSnapshot.empty) {
+                    setServicos([]);
+                    setSelectedServico("");
+                    return;
+                }
 
                 const empresaDoc = empresasSnapshot.docs[0];
                 const empresaData = empresaDoc.data();
                 const servicosData = empresaData.servicos || [];
 
-                const servicosList = servicosData.map((servico: any) => ({
+                const servicosList: Servico[] = servicosData.map((servico: any) => ({
                     id: servico.id,
                     nome: servico.nome,
                     preco: servico.preco,
@@ -144,6 +170,8 @@ const EmpresaInfoFuncionariosScreen = () => {
                 setServicos(servicosList);
                 if (servicosList.length > 0) {
                     setSelectedServico(servicosList[0].id);
+                } else {
+                    setSelectedServico("");
                 }
             } catch (error) {
                 console.error("Erro ao carregar serviços:", error);
@@ -151,101 +179,171 @@ const EmpresaInfoFuncionariosScreen = () => {
         };
 
         carregarServicos();
-    }, [userId]);
+    }, [userId, db]);
 
-    // Carregar agendamentos do funcionário selecionado
     useEffect(() => {
-        const carregarAgendamentos = async () => {
-            if (!selectedFuncionario) return;
-
+        const carregarTodosAgendamentosDaEmpresa = async () => {
             try {
+                const empresasRef = collection(db, "empresas");
+                const qEmpresas = query(empresasRef, where("userId", "==", userId));
+                const empresasSnapshot = await getDocs(qEmpresas);
+
+                if (empresasSnapshot.empty) {
+                    setAllAgendamentos([]);
+                    setLoading(false);
+                    return;
+                }
+
+                const empresaDoc = empresasSnapshot.docs[0];
+                const empresaId = empresaDoc.id;
+
                 const agendamentosRef = collection(db, "agendamentos");
-                const qAgendamentos = query(
-                    agendamentosRef, 
-                    where("funcionarioId", "==", selectedFuncionario)
-                );
+                const qAgendamentos = query(agendamentosRef, where("empresaId", "==", empresaId));
                 const agendamentosSnapshot = await getDocs(qAgendamentos);
 
-                const agendamentosList = agendamentosSnapshot.docs.map(doc => {
+                const agendamentosList: AgendamentoDoc[] = agendamentosSnapshot.docs.map(doc => {
                     const data = doc.data();
                     return {
                         id: doc.id,
                         data: data.data,
                         status: data.status || undefined,
+                        funcionarioId: data.funcionarioId || undefined,
+                        servico: data.servico || { nome: "Desconhecido", preco: 0, duracao: 0 },
                         ...data,
                     };
                 });
+                setAllAgendamentos(agendamentosList);
+                console.log("Todos os agendamentos da empresa carregados:", agendamentosList.length);
 
-                const today = new Date().toISOString().split("T")[0];
-
-                const agendamentosHoje = agendamentosList.filter(agendamento => {
-                    const agendamentoData = agendamento.data.toDate().toISOString().split("T")[0];
-                    return agendamentoData === today;
-                });
-
-                const finalizadosHoje = agendamentosHoje.filter(
-                    agendamento => agendamento.status === "finalizado"
-                );
-
-                setAgendamentos(agendamentosList);
-                setAgendamentosFinalizadosHoje(finalizadosHoje.length);
-                setAgendamentosAindaParaHoje(agendamentosHoje.length);
             } catch (error) {
-                console.error("Erro ao carregar agendamentos:", error);
+                console.error("Erro ao carregar todos os agendamentos da empresa:", error);
+            } finally {
+                setLoading(false);
             }
         };
+        carregarTodosAgendamentosDaEmpresa();
+    }, [userId, db]);
 
-        carregarAgendamentos();
-    }, [selectedFuncionario]);
-
-    // Carregar estatísticas por serviço do funcionário
     useEffect(() => {
-        const carregarEstatisticasServico = async () => {
-            if (!selectedFuncionario || !selectedServico) return;
+        if (!selectedFuncionario || allAgendamentos.length === 0) {
+            setAgendamentosDoFuncionario([]);
+            setAgendamentosAindaParaHoje(0);
+            setAgendamentosFinalizadosHoje(0);
+            return;
+        }
 
-            try {
-                const agendamentosRef = collection(db, "agendamentos");
-                const qAgendamentos = query(
-                    agendamentosRef,
-                    where("funcionarioId", "==", selectedFuncionario),
-                    where("servicoId", "==", selectedServico)
-                );
-                const agendamentosSnapshot = await getDocs(qAgendamentos);
+        const agendamentosFiltradosPorFuncionario = allAgendamentos.filter(
+            agendamento => agendamento.funcionarioId === selectedFuncionario
+        );
+        setAgendamentosDoFuncionario(agendamentosFiltradosPorFuncionario);
+        console.log(`Agendamentos para o funcionário ${selectedFuncionario}:`, agendamentosFiltradosPorFuncionario.length);
 
-                const agendamentosList = agendamentosSnapshot.docs.map(doc => doc.data());
 
-                // Filtrar por data selecionada para serviços reservados
-                const dataReservados = dateServicosReservados.toISOString().split("T")[0];
-                const reservadosNaData = agendamentosList.filter(agendamento => {
-                    const agendamentoData = agendamento.data.toDate().toISOString().split("T")[0];
-                    return agendamentoData === dataReservados;
-                });
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayISO = today.toISOString().split("T")[0];
 
-                // Filtrar por data selecionada para serviços realizados
-                const dataRealizados = dateServicosRealizados.toISOString().split("T")[0];
-                const realizadosNaData = agendamentosList.filter(agendamento => {
-                    const agendamentoData = agendamento.data.toDate().toISOString().split("T")[0];
-                    return agendamentoData === dataRealizados && agendamento.status === "finalizado";
-                });
-
-                // Atualizar estatísticas
-                setQuantidadeServicosReservados(reservadosNaData.length);
-                setValorTotalServicosReservados(
-                    reservadosNaData.reduce((total, agend) => total + (agend.servico?.preco || 0), 0)
-                );
-
-                setQuantidadeServicosRealizados(realizadosNaData.length);
-                setValorTotalServicosRealizados(
-                    realizadosNaData.reduce((total, agend) => total + (agend.servico?.preco || 0), 0)
-                );
-
-            } catch (error) {
-                console.error("Erro ao carregar estatísticas do serviço:", error);
+        const agendamentosHoje = agendamentosFiltradosPorFuncionario.filter(agendamento => {
+            if (agendamento.data && typeof agendamento.data.toDate === 'function') {
+                const agendamentoDate = agendamento.data.toDate();
+                agendamentoDate.setHours(0, 0, 0, 0);
+                return agendamentoDate.toISOString().split("T")[0] === todayISO;
             }
+            return false;
+        });
+
+        const finalizadosHoje = agendamentosHoje.filter(
+            agendamento => agendamento.status === "finalizado"
+        );
+
+        setAgendamentosAindaParaHoje(agendamentosHoje.length);
+        setAgendamentosFinalizadosHoje(finalizadosHoje.length);
+
+    }, [selectedFuncionario, allAgendamentos]);
+
+    useEffect(() => {
+        const calcularServicosReservados = () => {
+            if (!selectedFuncionario || agendamentosDoFuncionario.length === 0) {
+                setQuantidadeServicosReservados(0);
+                setValorTotalServicosReservados(0);
+                return;
+            }
+
+            const selectedDateISO = dateServicosReservados.toISOString().split("T")[0];
+            const selectedServicoName = servicos.find(s => s.id === selectedServico)?.nome;
+
+            const agendamentosFiltrados = agendamentosDoFuncionario.filter(agendamento => {
+                if (agendamento.data && typeof agendamento.data.toDate === 'function') {
+                    const agendamentoDataISO = agendamento.data.toDate().toISOString().split("T")[0];
+
+                    const isDateMatch = agendamentoDataISO === selectedDateISO;
+                    const isServiceMatch = selectedServico === "" || (agendamento.servico && agendamento.servico.nome === selectedServicoName);
+                    const isStatusAgendado = agendamento.status === "agendado";
+
+                    return isDateMatch && isServiceMatch && isStatusAgendado;
+                }
+                return false;
+            });
+
+            const quantidade = agendamentosFiltrados.length;
+            const valor = agendamentosFiltrados.reduce((total, agendamento) => {
+                return total + (agendamento.servico?.preco || 0);
+            }, 0);
+
+            console.log(`[Reservados - AGENDADO] Func: ${selectedFuncionario}, Data: ${selectedDateISO}, Serv: ${selectedServicoName || 'Todos'}`);
+            console.log("Quantidade de serviços reservados:", quantidade);
+            console.log("Valor total dos serviços reservados:", valor);
+
+            setQuantidadeServicosReservados(quantidade);
+            setValorTotalServicosReservados(valor);
         };
 
-        carregarEstatisticasServico();
-    }, [selectedFuncionario, selectedServico, dateServicosReservados, dateServicosRealizados]);
+        if (!loading && servicos.length > 0) {
+            calcularServicosReservados();
+        }
+    }, [dateServicosReservados, selectedServico, agendamentosDoFuncionario, servicos, loading, selectedFuncionario]); 
+
+    useEffect(() => {
+        const calcularServicosRealizados = () => {
+            if (!selectedFuncionario || agendamentosDoFuncionario.length === 0) {
+                setQuantidadeServicosRealizados(0);
+                setValorTotalServicosRealizados(0);
+                return;
+            }
+
+            const selectedDateISO = dateServicosRealizados.toISOString().split("T")[0];
+            const selectedServicoName = servicos.find(s => s.id === selectedServico)?.nome;
+
+            const agendamentosFiltrados = agendamentosDoFuncionario.filter(agendamento => {
+                if (agendamento.data && typeof agendamento.data.toDate === 'function') {
+                    const agendamentoDataISO = agendamento.data.toDate().toISOString().split("T")[0];
+
+                    const isDateMatch = agendamentoDataISO === selectedDateISO;
+                    const isServiceMatch = selectedServico === "" || (agendamento.servico && agendamento.servico.nome === selectedServicoName);
+                    const isStatusFinalizado = agendamento.status === "finalizado";
+
+                    return isDateMatch && isServiceMatch && isStatusFinalizado;
+                }
+                return false;
+            });
+
+            const quantidade = agendamentosFiltrados.length;
+            const valor = agendamentosFiltrados.reduce((total, agendamento) => {
+                return total + (agendamento.servico?.preco || 0);
+            }, 0);
+
+            console.log(`[Realizados - FINALIZADO] Func: ${selectedFuncionario}, Data: ${selectedDateISO}, Serv: ${selectedServicoName || 'Todos'}`);
+            console.log("Quantidade de serviços realizados:", quantidade);
+            console.log("Valor total dos serviços realizados:", valor);
+
+            setQuantidadeServicosRealizados(quantidade);
+            setValorTotalServicosRealizados(valor);
+        };
+
+        if (!loading && servicos.length > 0) {
+            calcularServicosRealizados();
+        }
+    }, [dateServicosRealizados, selectedServico, agendamentosDoFuncionario, servicos, loading, selectedFuncionario]); // Dependência adicionada aqui
 
     return (
         <View style={{ flex: 1, backgroundColor: "#000" }}>
@@ -254,7 +352,7 @@ const EmpresaInfoFuncionariosScreen = () => {
                     <Image source={setaImg} style={EmpresaInfoMoneyScreenStyle.tamanhoImagensContainerTitle} />
                 </TouchableOpacity>
                 <Text style={UserScreenStyle.textTitle}>Funcionarios</Text>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate("ConfigEmpresaInfo")}>
                     <Image source={engrenagemImg} style={EmpresaInfoMoneyScreenStyle.tamanhoImagensContainerTitle} />
                 </TouchableOpacity>
             </View>
@@ -324,7 +422,7 @@ const EmpresaInfoFuncionariosScreen = () => {
                                         textColor="red"
                                         style={{zIndex: 1000}}
                                     />
-                                    <View style={{ backgroundColor: 'white', width: 110, height: 30, position: 'relative', top: 0, left: -113, borderRadius:4}} />
+                                    <View style={{ backgroundColor: 'white', width: 120, height: 30, position: 'relative', top: 0, left: -120, borderRadius:4}} />
                                 </View>
                             </View>
                             <View style={[EmpresaInfoMoneyScreenStyle.containerFilterDireita, { alignItems: 'flex-end', justifyContent: 'center' }]}>
@@ -336,7 +434,7 @@ const EmpresaInfoFuncionariosScreen = () => {
                                     style={[EmpresaInfoMoneyScreenStyle.containerFilterFiltrosEsquerda, { backgroundColor: "rgba(50, 50, 50, 0.8)", padding: 10, borderRadius: 8, justifyContent: 'flex-end', }]}
                                 >
                                     <Text style={{ color: "white" }}>
-                                        {servicos.find(s => s.id === selectedServico)?.nome || "Selecione um serviço"}
+                                        {servicos.find(s => s.id === selectedServico)?.nome || "Selec. um serviço"}
                                     </Text>
                                     <Image source={ferramentaImg} style={[EmpresaInfoMoneyScreenStyle.imgFiltros, { marginLeft: 10 }]} />
                                 </TouchableOpacity>
@@ -371,8 +469,6 @@ const EmpresaInfoFuncionariosScreen = () => {
                             </View>
                         </View>
                     </View>
-
-                    {/* Serviços Realizados */}
                     <View style={EmpresaInfoMoneyScreenStyle.containerServicoReservado}>
                         <View>
                             <Text style={EmpresaInfoMoneyScreenStyle.titleSecundarios}>
@@ -394,7 +490,7 @@ const EmpresaInfoFuncionariosScreen = () => {
                                         textColor="red"
                                         style={{zIndex: 1000}}
                                     />
-                                    <View style={{ backgroundColor: 'white', width: 110, height: 30, position: 'relative', top: 0, left: -113, borderRadius:4}} />
+                                    <View style={{ backgroundColor: 'white', width: 120, height: 30, position: 'relative', top: 0, left: -123, borderRadius:4}} />
                                 </View>
                             </View>
                             <View style={[EmpresaInfoMoneyScreenStyle.containerFilterDireita, { alignItems: 'flex-end', justifyContent: 'center' }]}>
@@ -406,7 +502,7 @@ const EmpresaInfoFuncionariosScreen = () => {
                                     style={[EmpresaInfoMoneyScreenStyle.containerFilterFiltrosEsquerda, { backgroundColor: "rgba(50, 50, 50, 0.8)", padding: 10, borderRadius: 8, justifyContent: 'flex-end' }]}
                                 >
                                     <Text style={{ color: "white" }}>
-                                        {servicos.find(s => s.id === selectedServico)?.nome || "Selecione um serviço"}
+                                        {servicos.find(s => s.id === selectedServico)?.nome || "Selec. um serviço"}
                                     </Text>
                                     <Image source={ferramentaImg} style={[EmpresaInfoMoneyScreenStyle.imgFiltros, { marginLeft: 10 }]} />
                                 </TouchableOpacity>
@@ -441,17 +537,9 @@ const EmpresaInfoFuncionariosScreen = () => {
                             </View>
                         </View>
                     </View>
-
-                    <View>
-                        <TouchableOpacity style={EmpresaInfoMoneyScreenStyle.touchableOpacityAdd} onPress={() => navigation.navigate("SignFuncionario")}>
-                            <Text style={{color: 'white', fontWeight: 'bold',fontSize: 18}}>Adicionar Funcionário</Text>
-                        </TouchableOpacity>
-                    </View>
                 </View>
             </ScrollView>
             <EmpresaNavBar/>
-
-            {/* Modal de Seleção de Funcionário */}
             <Modal visible={modalFuncionarioVisible} transparent animationType="slide">
                 <View style={EmpresaInfoMoneyScreenStyle.modalContainer}>
                     <View style={EmpresaInfoMoneyScreenStyle.modalContent}>
@@ -460,14 +548,17 @@ const EmpresaInfoFuncionariosScreen = () => {
                             {funcionarios.length > 0 ? (
                                 <Picker
                                     selectedValue={selectedFuncionario}
-                                    onValueChange={(itemValue) => setSelectedFuncionario(itemValue)}
+                                    onValueChange={(itemValue) => {
+                                        setSelectedFuncionario(itemValue);
+                                        setModalFuncionarioVisible(false); // Fechar modal ao selecionar
+                                    }}
                                     itemStyle={{ color: "black", fontSize: 16 }}
                                     dropdownIconColor="black"
                                 >
                                     {funcionarios.map((funcionario) => (
-                                        <Picker.Item 
-                                            key={funcionario.id} 
-                                            label={funcionario.nome} 
+                                        <Picker.Item
+                                            key={funcionario.id}
+                                            label={funcionario.nome}
                                             value={funcionario.id}
                                         />
                                     ))}
@@ -484,8 +575,6 @@ const EmpresaInfoFuncionariosScreen = () => {
                     </View>
                 </View>
             </Modal>
-
-            {/* Modal de Seleção de Serviço */}
             <Modal visible={modalServicoVisible} transparent animationType="slide">
                 <View style={EmpresaInfoMoneyScreenStyle.modalContainer}>
                     <View style={EmpresaInfoMoneyScreenStyle.modalContent}>
@@ -494,13 +583,16 @@ const EmpresaInfoFuncionariosScreen = () => {
                             {servicos.length > 0 ? (
                                 <Picker
                                     selectedValue={selectedServico}
-                                    onValueChange={(itemValue) => setSelectedServico(itemValue)}
+                                    onValueChange={(itemValue) => {
+                                        setSelectedServico(itemValue);
+                                        setModalServicoVisible(false); // Fechar modal ao selecionar
+                                    }}
                                     itemStyle={{ color: "black", fontSize: 16 }}
                                     dropdownIconColor="black"
                                 >
                                     {servicos.map((servico) => (
-                                        <Picker.Item 
-                                            key={servico.id} 
+                                        <Picker.Item
+                                            key={servico.id}
                                             label={`${servico.nome} - R$ ${servico.preco.toFixed(2)}`}
                                             value={servico.id}
                                         />

@@ -14,117 +14,259 @@ import CheckImg from "../../../../assets/images/check.png";
 import ImgExemplo from "../../../../assets/images/imageExemplo.png";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "expo-router";
-import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc, Timestamp } from "firebase/firestore";
 import StartFirebase from "@/app/crud/firebaseConfig";
 import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext";
 import { format } from 'date-fns';
+import ReservaScreenStyle from "../../ReservaScreen/ReservascreenStyle";
 
 type RootStackParamList = {
     UserScreen: undefined;
+    ConfigEmpresaInfo: undefined;
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+interface Funcionario {
+    id: string;
+    nome: string;
+    fotoPerfil: string;
+    especialidade?: string;
+}
+
+interface Servico {
+    duracao: number;
+    nome: string;
+    preco: number;
+}
+
+type StatusAgendamento = 'agendado' | 'confirmado' | 'em_andamento' | 'finalizado' | 'cancelado';
+
+interface Agendamento {
+    id: string;
+    clienteId: string;
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
+    data: Timestamp;
+    empresaId: string;
+    funcionarioId: string;
+    servico: Servico;
+    status: StatusAgendamento;
+    horaInicio: string;
+    horaFim: string;
+}
 
 const EmpresaInfoAgendamentoScreen = () => {
     const [selectedService, setSelectedService] = useState("Corte de cabelo");
     const [modalVisible, setModalVisible] = useState(false);
     const [date, setDate] = useState(new Date());
-    const [agendamentos, setAgendamentos] = useState<any[]>([]);
-    const [filteredAgendamentos, setFilteredAgendamentos] = useState<any[]>([]);
+    const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
+    const [carregandoAgendamentos, setCarregandoAgendamentos] = useState(false);
     const navigation = useNavigation<NavigationProp>();
     const { db } = StartFirebase();
     const { id: userId } = useUserGlobalContext();
+    const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
+    const [empresaId, setEmpresaId] = useState<string | null>(null);
 
-    const onChange = (event: any, selectedDate: any) => {
-        const currentDate = selectedDate || date;
-        setDate(currentDate);
-        filterAgendamentosByDate(currentDate);
-    };
-
-    const fetchAgendamentos = async () => {
+    const carregarEmpresa = async () => {
+        if (!userId) return;
         try {
-            if (!userId) {
-                Alert.alert("Erro", "Usuário não autenticado.");
-                return;
-            }
-
             const empresasRef = collection(db, "empresas");
-            const qEmpresas = query(empresasRef, where("userId", "==", userId));
-            const empresasSnapshot = await getDocs(qEmpresas);
-
-            if (empresasSnapshot.empty) {
-                console.log("Nenhuma empresa encontrada para o usuário.");
-                return;
-            }
-
-            const empresaDoc = empresasSnapshot.docs[0];
-            const empresaId = empresaDoc.id;
-
-            const agendamentosRef = collection(db, "agendamentos");
-            const qAgendamentos = query(agendamentosRef, where("empresaId", "==", empresaId));
-            const agendamentosSnapshot = await getDocs(qAgendamentos);
-
-            // Create a list to store all promised fetch operations
-            const agendamentosPromises = agendamentosSnapshot.docs.map(async (docSnapshot) => {
-                const data = docSnapshot.data();
-                console.log("Agendamento Date:", data.data.toDate().toISOString());
-                
-                // Fetch cliente (user) information
-                const clienteId = data.clienteId;
-                let clienteNome = "Cliente";
-                let clienteFotoPerfil = "";
-                
-                if (clienteId) {
-                    try {
-                        const clienteDoc = await getDoc(doc(db, "users", clienteId));
-                        if (clienteDoc.exists()) {
-                            const clienteData = clienteDoc.data();
-                            clienteNome = clienteData.nome || "Cliente";
-                            clienteFotoPerfil = clienteData.fotoPerfil || "";
-                        }
-                    } catch (error) {
-                        console.error("Erro ao buscar dados do cliente:", error);
-                    }
-                }
-                
-                return {
-                    id: docSnapshot.id,
-                    data: data.data,
-                    servico: data.servico,
-                    clienteId: clienteId,
-                    clienteNome: clienteNome,
-                    clienteFotoPerfil: clienteFotoPerfil,
-                    ...data,
-                };
-            });
+            const empresaQuery = await getDocs(query(empresasRef, where("userId", "==", userId)));
             
-            // Wait for all promises to resolve
-            const agendamentosList = await Promise.all(agendamentosPromises);
-            console.log(agendamentosList);
-
-            setAgendamentos(agendamentosList);
-            filterAgendamentosByDate(date, agendamentosList); // Initial filter with the new list
+            if (!empresaQuery.empty) {
+                const empresaDoc = empresaQuery.docs[0];
+                setEmpresaId(empresaDoc.id);
+                return empresaDoc;
+            }
+            return null;
         } catch (error) {
-            console.error("Erro ao carregar agendamentos:", error);
-            Alert.alert("Erro", "Não foi possível carregar os agendamentos.");
+            console.error("Erro ao carregar empresa:", error);
+            return null;
         }
     };
 
-    const filterAgendamentosByDate = (selectedDate: Date, agendamentosList = agendamentos) => {
-        const selectedDateString = format(selectedDate, 'yyyy-MM-dd');
-        console.log("Selected Date:", selectedDateString);
-        const filtered = agendamentosList.filter(agendamento => {
-            const agendamentoDate = format(agendamento.data.toDate(), 'yyyy-MM-dd');
-            console.log("Agendamento Date:", agendamentoDate);
-            return agendamentoDate === selectedDateString;
-        });
-        setFilteredAgendamentos(filtered); // Set filtered results to the filtered state
-        console.log("Filtered Agendamentos:", filtered);
+    const carregarFuncionarios = async (empresaDoc: any) => {
+        if (!empresaDoc) return;
+        try {
+            const funcionariosIds = empresaDoc.data().funcionarios || [];
+            const funcionariosData: Funcionario[] = [];
+
+            for (const id of funcionariosIds) {
+                const funcDoc = await getDocs(query(collection(db, "users"), where("__name__", "==", id)));
+                if (!funcDoc.empty) {
+                    const funcionarioData = funcDoc.docs[0].data();
+                    funcionariosData.push({
+                        id: funcDoc.docs[0].id,
+                        nome: funcionarioData.nome || "Nome não disponível",
+                        fotoPerfil: funcionarioData.fotoPerfil || "",
+                        especialidade: funcionarioData.especialidade
+                    });
+                }
+            }
+
+            setFuncionarios(funcionariosData);
+        } catch (error) {
+            console.error("Erro ao carregar funcionários:", error);
+        }
     };
 
     useEffect(() => {
-        fetchAgendamentos();
-    }, []);
+        const inicializar = async () => {
+            const empresaDoc = await carregarEmpresa();
+            if (empresaDoc) {
+                await carregarFuncionarios(empresaDoc);
+                await buscarAgendamentosDoDia(date);
+            }
+        };
+        inicializar();
+    }, [userId]);
+
+    const buscarAgendamentosDoDia = async (selectedDate: Date) => {
+        if (!empresaId) return;
+        
+        setCarregandoAgendamentos(true);
+        try {
+            const inicioDia = new Date(selectedDate);
+            inicioDia.setHours(0, 0, 0, 0);
+            const timestampInicio = Timestamp.fromDate(inicioDia);
+
+            const fimDia = new Date(selectedDate);
+            fimDia.setHours(23, 59, 59, 999);
+            const timestampFim = Timestamp.fromDate(fimDia);
+
+            const agendamentosRef = collection(db, "agendamentos");
+            const q = query(
+                agendamentosRef,
+                where("empresaId", "==", empresaId),
+                where("data", ">=", timestampInicio),
+                where("data", "<=", timestampFim)
+            );
+
+            const querySnapshot = await getDocs(q);
+            const agendamentosDoDia = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as Agendamento[];
+
+            setAgendamentos(agendamentosDoDia);
+            console.log(`Encontrados ${agendamentosDoDia.length} agendamentos para ${format(selectedDate, 'dd/MM/yyyy')}`);
+        } catch (error) {
+            console.error("Erro ao buscar agendamentos:", error);
+            Alert.alert(
+                "Erro",
+                "Não foi possível carregar os agendamentos. Tente novamente."
+            );
+        } finally {
+            setCarregandoAgendamentos(false);
+        }
+    };
+
+    const onChange = async (event: any, selectedDate: any) => {
+        if (selectedDate) {
+            setDate(selectedDate);
+            await buscarAgendamentosDoDia(selectedDate);
+        }
+    };
+
+    const getAgendamentosHora = (hora: number) => {
+        if (!agendamentos || !agendamentos.length) return [];
+        
+        return agendamentos.filter(agendamento => {
+            if (!agendamento || !agendamento.data) return false;
+
+            const [horaInicioStr] = agendamento.horaInicio.split(':');
+            const [horaFimStr] = agendamento.horaFim.split(':');
+            
+            const horaInicio = parseInt(horaInicioStr);
+            const horaFim = parseInt(horaFimStr);
+            
+            return hora >= horaInicio && hora < horaFim;
+        });
+    };
+
+    const calcularAlturaAgendamento = (agendamento: Agendamento, horaAtual: number): { altura: number; offsetTop: number } => {
+        if (!agendamento || !agendamento.horaInicio || !agendamento.horaFim) {
+            return { altura: 80, offsetTop: 0 };
+        }
+
+        const [horaInicioStr] = agendamento.horaInicio.split(':');
+        const [horaFimStr] = agendamento.horaFim.split(':');
+        
+        const horaInicio = parseInt(horaInicioStr);
+        const horaFim = parseInt(horaFimStr);
+        
+        const offsetTop = horaInicio < horaAtual ? (horaAtual - horaInicio) * -80 : 0;
+        const altura = (horaFim - horaInicio) * 80;
+        
+        return { altura, offsetTop };
+    };
+
+    const renderAgendamento = (agendamento: Agendamento, horaAtual: number) => {
+        const funcionarioDoAgendamento = funcionarios.find(f => f.id === agendamento.funcionarioId);
+        const { altura, offsetTop } = calcularAlturaAgendamento(agendamento, horaAtual);
+        
+        return (
+            <View 
+                key={agendamento.id} 
+                style={[
+                    ReservaScreenStyle.boxAgendamento,
+                    { 
+                        height: altura,
+                        marginTop: offsetTop,
+                    }
+                ]}
+            >
+                <View style={ReservaScreenStyle.containerTextAgendamento}>
+                    <Text style={ReservaScreenStyle.textAgendamento}>
+                        {`${agendamento.horaInicio} - ${agendamento.horaFim}`}
+                    </Text>
+                    <Text style={ReservaScreenStyle.textAgendamento}>
+                        {funcionarioDoAgendamento?.nome || "Profissional"}
+                    </Text>
+                    <Text style={ReservaScreenStyle.textAgendamento}>
+                        {agendamento.servico.nome}
+                    </Text>
+                    {carregandoAgendamentos && (
+                        <Text style={{color: '#717171', fontSize: 12}}>Carregando...</Text>
+                    )}
+                </View>
+            </View>
+        );
+    };
+
+    const renderHorario = (hora: number) => {
+        const agendamentosHora = getAgendamentosHora(hora);
+        
+        return (
+            <View key={hora} style={{ height: 80 }}>
+                <View style={ReservaScreenStyle.containerHoraLinha}>
+                    <Text style={{
+                        fontSize: 10, 
+                        fontWeight: 'bold', 
+                        marginLeft: 5,
+                        color: '#000'
+                    }}>
+                        {hora.toString().padStart(2, '0')}
+                    </Text>
+                    <View style={ReservaScreenStyle.linhaEntreHorarios}/>
+                </View>
+                <ScrollView 
+                    horizontal
+                    style={ReservaScreenStyle.espacoParaAgendamentos}
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{
+                        flexDirection: 'row',
+                        gap: 10,
+                    }}
+                >
+                    {agendamentosHora.map(agendamento => 
+                        agendamento ? renderAgendamento(agendamento, hora) : null
+                    )}
+                </ScrollView>
+            </View>
+        );
+    };
 
     return (
         <View style={{ flex: 1, backgroundColor: "#000" }}>
@@ -133,7 +275,7 @@ const EmpresaInfoAgendamentoScreen = () => {
                     <Image source={setaImg} style={EmpresaInfoMoneyScreenStyle.tamanhoImagensContainerTitle} />
                 </TouchableOpacity>
                 <Text style={UserScreenStyle.textTitle}>Agendamentos</Text>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate("ConfigEmpresaInfo")}>
                     <Image source={engrenagemImg} style={EmpresaInfoMoneyScreenStyle.tamanhoImagensContainerTitle} />
                 </TouchableOpacity>
             </View>
@@ -154,7 +296,7 @@ const EmpresaInfoAgendamentoScreen = () => {
                                     textColor="red"
                                     style={{ zIndex: 1000 }}
                                 />
-                                <View style={{ backgroundColor: 'white', width: 110, height: 30, position: 'relative', top: 0, left: -113, borderRadius: 4 }} />
+                                <View style={{ backgroundColor: 'white', width: 120, height: 30, position: 'relative', top: 0, left: -120, borderRadius: 4 }} />
                             </View>
                         </View>
                         <View style={[EmpresaInfoMoneyScreenStyle.containerFilterDireita, { alignItems: 'flex-end', justifyContent: 'center' }]}>
@@ -170,59 +312,9 @@ const EmpresaInfoAgendamentoScreen = () => {
                             </TouchableOpacity>
                         </View>
                     </View>
-                    {filteredAgendamentos.length === 0 ? (
-                        <Text style={{ color: "#fff", textAlign: "center", marginTop: 20 }}>
-                            Nenhum agendamento encontrado.
-                        </Text>
-                    ) : (
-                        filteredAgendamentos.map((agendamento) => (
-                            <View key={agendamento.id} style={AgendamentoScreenStyle.AgendamentoHistoricoBox}>
-                                <View style={AgendamentoScreenStyle.imgHisotricoBoxOutside}>
-                                    {agendamento.clienteFotoPerfil ? (
-                                        <Image 
-                                            source={{ uri: agendamento.clienteFotoPerfil }} 
-                                            style={AgendamentoScreenStyle.imgHisotricoBox} 
-                                        />
-                                    ) : (
-                                        <Image 
-                                            source={ImgExemplo} 
-                                            style={AgendamentoScreenStyle.imgHisotricoBox} 
-                                        />
-                                    )}
-                                    <Text style={{
-                                        flex: 1,
-                                        textAlign: 'center',
-                                        color: '#fff',
-                                        fontWeight: 'bold',
-                                        fontSize: 18
-                                    }}>
-                                        {agendamento.clienteNome || "Cliente"}
-                                    </Text>
-                                </View>
-                                <View style={[AgendamentoScreenStyle.line, { marginTop: 15 }]} />
-                                <View style={AgendamentoScreenStyle.servicosBox}>
-                                    <View style={AgendamentoScreenStyle.servicosBoxInside}>
-                                        <Image source={CheckImg} style={{ width: 15, height: 15 }} />
-                                        <Text style={{ color: 'white' }}>Pedido - {agendamento.id}</Text>
-                                    </View>
-                                    <View style={AgendamentoScreenStyle.servicosBoxInside}>
-                                        <View style={AgendamentoScreenStyle.ballService}>
-                                            <Text>1</Text>
-                                        </View>
-                                        <Text style={{ color: 'white' }}>
-                                            {agendamento.servico?.nome || "Serviço"}
-                                        </Text>
-                                    </View>
-                                </View>
-                                <View style={AgendamentoScreenStyle.line} />
-                                <TouchableOpacity style={AgendamentoScreenStyle.TouchableOpacity}>
-                                    <Text style={[AgendamentoScreenStyle.TouchableOpacityText, { color: '#00C20A' }]}>
-                                        Iniciar Atendimento
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
-                        ))
-                    )}
+                    <ScrollView style={ReservaScreenStyle.ContainerCalendario}>
+                        {Array.from({length: 24}, (_, i) => renderHorario(i))}
+                    </ScrollView>
                 </View>
             </ScrollView>
             <EmpresaNavBar />

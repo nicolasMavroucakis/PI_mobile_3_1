@@ -10,20 +10,66 @@ import lapisImg from "../../../../assets/images/lapis.png"
 import { useNavigation } from "expo-router";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useEmpresaGlobalContext } from "@/app/GlobalContext/EmpresaGlobalContext";
-
+import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import StartFirebase from "@/app/crud/firebaseConfig";
+import { useEmpresaContext } from "@/app/GlobalContext/EmpresaReservaGlobalContext";
 
 type RootStackParamList = {
     UserScreen: undefined;
     AdicionarCategoriaScreen: undefined;
     AdicionarServico: undefined;
+    ConfigEmpresaInfo: undefined;
+    EmpresaInfoScreen: undefined;
 };
-
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const EmpresaMinhaPaginaScreen = () => {
     const navigation = useNavigation<NavigationProp>();
     const { categorias, deleteCategoria, servicos, deleteServico } = useEmpresaGlobalContext(); 
+    const { id: userId } = useUserGlobalContext();
+    const { db } = StartFirebase();
+    const { setAll } = useEmpresaContext();
+
+    const handleVerPrevia = async () => {
+        try {
+            if (!userId) return;
+
+            const empresasRef = collection(db, "empresas");
+            const empresaQuery = await getDocs(query(empresasRef, where("userId", "==", userId)));
+            
+            if (!empresaQuery.empty) {
+                const empresaDoc = empresaQuery.docs[0];
+                const empresaData = empresaDoc.data();
+                const enderecoData = empresaData.endereco || {};
+                
+                const dadosAtualizados = {
+                    id: empresaDoc.id,
+                    nome: empresaData.nome || '',
+                    email: empresaData.email || '',
+                    endereco: {
+                        cep: enderecoData.cep || '',
+                        cidade: enderecoData.cidade || '',
+                        complemento: enderecoData.complemento || '',
+                        numero: enderecoData.numero || '',
+                        rua: enderecoData.rua || ''
+                    },
+                    funcionarios: empresaData.funcionarios || [],
+                    servicos: empresaData.servicos || [],
+                    telefone: empresaData.telefone || '',
+                    createdAt: empresaData.createdAt ? new Date(empresaData.createdAt.seconds * 1000) : null,
+                    updatedAt: empresaData.updatedAt ? new Date(empresaData.updatedAt.seconds * 1000) : null,
+                    userId: empresaData.userId || '',
+                };
+
+                setAll(dadosAtualizados);
+                navigation.navigate('EmpresaInfoScreen');
+            }
+        } catch (error) {
+            console.error("Erro ao buscar dados da empresa:", error);
+        }
+    };
 
     return (
         <View style={{ flex: 1, backgroundColor: "#000" }}>
@@ -32,14 +78,17 @@ const EmpresaMinhaPaginaScreen = () => {
                     <Image source={setaImg} style={EmpresaInfoMoneyScreenStyle.tamanhoImagensContainerTitle} />
                 </TouchableOpacity>
                 <Text style={UserScreenStyle.textTitle}>Agendamentos</Text>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.navigate("ConfigEmpresaInfo")}>
                     <Image source={engrenagemImg} style={EmpresaInfoMoneyScreenStyle.tamanhoImagensContainerTitle} />
                 </TouchableOpacity>
             </View>
             <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={[UserScreenStyle.containerRest, { minHeight: 750, flexGrow: 1, paddingBottom: 100 }]}>
                     <View style={EmpresaInfoMoneyScreenStyle.containerMinhaPaginaTop}>
-                        <TouchableOpacity style={EmpresaInfoMoneyScreenStyle.touchbleOpacityButtonMinhaPaginaTop}>
+                        <TouchableOpacity 
+                            style={EmpresaInfoMoneyScreenStyle.touchbleOpacityButtonMinhaPaginaTop}
+                            onPress={handleVerPrevia}
+                        >
                             <Text style={{ color: '#00C20A', fontSize: 11, fontWeight: 'bold' }}>
                                 Ver Previa da Pagina
                             </Text>

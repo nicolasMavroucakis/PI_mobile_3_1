@@ -21,6 +21,10 @@ import EmpresaInfoAgendamentoScreen from "./Pages/UserInfo/Empresa/EmpresaInfoAg
 import EmpresaMinhaPaginaScreen from "./Pages/UserInfo/Empresa/EmpresaMinhaPaginaScreen";
 import ReservaScreen from "./Pages/ReservaScreen/ReservaScreen";
 import ChangeEmpresaInfo from "./Pages/SingLog/ChangeEmpresaInfo";
+import ConfigEmpresaInfo from "./Pages/UserInfo/Empresa/ConfigEmpresaInfo";
+import FecharAgendaDia from "./Pages/UserInfo/Empresa/FecharAgendaDia";
+import AdicionarFerias from "./Pages/UserInfo/Empresa/AdicionarFerias";
+import AdicionarLicenca from "./Pages/UserInfo/Empresa/AdicionarLicenca";
 
 import { UserGlobalContextProvider } from "./GlobalContext/UserGlobalContext";
 import { EmpresaGlobalContextProvider } from "./GlobalContext/EmpresaGlobalContext";
@@ -49,6 +53,10 @@ type RootStackParamList = {
   EmpresaMinhaPaginaScreen: undefined;
   ReservaScreen: undefined;
   ChangeEmpresaInfo: undefined;
+  ConfigEmpresaInfo: undefined;
+  FecharAgendaDia: undefined;
+  AdicionarFerias: undefined;
+  AdicionarLicenca: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -81,7 +89,11 @@ export default function Page() {
               <Stack.Screen name="EmpresaMinhaPaginaScreen" component={EmpresaMinhaPaginaScreen} options={{ headerShown: false }} />
               <Stack.Screen name="ReservaScreen" component={ReservaScreen} options={{ headerShown: false }} />
               <Stack.Screen name="ChangeEmpresaInfo" component={ChangeEmpresaInfo} options={{ headerShown: false }} />
-            </Stack.Navigator>
+              <Stack.Screen name="ConfigEmpresaInfo" component={ConfigEmpresaInfo} options={{ headerShown: false }} />
+              <Stack.Screen name="FecharAgendaDia" component={FecharAgendaDia} options={{ headerShown: false }} />
+              <Stack.Screen name="AdicionarFerias" component={AdicionarFerias} options={{ headerShown: false }} />
+              <Stack.Screen name="AdicionarLicenca" component={AdicionarLicenca} options={{ headerShown: false }} />
+            </Stack.Navigator>  
           </AgendamentoServicosProvider>
         </EmpresaProvider>
       </EmpresaGlobalContextProvider>
