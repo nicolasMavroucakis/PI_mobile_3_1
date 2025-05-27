@@ -1,4 +1,5 @@
-import { View, ScrollView, Text, TouchableOpacity, Image } from "react-native"
+import React from 'react';
+import { View, ScrollView, Text, TouchableOpacity, Image, Alert } from "react-native"
 import HomeScreenStyle from "../HomeScreen/HomeScreenStyle"
 import AgendamentoScreenStyle from "./AgendamentoScreenStyle"
 import HomeNavBar from "@/components/HomeNavBar"
@@ -8,12 +9,24 @@ import CheckImg from "../../../../assets/images/check.png"
 import { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import { useNavigation } from "expo-router"
 import { useEffect, useState } from "react"
-import { collection, query, where, getDocs, orderBy, Timestamp, doc, getDoc } from "firebase/firestore"
+import { collection, query, where, getDocs, orderBy, Timestamp, doc, getDoc, updateDoc } from "firebase/firestore"
 import StartFirebase from "@/app/crud/firebaseConfig"
 import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext"
+import { useAgendamentoServicos } from "@/app/GlobalContext/AgendamentoServicosGlobalContext"
 
 type RootStackParamList = {
-    DetalhesAgendamento: undefined;
+    DetalhesAgendamentoStatusChangeScreen: {
+        agendamento: Agendamento;
+    };
+    ReservaScreen: {
+        servico?: {
+            nome: string;
+            duracao?: number;
+            preco?: number;
+            status?: string;
+        };
+        empresaId: string;
+    };
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -43,77 +56,157 @@ const AgendamentoScreen = () => {
     const navigation = useNavigation<NavigationProp>();
     const { db } = StartFirebase();
     const { id: userId } = useUserGlobalContext();
+    const { adicionarServico, limparSelecao } = useAgendamentoServicos();
     const [agendamentosAtivos, setAgendamentosAtivos] = useState<Agendamento[]>([]);
     const [agendamentosHistorico, setAgendamentosHistorico] = useState<Agendamento[]>([]);
+    const [agendamentosEmAndamento, setAgendamentosEmAndamento] = useState<Agendamento[]>([]);
+    const [agendamentosEsperandoConfirmacao, setAgendamentosEsperandoConfirmacao] = useState<Agendamento[]>([]);
+
+    const handleConfirmarFinalizacao = async (agendamentoId: string) => {
+        try {
+            const agendamentoRef = doc(db, "agendamentos", agendamentoId);
+            await updateDoc(agendamentoRef, {
+                status: "finalizado"
+            });
+            
+            // Atualizar a lista localmente
+            fetchAgendamentos();
+            
+            Alert.alert("Sucesso", "Serviço confirmado como finalizado!");
+        } catch (error) {
+            console.error("Erro ao confirmar finalização:", error);
+            Alert.alert("Erro", "Não foi possível confirmar a finalização do serviço.");
+        }
+    };
+
+    const handleRecusarFinalizacao = async (agendamentoId: string) => {
+        try {
+            const agendamentoRef = doc(db, "agendamentos", agendamentoId);
+            await updateDoc(agendamentoRef, {
+                status: "em_andamento"
+            });
+            
+            // Atualizar a lista localmente
+            fetchAgendamentos();
+            
+            Alert.alert("Aviso", "Serviço retornado para 'Em andamento'");
+        } catch (error) {
+            console.error("Erro ao recusar finalização:", error);
+            Alert.alert("Erro", "Não foi possível recusar a finalização do serviço.");
+        }
+    };
+
+    const fetchAgendamentos = async () => {
+        if (!userId) return;
+
+        try {
+            const agendamentosRef = collection(db, "agendamentos");
+            const q = query(agendamentosRef, where("clienteId", "==", userId));
+            const querySnapshot = await getDocs(q);
+
+            const agendamentos = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as Agendamento[];
+
+            console.log("Todos os agendamentos:", agendamentos);
+
+            agendamentos.sort((a, b) => b.data.seconds - a.data.seconds);
+            const hoje = new Date();
+            console.log("Data atual (hoje):", hoje);
+
+            // Separar agendamentos por status
+            const emAndamento = agendamentos.filter(agendamento => 
+                agendamento.status === "em_andamento"
+            );
+
+            const esperandoConfirmacao = agendamentos.filter(agendamento =>
+                agendamento.status === "esperando_confirmacao"
+            );
+
+            const ativos = agendamentos.filter(agendamento => {
+                const dataAgendamento = new Date(agendamento.data.seconds * 1000);
+                console.log("Verificando agendamento:", {
+                    id: agendamento.id,
+                    data: dataAgendamento,
+                    status: agendamento.status,
+                    ehFuturo: dataAgendamento >= hoje
+                });
+                return (
+                    agendamento.status === "agendado" || 
+                    (agendamento.status !== "em_andamento" && 
+                     agendamento.status !== "esperando_confirmacao" && 
+                     agendamento.status !== "finalizado")
+                );
+            });
+
+            console.log("Agendamentos ativos filtrados:", ativos);
+
+            const historico = agendamentos.filter(agendamento => {
+                const dataAgendamento = new Date(agendamento.data.seconds * 1000);
+                return dataAgendamento < hoje && agendamento.status === "finalizado";
+            });
+
+            setAgendamentosEmAndamento(emAndamento);
+            setAgendamentosEsperandoConfirmacao(esperandoConfirmacao);
+            setAgendamentosAtivos(ativos);
+
+            const enrichedHistorico = await enrichHistoricoWithUserInfo(historico);
+            setAgendamentosHistorico(enrichedHistorico);
+
+        } catch (error) {
+            console.error("Erro ao buscar agendamentos:", error);
+        }
+    };
 
     useEffect(() => {
-        const fetchAgendamentos = async () => {
-            if (!userId) return;
-
-            try {
-                const agendamentosRef = collection(db, "agendamentos");
-                const q = query(agendamentosRef, where("clienteId", "==", userId));
-                const querySnapshot = await getDocs(q);
-
-                const agendamentos = querySnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                })) as Agendamento[];
-
-                agendamentos.sort((a, b) => b.data.seconds - a.data.seconds);
-                const hoje = new Date();
-
-                const ativos = agendamentos.filter(agendamento => {
-                    const dataAgendamento = new Date(agendamento.data.seconds * 1000);
-                    return dataAgendamento >= hoje;
-                });
-
-                const historico = agendamentos.filter(agendamento => {
-                    const dataAgendamento = new Date(agendamento.data.seconds * 1000);
-                    return dataAgendamento < hoje && agendamento.status === "finalizado";
-                });
-
-                setAgendamentosAtivos(ativos);
-
-                const enrichedHistorico = await enrichHistoricoWithUserInfo(historico);
-                setAgendamentosHistorico(enrichedHistorico);
-
-            } catch (error) {
-                console.error("Erro ao buscar agendamentos:", error);
-            }
-        };
-
-        const enrichHistoricoWithUserInfo = async (historico: Agendamento[]) => {
-            const enriched = await Promise.all(historico.map(async (item) => {
-                try {
-                    const empresaRef = doc(db, "empresas", item.empresaId);
-                    const empresaSnap = await getDoc(empresaRef);
-                    if (!empresaSnap.exists()) return item;
-
-                    const empresaData = empresaSnap.data();
-                    const userRef = doc(db, "users", empresaData.userId);
-                    const userSnap = await getDoc(userRef);
-                    if (!userSnap.exists()) return item;
-
-                    const userData = userSnap.data();
-                    return {
-                        ...item,
-                        empresaInfo: {
-                            nome: userData.nome,
-                            fotoPerfil: userData.fotoPerfil
-                        }
-                    };
-                } catch (error) {
-                    console.error("Erro ao enriquecer histórico:", error);
-                    return item;
-                }
-            }));
-
-            return enriched;
-        };
-
         fetchAgendamentos();
     }, [userId]);
+
+    const enrichHistoricoWithUserInfo = async (historico: Agendamento[]) => {
+        const enriched = await Promise.all(historico.map(async (item) => {
+            try {
+                const empresaRef = doc(db, "empresas", item.empresaId);
+                const empresaSnap = await getDoc(empresaRef);
+                if (!empresaSnap.exists()) return item;
+
+                const empresaData = empresaSnap.data();
+                const userRef = doc(db, "users", empresaData.userId);
+                const userSnap = await getDoc(userRef);
+                if (!userSnap.exists()) return item;
+
+                const userData = userSnap.data();
+                return {
+                    ...item,
+                    empresaInfo: {
+                        nome: userData.nome,
+                        fotoPerfil: userData.fotoPerfil
+                    }
+                };
+            } catch (error) {
+                console.error("Erro ao enriquecer histórico:", error);
+                return item;
+            }
+        }));
+
+        return enriched;
+    };
+
+    const handleAgendamentoPress = (agendamento: Agendamento) => {
+        navigation.navigate('DetalhesAgendamentoStatusChangeScreen', { agendamento });
+    };
+
+    const handleAdicionarASacola = (agendamento: Agendamento) => {
+        limparSelecao();
+        if (agendamento.servico) {
+            adicionarServico({
+                nome: agendamento.servico.nome,
+                preco: agendamento.servico.preco || 0,
+                duracao: agendamento.servico.duracao || 0
+            });
+        }
+        navigation.navigate('ReservaScreen', { empresaId: agendamento.empresaId });
+    };
 
     return (
         <View style={{ flex: 1, backgroundColor: "#000" }}>
@@ -121,14 +214,18 @@ const AgendamentoScreen = () => {
                 <View style={AgendamentoScreenStyle.containerTitle}>
                     <Text style={AgendamentoScreenStyle.textTitle}>Meus Agendamentos</Text>
                 </View>
-                <View style={AgendamentoScreenStyle.containerRest}>
+                <View style={[AgendamentoScreenStyle.containerRest, { height: 1000 }]}>
                     <Text style={[AgendamentoScreenStyle.textTitleInside, { marginTop: 10 }]}>Agendados</Text>
                     <ScrollView style={AgendamentoScreenStyle.agendamentosAtivosContainer}>
                         {agendamentosAtivos.length === 0 ? (
                             <Text style={{ color: "#fff", marginLeft: 10 }}>Nenhum agendamento ativo encontrado.</Text>
                         ) : (
                             agendamentosAtivos.map((agendamento) => (
-                                <TouchableOpacity key={agendamento.id} style={HomeScreenStyle.MeusAgendamentosInput}>
+                                <TouchableOpacity 
+                                    key={agendamento.id} 
+                                    style={HomeScreenStyle.MeusAgendamentosInput}
+                                    onPress={() => handleAgendamentoPress(agendamento)}
+                                >
                                     <View style={HomeScreenStyle.MeusAgendamentosInputDentro}>
                                         <View style={[HomeScreenStyle.containersDentroAgendamento, { alignItems: 'flex-start' }]}>
                                             <Text style={{ fontWeight: 'bold', fontSize: 25, paddingLeft: 10, color: '#B10000' }}>
@@ -168,75 +265,200 @@ const AgendamentoScreen = () => {
                                 {agendamentosHistorico.length === 0 ? (
                                     <Text style={{ color: "#fff", marginLeft: 10 }}>Nenhum agendamento no histórico.</Text>
                                 ) : (
-                                    agendamentosHistorico.map((agendamento, idx) => (
-                                        <View
-                                            key={agendamento.id}
-                                            style={[
-                                                AgendamentoScreenStyle.AgendamentoContainerInside,
-                                                idx === agendamentosHistorico.length - 1 && { paddingBottom: 100 }
-                                            ]}
-                                        >
-                                            <Text style={AgendamentoScreenStyle.textTitleInsideHistorico}>
-                                                {new Date(agendamento.data.seconds * 1000).toLocaleDateString('pt-BR', {
-                                                    weekday: 'short',
-                                                    day: 'numeric',
-                                                    month: 'long',
-                                                    year: 'numeric'
-                                                })}
-                                            </Text>
-                                            <View style={AgendamentoScreenStyle.AgendamentoHistoricoBox}>
-                                                <View style={AgendamentoScreenStyle.imgHisotricoBoxOutside}>
-                                                    <Image
-                                                        source={
-                                                            agendamento.empresaInfo?.fotoPerfil
-                                                                ? { uri: agendamento.empresaInfo.fotoPerfil }
-                                                                : require("../../../../assets/images/imageExemplo.png")
-                                                        }
-                                                        style={AgendamentoScreenStyle.imgHisotricoBox}
-                                                    />
-                                                    <Text style={{
-                                                        flex: 1,
-                                                        textAlign: 'center',
-                                                        color: '#fff',
-                                                        fontWeight: 'bold',
-                                                        fontSize: 18
-                                                    }}>
-                                                        {agendamento.empresaInfo?.nome || "Empresa"}
-                                                    </Text>
-                                                </View>
+                                    (() => {
+                                        const grupos: { [data: string]: Agendamento[] } = {};
+                                        agendamentosHistorico.forEach(agendamento => {
+                                            const data = new Date(agendamento.data.seconds * 1000).toLocaleDateString('pt-BR', {
+                                                weekday: 'short',
+                                                day: 'numeric',
+                                                month: 'long',
+                                                year: 'numeric'
+                                            });
+                                            if (!grupos[data]) grupos[data] = [];
+                                            grupos[data].push(agendamento);
+                                        });
+                                        return Object.entries(grupos).map(([data, agendamentos], groupIdx) => (
+                                            <React.Fragment key={data}>
+                                                <Text style={AgendamentoScreenStyle.textTitleInsideHistorico}>{data}</Text>
+                                                {agendamentos.map((agendamento, idx) => (
+                                                    <View
+                                                        key={agendamento.id}
+                                                        style={[
+                                                            AgendamentoScreenStyle.AgendamentoContainerInside,
+                                                            groupIdx === Object.entries(grupos).length - 1 && idx === agendamentos.length - 1 && { paddingBottom: 20 }
+                                                        ]}
+                                                    >
+                                                        <View style={AgendamentoScreenStyle.AgendamentoHistoricoBox}>
+                                                            <View style={AgendamentoScreenStyle.imgHisotricoBoxOutside}>
+                                                                <Image
+                                                                    source={
+                                                                        agendamento.empresaInfo?.fotoPerfil
+                                                                            ? { uri: agendamento.empresaInfo.fotoPerfil }
+                                                                            : require("../../../../assets/images/imageExemplo.png")
+                                                                    }
+                                                                    style={AgendamentoScreenStyle.imgHisotricoBox}
+                                                                />
+                                                                <Text style={{
+                                                                    flex: 1,
+                                                                    textAlign: 'center',
+                                                                    color: '#fff',
+                                                                    fontWeight: 'bold',
+                                                                    fontSize: 18
+                                                                }}>
+                                                                    {agendamento.empresaInfo?.nome || "Empresa"}
+                                                                </Text>
+                                                            </View>
 
-                                                <View style={[AgendamentoScreenStyle.line, { marginTop: 15 }]} />
+                                                            <View style={[AgendamentoScreenStyle.line, { marginTop: 15 }]} />
 
-                                                <View style={AgendamentoScreenStyle.servicosBox}>
-                                                    <View style={AgendamentoScreenStyle.servicosBoxInside}>
-                                                        <Image source={CheckImg} style={{ width: 15, height: 15 }} />
-                                                        <Text style={{ color: 'white' }}>Pedido concluído - N {agendamento.id.slice(-4)}</Text>
-                                                    </View>
-                                                    <View style={AgendamentoScreenStyle.servicosBoxInside}>
-                                                        <View style={AgendamentoScreenStyle.ballService}>
-                                                            <Text>1</Text>
+                                                            <View style={AgendamentoScreenStyle.servicosBox}>
+                                                                <View style={AgendamentoScreenStyle.servicosBoxInside}>
+                                                                    <Image source={CheckImg} style={{ width: 15, height: 15 }} />
+                                                                    <Text style={{ color: 'white' }}>Pedido concluído - N {agendamento.id.slice(-4)}</Text>
+                                                                </View>
+                                                                <View style={AgendamentoScreenStyle.servicosBoxInside}>
+                                                                    <View style={AgendamentoScreenStyle.ballService}>
+                                                                        <Text>1</Text>
+                                                                    </View>
+                                                                    <Text style={{ color: 'white' }}>
+                                                                        {agendamento.servico?.nome || "Serviço"}
+                                                                    </Text>
+                                                                </View>
+                                                            </View>
+                                                            <View style={AgendamentoScreenStyle.line} />
+                                                            <TouchableOpacity
+                                                                style={AgendamentoScreenStyle.TouchableOpacity}
+                                                                onPress={() => handleAdicionarASacola(agendamento)}
+                                                            >
+                                                                <Text style={AgendamentoScreenStyle.TouchableOpacityText}>
+                                                                    Adicionar à sacola
+                                                                </Text>
+                                                            </TouchableOpacity>
                                                         </View>
-                                                        <Text style={{ color: 'white' }}>
-                                                            {agendamento.servico?.nome || "Serviço"}
-                                                        </Text>
                                                     </View>
-                                                </View>
-                                                <View style={AgendamentoScreenStyle.line} />
-                                                <TouchableOpacity
-                                                    style={AgendamentoScreenStyle.TouchableOpacity}
-                                                    onPress={() => navigation.navigate('DetalhesAgendamento')}
-                                                >
-                                                    <Text style={AgendamentoScreenStyle.TouchableOpacityText}>
-                                                        Adicionar à sacola
-                                                    </Text>
-                                                </TouchableOpacity>
-                                            </View>
-                                        </View>
-                                    ))
+                                                ))}
+                                            </React.Fragment>
+                                        ));
+                                    })()
                                 )}
                             </View>
                         </ScrollView>
                     </View>
+
+                    {agendamentosEmAndamento.length > 0 && (
+                        <View style={{ marginTop: 20 }}>
+                            <Text style={AgendamentoScreenStyle.textTitleInside}>Em Andamento</Text>
+                            <ScrollView style={AgendamentoScreenStyle.agendamentosAtivosContainer}>
+                                {agendamentosEmAndamento.map((agendamento) => (
+                                    <TouchableOpacity 
+                                        key={agendamento.id} 
+                                        style={HomeScreenStyle.MeusAgendamentosInput}
+                                        onPress={() => handleAgendamentoPress(agendamento)}
+                                    >
+                                        <View style={HomeScreenStyle.MeusAgendamentosInputDentro}>
+                                            <View style={[HomeScreenStyle.containersDentroAgendamento, { alignItems: 'flex-start' }]}>
+                                                <Text style={{ fontWeight: 'bold', fontSize: 25, paddingLeft: 10, color: '#B10000' }}>
+                                                    {new Date(agendamento.data.seconds * 1000).toLocaleDateString('pt-BR', { weekday: 'short' })}
+                                                </Text>
+                                                <Text style={{ fontWeight: 'bold', fontSize: 25, paddingLeft: 20, color: '#B10000' }}>
+                                                    {new Date(agendamento.data.seconds * 1000).getDate()}
+                                                </Text>
+                                            </View>
+                                            <View style={[HomeScreenStyle.containersDentroAgendamento, { alignItems: 'center' }]}>
+                                                <View style={HomeScreenStyle.containersDentroAgendamentoLocHora}>
+                                                    <Image source={ClockImg} />
+                                                    <Text style={{ fontWeight: 'bold', fontSize: 15 }}>
+                                                        {new Date(agendamento.data.seconds * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                    </Text>
+                                                </View>
+                                                <View style={HomeScreenStyle.containersDentroAgendamentoLocHora}>
+                                                    <Image source={Location} />
+                                                    <Text style={{ fontWeight: 'bold', fontSize: 15 }}>Atendimento a Residência</Text>
+                                                </View>
+                                            </View>
+                                            <View style={[HomeScreenStyle.containersDentroAgendamento, { alignItems: 'flex-end' }]}>
+                                                <Text style={{ fontWeight: 'bold', fontSize: 15, paddingRight: 10 }}>
+                                                    {agendamento.servico?.nome || "Serviço"}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                    </TouchableOpacity>
+                                ))}
+                            </ScrollView>
+                        </View>
+                    )}
+
+                    {agendamentosEsperandoConfirmacao.length > 0 && (
+                        <View style={{ marginTop: 20, marginBottom: 80 }}>
+                            <Text style={[AgendamentoScreenStyle.textTitleInside, { color: '#FFA500' }]}>
+                                Esperando Confirmação
+                            </Text>
+                            <ScrollView style={[AgendamentoScreenStyle.agendamentosAtivosContainer, { height: 200 }]}>
+                                {agendamentosEsperandoConfirmacao.map((agendamento) => (
+                                    <View key={agendamento.id}>
+                                        <TouchableOpacity 
+                                            style={HomeScreenStyle.MeusAgendamentosInput}
+                                            onPress={() => handleAgendamentoPress(agendamento)}
+                                        >
+                                            <View style={HomeScreenStyle.MeusAgendamentosInputDentro}>
+                                                <View style={[HomeScreenStyle.containersDentroAgendamento, { alignItems: 'flex-start' }]}>
+                                                    <Text style={{ fontWeight: 'bold', fontSize: 25, paddingLeft: 10, color: '#FFA500' }}>
+                                                        {new Date(agendamento.data.seconds * 1000).toLocaleDateString('pt-BR', { weekday: 'short' })}
+                                                    </Text>
+                                                    <Text style={{ fontWeight: 'bold', fontSize: 25, paddingLeft: 20, color: '#FFA500' }}>
+                                                        {new Date(agendamento.data.seconds * 1000).getDate()}
+                                                    </Text>
+                                                </View>
+                                                <View style={[HomeScreenStyle.containersDentroAgendamento, { alignItems: 'center' }]}>
+                                                    <View style={HomeScreenStyle.containersDentroAgendamentoLocHora}>
+                                                        <Image source={ClockImg} />
+                                                        <Text style={{ fontWeight: 'bold', fontSize: 15 }}>
+                                                            {new Date(agendamento.data.seconds * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                        </Text>
+                                                    </View>
+                                                    <View style={HomeScreenStyle.containersDentroAgendamentoLocHora}>
+                                                        <Image source={Location} />
+                                                        <Text style={{ fontWeight: 'bold', fontSize: 15 }}>Atendimento a Residência</Text>
+                                                    </View>
+                                                </View>
+                                                <View style={[HomeScreenStyle.containersDentroAgendamento, { alignItems: 'flex-end' }]}>
+                                                    <Text style={{ fontWeight: 'bold', fontSize: 15, paddingRight: 10 }}>
+                                                        {agendamento.servico?.nome || "Serviço"}
+                                                    </Text>
+                                                </View>
+                                            </View>
+                                        </TouchableOpacity>
+                                        <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 10, marginBottom: 20 }}>
+                                            <TouchableOpacity 
+                                                onPress={() => handleConfirmarFinalizacao(agendamento.id)}
+                                                style={{
+                                                    backgroundColor: '#00C20A',
+                                                    padding: 10,
+                                                    borderRadius: 5,
+                                                    width: '45%',
+                                                    alignItems: 'center'
+                                                }}
+                                            >
+                                                <Text style={{ color: 'white', fontWeight: 'bold' }}>Confirmar Finalização</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity 
+                                                onPress={() => handleRecusarFinalizacao(agendamento.id)}
+                                                style={{
+                                                    backgroundColor: '#B10000',
+                                                    padding: 10,
+                                                    borderRadius: 5,
+                                                    width: '45%',
+                                                    alignItems: 'center'
+                                                }}
+                                            >
+                                                <Text style={{ color: 'white', fontWeight: 'bold' }}>Recusar</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
+                                ))}
+                            </ScrollView>
+                        </View>
+                    )}
                 </View>
             </ScrollView>
             <HomeNavBar />

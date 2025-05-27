@@ -24,6 +24,7 @@ type RootStackParamList = {
     HomeApp: undefined;
     AdicionarCategoriaScreen: undefined;
     ReservaScreen: undefined;
+    IniciarAgendamentoScreen: undefined;
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
@@ -145,7 +146,7 @@ const LogInScreen = () => {
                         <Text style={{ color: '#fff', fontSize: 18, marginLeft: 10 }}>Esqueceu</Text>
                     </View>
                     <View>
-                        <TouchableOpacity onPress={() => navigation.navigate('ReservaScreen')} style={stylesSingLog.buttonSenha}>
+                        <TouchableOpacity onPress={() => navigation.navigate('IniciarAgendamentoScreen')} style={stylesSingLog.buttonSenha}>
                             <Text style={stylesSingLog.buttonText}>a sua Senha?</Text>
                         </TouchableOpacity>
                     </View>

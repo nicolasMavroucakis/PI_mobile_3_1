@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { useEmpresaContext } from "@/app/GlobalContext/EmpresaReservaGlobalContext";
 import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext";
 import { useRouter } from "expo-router";
+import { useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 const { db } = StartFirebase();
@@ -52,6 +53,9 @@ interface Agendamento {
 
 const ReservaScreen = () => {
     const router = useRouter();
+    const route = useRoute();
+    const { empresaId } = (route.params || {}) as { empresaId?: string };
+    const { setAll } = useEmpresaContext();
     const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
     const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
     const [carregandoAgendamentos, setCarregandoAgendamentos] = useState(false);
@@ -64,7 +68,8 @@ const ReservaScreen = () => {
         selecionarFuncionario,
         calcularValorTotal,
         calcularTempoTotal,
-        servicosSelecionados
+        servicosSelecionados,
+        adicionarServico
     } = useAgendamentoServicos();
     const [horaAgendamento, setHoraAgendamento] = useState(new Date());
 
@@ -108,6 +113,31 @@ const ReservaScreen = () => {
     useEffect(() => {
         carregarFuncionarios();
     }, [empresa.funcionarios]);
+
+    useEffect(() => {
+        if (empresaId && (!empresa.id || empresa.id !== empresaId)) {
+            const buscarEmpresa = async () => {
+                const empresaDoc = await getDoc(doc(db, 'empresas', empresaId));
+                if (empresaDoc.exists()) {
+                    const empresaData = empresaDoc.data();
+                    setAll({
+                        id: empresaDoc.id,
+                        nome: empresaData.nome || '',
+                        email: empresaData.email || '',
+                        endereco: empresaData.endereco || {},
+                        funcionarios: empresaData.funcionarios || [],
+                        servicos: empresaData.servicos || [],
+                        telefone: empresaData.telefone || '',
+                        createdAt: empresaData.createdAt ? new Date(empresaData.createdAt.seconds * 1000) : null,
+                        updatedAt: empresaData.updatedAt ? new Date(empresaData.updatedAt.seconds * 1000) : null,
+                        userId: empresaData.userId || '',
+                        fotoPerfil: empresaData.fotoPerfil || ''
+                    });
+                }
+            };
+            buscarEmpresa();
+        }
+    }, [empresaId]);
 
     const verificarDisponibilidade = async (data: Date, funcionarioId: string | null) => {
         try {
@@ -210,6 +240,16 @@ const ReservaScreen = () => {
             buscarAgendamentosDoDia(dataAgendamento);
         }
     }, [funcionarioSelecionado]);
+
+    useEffect(() => {
+        if (servicosSelecionados.length === 1) {
+            return;
+        }
+        if (servicosSelecionados.length === 0) return;
+        if (servicosSelecionados.length > 1) {
+            adicionarServico(servicosSelecionados[0]);
+        }
+    }, []);
 
     const onChange = async (event: any, selectedDate: any) => {
         if (selectedDate) {
@@ -470,7 +510,6 @@ const ReservaScreen = () => {
                     return false;
                 }
             } else {
-                // Verifica número de agendamentos paralelos
                 const agendamentosParalelos = agendamentosNoDia.filter(agendamento => {
                     const horaInicioAgendamento = agendamento.horaInicio;
                     const horaFimAgendamento = agendamento.horaFim;

@@ -10,9 +10,9 @@ export const uploadProfileImage = async (userId: string, imageUri: string): Prom
 
     try {
         console.log('Iniciando upload da imagem para o usuário:', userId);
-        // Criar uma referência para o arquivo no Storage usando o ID do Firestore
+        
         const storageRef = ref(storage, `profile_images/${userId}`);
-        // Converter a URI da imagem para blob
+
         const response = await fetch(imageUri);
         if (!response.ok) {
             throw new Error(`Erro ao carregar a imagem: ${response.status} ${response.statusText}`);

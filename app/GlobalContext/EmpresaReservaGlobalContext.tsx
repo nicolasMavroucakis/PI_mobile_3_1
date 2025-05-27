@@ -27,6 +27,7 @@ interface EmpresaContextData {
   telefone: string;
   updatedAt: Date | null;
   userId: string;
+  fotoPerfil: string;
   
   setId: (id: string) => void;
   setCreatedAt: (date: Date | null) => void;
@@ -38,6 +39,7 @@ interface EmpresaContextData {
   setTelefone: (telefone: string) => void;
   setUpdatedAt: (date: Date | null) => void;
   setUserId: (userId: string) => void;
+  setFotoPerfil: (fotoPerfil: string) => void;
   setAll: (data: Partial<EmpresaContextData>) => void;
 }
 
@@ -58,6 +60,7 @@ interface EmpresaState {
   telefone: string;
   updatedAt: Date | null;
   userId: string;
+  fotoPerfil: string;
 }
 
 export const EmpresaProvider: React.FC<EmpresaProviderProps> = ({ children }) => {
@@ -77,7 +80,8 @@ export const EmpresaProvider: React.FC<EmpresaProviderProps> = ({ children }) =>
     servicos: [],
     telefone: '',
     updatedAt: null,
-    userId: ''
+    userId: '',
+    fotoPerfil: ''
   });
 
   const setAll = (data: Partial<EmpresaContextData>) => {
@@ -94,6 +98,7 @@ export const EmpresaProvider: React.FC<EmpresaProviderProps> = ({ children }) =>
       if (data.telefone !== undefined) newState.telefone = data.telefone;
       if (data.updatedAt !== undefined) newState.updatedAt = data.updatedAt;
       if (data.userId !== undefined) newState.userId = data.userId;
+      if (data.fotoPerfil !== undefined) newState.fotoPerfil = data.fotoPerfil;
       
       console.log('Estado atualizado:', newState);
       return newState;
@@ -114,6 +119,7 @@ export const EmpresaProvider: React.FC<EmpresaProviderProps> = ({ children }) =>
         setTelefone: (telefone) => setState(prev => ({ ...prev, telefone })),
         setUpdatedAt: (updatedAt) => setState(prev => ({ ...prev, updatedAt })),
         setUserId: (userId) => setState(prev => ({ ...prev, userId })),
+        setFotoPerfil: (fotoPerfil) => setState(prev => ({ ...prev, fotoPerfil })),
         setAll,
       }}
     >

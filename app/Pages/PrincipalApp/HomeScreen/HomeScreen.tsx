@@ -56,7 +56,11 @@ const HomeScreen = () => {
         const fetchAgendamentos = async () => {
             if (!userId) return;
             const agendamentosRef = collection(db, "agendamentos");
-            const q = query(agendamentosRef, where("clienteId", "==", userId));
+            const q = query(
+                agendamentosRef, 
+                where("clienteId", "==", userId),
+                where("status", "==", "agendado")
+            );
             const querySnapshot = await getDocs(q);
             const agendamentos = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setMeusAgendamentos(agendamentos);
@@ -150,6 +154,11 @@ const HomeScreen = () => {
                 const empresaData = empresaDoc.docs[0].data();
                 const enderecoData = empresaData.endereco || {};
                 
+                // Buscar dados do usuário para pegar a foto de perfil
+                const usersRef = collection(db, "users");
+                const userDoc = await getDocs(query(usersRef, where("__name__", "==", empresa.userId)));
+                const fotoPerfil = userDoc.docs[0]?.data()?.fotoPerfil || '';
+                
                 console.log("Dados brutos do Firebase:", empresaData);
                 console.log("Dados do endereço:", enderecoData);
 
@@ -163,18 +172,19 @@ const HomeScreen = () => {
                         complemento: enderecoData.complemento || '',
                         numero: enderecoData.numero || '',
                         rua: enderecoData.rua || ''
-            },
+                    },
                     funcionarios: empresaData.funcionarios || [],
                     servicos: empresaData.servicos || [],
                     telefone: empresaData.telefone || '',
                     createdAt: empresaData.createdAt ? new Date(empresaData.createdAt.seconds * 1000) : null,
                     updatedAt: empresaData.updatedAt ? new Date(empresaData.updatedAt.seconds * 1000) : null,
                     userId: empresaData.userId || '',
+                    fotoPerfil: fotoPerfil
                 };
 
                 console.log("Dados que serão enviados para o contexto:", dadosAtualizados);
                 setAll(dadosAtualizados);
-        navigation.navigate('EmpresaInfoScreen');
+                navigation.navigate('EmpresaInfoScreen');
             } else {
                 console.error("Empresa não encontrada");
             }

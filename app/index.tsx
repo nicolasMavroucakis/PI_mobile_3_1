@@ -25,6 +25,9 @@ import ConfigEmpresaInfo from "./Pages/UserInfo/Empresa/ConfigEmpresaInfo";
 import FecharAgendaDia from "./Pages/UserInfo/Empresa/FecharAgendaDia";
 import AdicionarFerias from "./Pages/UserInfo/Empresa/AdicionarFerias";
 import AdicionarLicenca from "./Pages/UserInfo/Empresa/AdicionarLicenca";
+import IniciarAgendamentoScreen from "./Pages/UserInfo/Empresa/IniciarAgendamentoScreen";
+import AgendamentosScreen from "./Pages/PrincipalApp/AgendamentosScreen/AgendamentosScreen";
+import DetalhesAgendamentoStatusChangeScreen from "./Pages/PrincipalApp/AgendamentosScreen/DetalhesAgendamentoScreen";
 
 import { UserGlobalContextProvider } from "./GlobalContext/UserGlobalContext";
 import { EmpresaGlobalContextProvider } from "./GlobalContext/EmpresaGlobalContext";
@@ -57,6 +60,9 @@ type RootStackParamList = {
   FecharAgendaDia: undefined;
   AdicionarFerias: undefined;
   AdicionarLicenca: undefined;
+  IniciarAgendamentoScreen: undefined;
+  AgendamentosScreen: undefined;
+  DetalhesAgendamentoStatusChangeScreen: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -93,7 +99,10 @@ export default function Page() {
               <Stack.Screen name="FecharAgendaDia" component={FecharAgendaDia} options={{ headerShown: false }} />
               <Stack.Screen name="AdicionarFerias" component={AdicionarFerias} options={{ headerShown: false }} />
               <Stack.Screen name="AdicionarLicenca" component={AdicionarLicenca} options={{ headerShown: false }} />
-            </Stack.Navigator>  
+              <Stack.Screen name="IniciarAgendamentoScreen" component={IniciarAgendamentoScreen} options={{ headerShown: false }} />
+              <Stack.Screen name="AgendamentosScreen" component={AgendamentosScreen} options={{ headerShown: false }} />
+              <Stack.Screen name="DetalhesAgendamentoStatusChangeScreen" component={DetalhesAgendamentoStatusChangeScreen} options={{ headerShown: false }} />
+            </Stack.Navigator>      
           </AgendamentoServicosProvider>
         </EmpresaProvider>
       </EmpresaGlobalContextProvider>

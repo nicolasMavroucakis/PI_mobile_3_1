@@ -43,6 +43,11 @@ const EmpresaMinhaPaginaScreen = () => {
                 const empresaDoc = empresaQuery.docs[0];
                 const empresaData = empresaDoc.data();
                 const enderecoData = empresaData.endereco || {};
+
+                // Buscar dados do usuário para pegar a foto de perfil
+                const usersRef = collection(db, "users");
+                const userDoc = await getDocs(query(usersRef, where("__name__", "==", userId)));
+                const fotoPerfil = userDoc.docs[0]?.data()?.fotoPerfil || '';
                 
                 const dadosAtualizados = {
                     id: empresaDoc.id,
@@ -61,13 +66,15 @@ const EmpresaMinhaPaginaScreen = () => {
                     createdAt: empresaData.createdAt ? new Date(empresaData.createdAt.seconds * 1000) : null,
                     updatedAt: empresaData.updatedAt ? new Date(empresaData.updatedAt.seconds * 1000) : null,
                     userId: empresaData.userId || '',
+                    fotoPerfil: fotoPerfil
                 };
 
+                console.log("Dados atualizados com foto:", dadosAtualizados);
                 setAll(dadosAtualizados);
                 navigation.navigate('EmpresaInfoScreen');
             }
         } catch (error) {
-            console.error("Erro ao buscar dados da empresa:", error);
+            console.error("Erro ao carregar dados da empresa:", error);
         }
     };
 

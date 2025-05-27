@@ -39,7 +39,7 @@ const AgendamentoScreenStyle = StyleSheet.create({
     }, 
     agendamentosAtivosContainer: {
         width: width,
-        height: 120,
+        height: 170,
         maxHeight: 240,
         paddingBottom: 20,
         paddingTop: 20,
@@ -73,20 +73,21 @@ const AgendamentoScreenStyle = StyleSheet.create({
         flexDirection: 'column',
         paddingBottom: 20,
         paddingTop: 10,
-        gap: 70
+        gap: 10,
+        justifyContent: 'center',
+        alignItems: 'center'
     },
     AgendamentoContainerInside: {
         width: width,
-        height: 150,
-        marginTop: 10,
-        marginBottom: 10,
-        marginLeft: width * 0.04,
+        minHeight: 150,
+        marginBottom: 20,
         gap: 30
     },
     textTitleInsideHistorico: {
         fontSize: 12,
         fontWeight: 'bold',
-        color: 'white'
+        color: 'white',
+        marginLeft: 10,
     },
     imgHisotricoBox: {
         width: 30,

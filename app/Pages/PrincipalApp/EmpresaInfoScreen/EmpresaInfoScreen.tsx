@@ -63,7 +63,7 @@ const EmpresaInfoScreen = () => {
             <ScrollView>
                 <View style={{ position: 'relative' }}>
                     <Image
-                        source={ImgExemplo}
+                        source={empresa.fotoPerfil ? { uri: empresa.fotoPerfil } : ImgExemplo}
                         style={EmpresaInfoScreenStyle.principalImage}
                         resizeMode="cover"
                     />
@@ -80,10 +80,13 @@ const EmpresaInfoScreen = () => {
                     <View style={EmpresaInfoScreenStyle.containerFavoritoCompText}>
                         <View>
                             <Text style={EmpresaInfoScreenStyle.empresa}>
-                                {empresa.nome}
+                                {empresa.nome || "Nome da Empresa"}
                             </Text>
                             <Text style={EmpresaInfoScreenStyle.empresaMenor}>
-                                {empresa.endereco.rua}, {empresa.endereco.numero}, {empresa.endereco.cidade}
+                                {empresa.endereco ? 
+                                    `${empresa.endereco.rua || ''} ${empresa.endereco.numero ? `, ${empresa.endereco.numero}` : ''} ${empresa.endereco.cidade ? `, ${empresa.endereco.cidade}` : ''}`.trim() 
+                                    : "Endereço não disponível"
+                                }
                             </Text>
                         </View>
                         <View style={EmpresaInfoScreenStyle.containerFavoritoComp}>

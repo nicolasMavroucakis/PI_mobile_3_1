@@ -23,6 +23,9 @@ import ReservaScreenStyle from "../../ReservaScreen/ReservascreenStyle";
 type RootStackParamList = {
     UserScreen: undefined;
     ConfigEmpresaInfo: undefined;
+    IniciarAgendamentoScreen: {
+        agendamento: Agendamento;
+    };
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -207,7 +210,7 @@ const EmpresaInfoAgendamentoScreen = () => {
         const { altura, offsetTop } = calcularAlturaAgendamento(agendamento, horaAtual);
         
         return (
-            <View 
+            <TouchableOpacity 
                 key={agendamento.id} 
                 style={[
                     ReservaScreenStyle.boxAgendamento,
@@ -216,6 +219,7 @@ const EmpresaInfoAgendamentoScreen = () => {
                         marginTop: offsetTop,
                     }
                 ]}
+                onPress={() => navigation.navigate('IniciarAgendamentoScreen', { agendamento })}
             >
                 <View style={ReservaScreenStyle.containerTextAgendamento}>
                     <Text style={ReservaScreenStyle.textAgendamento}>
@@ -231,7 +235,7 @@ const EmpresaInfoAgendamentoScreen = () => {
                         <Text style={{color: '#717171', fontSize: 12}}>Carregando...</Text>
                     )}
                 </View>
-            </View>
+            </TouchableOpacity>
         );
     };
 

@@ -255,6 +255,35 @@ const EmpresaInfoMoneyScreenStyle = StyleSheet.create({
         borderRadius: 10,
         marginTop: 20,
         margin:'auto'
+    },
+    containerIniciarAgendamento: {
+        backgroundColor: '#323232',
+        width: width,
+        height: height,
+    },
+    containerIniciarAgendamentoTop: {
+        width: width,
+        height: 100,
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexDirection: 'row',
+    },
+    imgPerfilIniciarAgendamento: {
+        width: 100,
+        height: 100,
+        borderRadius: 100,
+    },
+    containerIniciarAgendamentoTopImage: {
+        width: width,
+        height: 150,
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    containerInformacoesdoAgendamentoTitulo: {
+        width: width,
+        height: 50,
+        justifyContent: 'center',
+        alignItems: 'center',
     }
 });
 
