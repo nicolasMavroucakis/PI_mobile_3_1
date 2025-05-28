@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ScrollView, Text, TouchableOpacity, Image, Alert } from "react-native"
+import { View, ScrollView, Text, TouchableOpacity, Image, Alert, Modal, TextInput } from "react-native"
 import HomeScreenStyle from "../HomeScreen/HomeScreenStyle"
 import AgendamentoScreenStyle from "./AgendamentoScreenStyle"
 import HomeNavBar from "@/components/HomeNavBar"
@@ -9,7 +9,7 @@ import CheckImg from "../../../../assets/images/check.png"
 import { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import { useNavigation } from "expo-router"
 import { useEffect, useState } from "react"
-import { collection, query, where, getDocs, orderBy, Timestamp, doc, getDoc, updateDoc } from "firebase/firestore"
+import { collection, query, where, getDocs, orderBy, Timestamp, doc, getDoc, updateDoc, addDoc } from "firebase/firestore"
 import StartFirebase from "@/app/crud/firebaseConfig"
 import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext"
 import { useAgendamentoServicos } from "@/app/GlobalContext/AgendamentoServicosGlobalContext"
@@ -61,21 +61,54 @@ const AgendamentoScreen = () => {
     const [agendamentosHistorico, setAgendamentosHistorico] = useState<Agendamento[]>([]);
     const [agendamentosEmAndamento, setAgendamentosEmAndamento] = useState<Agendamento[]>([]);
     const [agendamentosEsperandoConfirmacao, setAgendamentosEsperandoConfirmacao] = useState<Agendamento[]>([]);
+    const [avaliarModalVisible, setAvaliarModalVisible] = useState(false);
+    const [avaliacaoNota, setAvaliacaoNota] = useState(0);
+    const [avaliacaoComentario, setAvaliacaoComentario] = useState("");
+    const [agendamentoParaAvaliar, setAgendamentoParaAvaliar] = useState<Agendamento | null>(null);
 
     const handleConfirmarFinalizacao = async (agendamentoId: string) => {
+        const agendamento = agendamentosEsperandoConfirmacao.find(a => a.id === agendamentoId);
+        if (agendamento) {
+            setAgendamentoParaAvaliar(agendamento);
+            setAvaliarModalVisible(true);
+        }
+    };
+
+    const enviarAvaliacao = async () => {
+        if (!agendamentoParaAvaliar) return;
         try {
-            const agendamentoRef = doc(db, "agendamentos", agendamentoId);
-            await updateDoc(agendamentoRef, {
+            // Salvar avaliação no Firestore
+            const avaliacao = {
+                empresaId: agendamentoParaAvaliar.empresaId,
+                agendamentoId: agendamentoParaAvaliar.id,
+                clienteId: agendamentoParaAvaliar.clienteId,
+                nota: avaliacaoNota,
+                comentario: avaliacaoComentario,
+                data: new Date()
+            };
+            await addDoc(collection(db, "avaliacao"), avaliacao);
+            // Atualizar média/total na empresa
+            const avaliacoesSnap = await getDocs(query(collection(db, "avaliacoes"), where("empresaId", "==", agendamentoParaAvaliar.empresaId)));
+            const avaliacoes = avaliacoesSnap.docs.map(doc => doc.data());
+            const total = avaliacoes.length;
+            const media = avaliacoes.reduce((sum, a) => sum + (a.nota || 0), 0) / total;
+            await updateDoc(doc(db, "empresas", agendamentoParaAvaliar.empresaId), {
+                mediaAvaliacoes: media,
+                totalAvaliacoes: total
+            });
+            // Finalizar agendamento
+            await updateDoc(doc(db, "agendamentos", agendamentoParaAvaliar.id), {
                 status: "finalizado"
             });
-            
-            // Atualizar a lista localmente
+            setAvaliarModalVisible(false);
+            setAvaliacaoNota(0);
+            setAvaliacaoComentario("");
+            setAgendamentoParaAvaliar(null);
             fetchAgendamentos();
-            
-            Alert.alert("Sucesso", "Serviço confirmado como finalizado!");
+            Alert.alert("Sucesso", "Avaliação enviada e serviço finalizado!");
         } catch (error) {
-            console.error("Erro ao confirmar finalização:", error);
-            Alert.alert("Erro", "Não foi possível confirmar a finalização do serviço.");
+            console.error("Erro ao enviar avaliação:", error);
+            Alert.alert("Erro", "Não foi possível enviar a avaliação.");
         }
     };
 
@@ -462,6 +495,46 @@ const AgendamentoScreen = () => {
                 </View>
             </ScrollView>
             <HomeNavBar />
+            {/* Modal de Avaliação */}
+            <Modal
+                visible={avaliarModalVisible}
+                transparent
+                animationType="slide"
+                onRequestClose={() => setAvaliarModalVisible(false)}
+            >
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.7)' }}>
+                    <View style={{ backgroundColor: '#fff', borderRadius: 10, padding: 20, width: 300 }}>
+                        <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 10 }}>Avalie o serviço</Text>
+                        <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 10 }}>
+                            {[1,2,3,4,5].map(n => (
+                                <TouchableOpacity key={n} onPress={() => setAvaliacaoNota(n)}>
+                                    <Text style={{ fontSize: 30, color: n <= avaliacaoNota ? '#FFD700' : '#ccc' }}>★</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                        <TextInput
+                            placeholder="Deixe um comentário (opcional)"
+                            value={avaliacaoComentario}
+                            onChangeText={setAvaliacaoComentario}
+                            style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 5, padding: 8, marginBottom: 10 }}
+                            multiline
+                        />
+                        <TouchableOpacity
+                            style={{ backgroundColor: '#00C20A', padding: 10, borderRadius: 5, alignItems: 'center' }}
+                            onPress={enviarAvaliacao}
+                            disabled={avaliacaoNota === 0}
+                        >
+                            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Enviar Avaliação</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={{ marginTop: 10, alignItems: 'center' }}
+                            onPress={() => setAvaliarModalVisible(false)}
+                        >
+                            <Text style={{ color: '#B10000' }}>Cancelar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 };

@@ -4,13 +4,15 @@ import ImgExemplo from "../../../../assets/images/imageExemplo.png";
 import ImgComp from "../../../../assets/images/compartilhar.png";
 import EmpresaInfoScreenStyle from "./EmpresaInfoScreenStyle";
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import EmpresaServicos from "@/components/EmpresaInfoComponents/EmpresaServicos";
 import EmpresaCartaoPresente from "@/components/EmpresaInfoComponents/EmpresaCartaoPresente";
 import EmpresaDetalhes from "@/components/EmpresaInfoComponents/EmpresaDetalhes";
 import EmpresaAvaliacao from "@/components/EmpresaInfoComponents/EmpresaAvaliacao";
 import { calcularMediaEAvaliacoes } from "@/components/utils/avaliacaoUtils";
 import { useEmpresaContext } from "@/app/GlobalContext/EmpresaReservaGlobalContext";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import StartFirebase from "@/app/crud/firebaseConfig";
 
 const EmpresaInfoScreen = () => {
     const [favoritado, setFavoritado] = useState(false); 
@@ -19,6 +21,34 @@ const EmpresaInfoScreen = () => {
     const [cartaoPresente, setCartaoPresente] = useState(false)
     const [detalhes, setDetalhes] = useState(false)
     const empresa = useEmpresaContext();
+    const [average, setAverage] = useState("0.0");
+    const [total, setTotal] = useState(0);
+    const [formattedTotal, setFormattedTotal] = useState("0");
+    const { db } = StartFirebase();
+
+    useEffect(() => {
+        const fetchAvaliacoes = async () => {
+            if (!empresa.id) return;
+            const q = query(
+                collection(db, "avaliacao"),
+                where("empresaId", "==", empresa.id)
+            );
+            const snap = await getDocs(q);
+            let sum = 0;
+            let count = 0;
+            snap.docs.forEach(doc => {
+                const data = doc.data();
+                if (data.nota >= 1 && data.nota <= 5) {
+                    sum += data.nota;
+                    count++;
+                }
+            });
+            setAverage(count > 0 ? (sum / count).toFixed(1) : "0.0");
+            setTotal(count);
+            setFormattedTotal(count >= 1000 ? (count / 1000).toFixed(count >= 10000 ? 0 : 1).replace('.', ',') + 'k' : count.toString());
+        };
+        fetchAvaliacoes();
+    }, [empresa.id]);
 
     const ratingsData: { [key: number]: number } = {
         5: 66,
@@ -28,7 +58,7 @@ const EmpresaInfoScreen = () => {
         1: 0,
     };
 
-    const { average, total, formattedTotal } = calcularMediaEAvaliacoes(ratingsData);
+    const { average: calculatedAverage, total: calculatedTotal } = calcularMediaEAvaliacoes(ratingsData);
 
     const toggleFavorito = () => {
         setFavoritado(!favoritado);
@@ -127,7 +157,7 @@ const EmpresaInfoScreen = () => {
                     {servico === true && <EmpresaServicos />}
                     {cartaoPresente === true && <EmpresaCartaoPresente />}
                     {detalhes === true && <EmpresaDetalhes/>}
-                    {avaliacao === true && <EmpresaAvaliacao ratingsData={ratingsData} average={average} total={total} formattedTotal={formattedTotal} />}
+                    {avaliacao === true && <EmpresaAvaliacao />}
                 </View>
             </ScrollView>
             <HomeNavBar/>

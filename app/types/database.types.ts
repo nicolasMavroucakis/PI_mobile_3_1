@@ -56,4 +56,13 @@ export interface Agendamento {
     valor: number;
     observacoes?: string;
     createdAt: Date;
+}
+
+export interface Avaliacao {
+    empresaId: string;
+    agendamentoId: string;
+    clienteId: string;
+    nota: number;
+    comentario?: string;
+    data: Date;
 } 
