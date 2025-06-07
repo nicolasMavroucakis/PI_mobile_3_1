@@ -36,6 +36,7 @@ const ChangeEmpresaInfo = () => {
     const [linkSite, setLinkSite] = useState('');
     const [linkInstagram, setLinkInstagram] = useState('');
     const [intervaloServicos, setIntervaloServicos] = useState('');
+    const [sobreNos, setSobreNos] = useState('');
     const { id: userId } = useUserGlobalContext();
 
     const {
@@ -135,6 +136,7 @@ const ChangeEmpresaInfo = () => {
                 setEndereco(data.endereco?.rua || "");
                 setNumero(data.endereco?.numero || "");
                 setComplemento(data.endereco?.complemento || "");
+                setSobreNos(data.sobre_nos || "");
                 // Preencher horários e abertos se existirem
                 if (data.horarioFuncionamento) {
                     const horariosFirestore = data.horarioFuncionamento;
@@ -216,6 +218,7 @@ const ChangeEmpresaInfo = () => {
                         numero,
                         complemento: complemento || ""
                     },
+                    sobre_nos: sobreNos,
                     horarioFuncionamento: horarioFuncionamentoFirestore,
                     updatedAt: serverTimestamp(),
                 },
@@ -253,6 +256,7 @@ const ChangeEmpresaInfo = () => {
         { label: 'Link Site', value: linkSite, set: setLinkSite },
         { label: 'Link Instagram', value: linkInstagram, set: setLinkInstagram },
         { label: 'Intervalo entre Serviços (minutos)', value: intervaloServicos, set: setIntervaloServicos },
+        { label: 'Sobre nós', value: sobreNos, set: setSobreNos, multiline: true },
     ];
 
     return (
@@ -286,6 +290,7 @@ const ChangeEmpresaInfo = () => {
                             value={input.value}
                             onChangeText={input.set}
                             secureTextEntry={input.secure}
+                            multiline={input.multiline}
                         />
                     </View>
                 ))}

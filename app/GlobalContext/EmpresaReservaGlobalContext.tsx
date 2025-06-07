@@ -16,7 +16,7 @@ interface Servico {
   updatedAt: Date;
 }
 
-interface EmpresaContextData {
+export interface EmpresaContextData {
   id: string;
   createdAt: Date | null;
   email: string;
@@ -28,6 +28,8 @@ interface EmpresaContextData {
   updatedAt: Date | null;
   userId: string;
   fotoPerfil: string;
+  linkInstagram?: string;
+  linkSite?: string;
   
   setId: (id: string) => void;
   setCreatedAt: (date: Date | null) => void;
@@ -61,6 +63,8 @@ interface EmpresaState {
   updatedAt: Date | null;
   userId: string;
   fotoPerfil: string;
+  linkInstagram?: string;
+  linkSite?: string;
 }
 
 export const EmpresaProvider: React.FC<EmpresaProviderProps> = ({ children }) => {
@@ -81,7 +85,9 @@ export const EmpresaProvider: React.FC<EmpresaProviderProps> = ({ children }) =>
     telefone: '',
     updatedAt: null,
     userId: '',
-    fotoPerfil: ''
+    fotoPerfil: '',
+    linkInstagram: '',
+    linkSite: ''
   });
 
   const setAll = (data: Partial<EmpresaContextData>) => {
@@ -99,6 +105,8 @@ export const EmpresaProvider: React.FC<EmpresaProviderProps> = ({ children }) =>
       if (data.updatedAt !== undefined) newState.updatedAt = data.updatedAt;
       if (data.userId !== undefined) newState.userId = data.userId;
       if (data.fotoPerfil !== undefined) newState.fotoPerfil = data.fotoPerfil;
+      if (data.linkInstagram !== undefined) newState.linkInstagram = data.linkInstagram;
+      if (data.linkSite !== undefined) newState.linkSite = data.linkSite;
       
       console.log('Estado atualizado:', newState);
       return newState;

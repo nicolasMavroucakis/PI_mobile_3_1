@@ -179,7 +179,9 @@ const HomeScreen = () => {
                     createdAt: empresaData.createdAt ? new Date(empresaData.createdAt.seconds * 1000) : null,
                     updatedAt: empresaData.updatedAt ? new Date(empresaData.updatedAt.seconds * 1000) : null,
                     userId: empresaData.userId || '',
-                    fotoPerfil: fotoPerfil
+                    fotoPerfil: fotoPerfil,
+                    linkInstagram: empresaData.linkInstagram || '',
+                    linkSite: empresaData.linkSite || ''
                 };
 
                 console.log("Dados que serão enviados para o contexto:", dadosAtualizados);

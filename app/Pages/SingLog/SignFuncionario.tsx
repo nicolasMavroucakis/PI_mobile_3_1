@@ -89,7 +89,6 @@ const SignFuncionario = () => {
 
             const userDocRef = await addDoc(usersRef, userData);
 
-            // Adicionar o funcionário ao array de funcionários da empresa
             await updateDoc(doc(db, "empresas", empresaId), {
                 funcionarios: arrayUnion(userDocRef.id)
             });

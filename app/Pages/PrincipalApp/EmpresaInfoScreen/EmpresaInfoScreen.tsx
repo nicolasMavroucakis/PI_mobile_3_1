@@ -1,5 +1,5 @@
 import HomeNavBar from "@/components/HomeNavBar";
-import { ScrollView, View, Text, Image, TouchableOpacity } from "react-native";
+import { ScrollView, View, Text, Image, TouchableOpacity, Alert } from "react-native";
 import ImgExemplo from "../../../../assets/images/imageExemplo.png";
 import ImgComp from "../../../../assets/images/compartilhar.png";
 import EmpresaInfoScreenStyle from "./EmpresaInfoScreenStyle";
@@ -11,8 +11,9 @@ import EmpresaDetalhes from "@/components/EmpresaInfoComponents/EmpresaDetalhes"
 import EmpresaAvaliacao from "@/components/EmpresaInfoComponents/EmpresaAvaliacao";
 import { calcularMediaEAvaliacoes } from "@/components/utils/avaliacaoUtils";
 import { useEmpresaContext } from "@/app/GlobalContext/EmpresaReservaGlobalContext";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
 import StartFirebase from "@/app/crud/firebaseConfig";
+import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext";
 
 const EmpresaInfoScreen = () => {
     const [favoritado, setFavoritado] = useState(false); 
@@ -25,6 +26,7 @@ const EmpresaInfoScreen = () => {
     const [total, setTotal] = useState(0);
     const [formattedTotal, setFormattedTotal] = useState("0");
     const { db } = StartFirebase();
+    const user = useUserGlobalContext();
 
     useEffect(() => {
         const fetchAvaliacoes = async () => {
@@ -50,6 +52,17 @@ const EmpresaInfoScreen = () => {
         fetchAvaliacoes();
     }, [empresa.id]);
 
+    useEffect(() => {
+        const fetchFavoritado = async () => {
+            if (!user.id || !empresa.id) return;
+            const userRef = doc(db, "users", user.id);
+            const userSnap = await getDoc(userRef);
+            const favoritos = userSnap.exists() && userSnap.data().favoritos ? userSnap.data().favoritos : [];
+            setFavoritado(favoritos.some((fav: { id: string; foto: string }) => fav.id === empresa.id));
+        };
+        fetchFavoritado();
+    }, [user.id, empresa.id]);
+
     const ratingsData: { [key: number]: number } = {
         5: 66,
         4: 10,
@@ -60,8 +73,43 @@ const EmpresaInfoScreen = () => {
 
     const { average: calculatedAverage, total: calculatedTotal } = calcularMediaEAvaliacoes(ratingsData);
 
-    const toggleFavorito = () => {
-        setFavoritado(!favoritado);
+    const toggleFavorito = async () => {
+        setFavoritado((prev) => !prev);
+
+        console.log('user.id:', user.id, 'empresa.id:', empresa.id);
+        if (!user.id || !empresa.id) {
+            Alert.alert("Erro", "Usuário ou empresa não encontrados.");
+            return;
+        }
+
+        try {
+            const userRef = doc(db, "users", user.id);
+            const favoritoObj = { id: empresa.id, foto: empresa.fotoPerfil };
+            console.log('Favoritando empresa:', favoritoObj);
+
+            let favoritos: { id: string; foto: string }[] = [];
+            const userSnap = await getDoc(userRef);
+
+            if (userSnap.exists()) {
+                favoritos = userSnap.data().favoritos ? userSnap.data().favoritos : [];
+            } else {
+                await setDoc(userRef, { favoritos: [] }, { merge: true });
+            }
+
+            const jaFavoritado = favoritos.some((fav: { id: string; foto: string }) => fav.id === empresa.id);
+
+            if (jaFavoritado) {
+                const novosFavoritos = favoritos.filter((fav: { id: string; foto: string }) => fav.id !== empresa.id);
+                await updateDoc(userRef, { favoritos: novosFavoritos });
+                Alert.alert("Favoritos", "Empresa removida dos favoritos!");
+            } else {
+                await updateDoc(userRef, { favoritos: [...favoritos, favoritoObj] });
+                Alert.alert("Favoritos", "Empresa adicionada aos favoritos!");
+            }
+        } catch (e) {
+            Alert.alert("Erro", "Não foi possível atualizar favoritos.");
+            console.log(e);
+        }
     };
 
     const handleTrocaTipoPagina = (tipo: any) => {
@@ -156,7 +204,7 @@ const EmpresaInfoScreen = () => {
                     </View>
                     {servico === true && <EmpresaServicos />}
                     {cartaoPresente === true && <EmpresaCartaoPresente />}
-                    {detalhes === true && <EmpresaDetalhes/>}
+                    {detalhes === true && <EmpresaDetalhes empresa={empresa} />}
                     {avaliacao === true && <EmpresaAvaliacao />}
                 </View>
             </ScrollView>

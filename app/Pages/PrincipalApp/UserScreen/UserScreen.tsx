@@ -6,16 +6,24 @@ import EngrenagemImg from "../../../../assets/images/engrenage.png";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "expo-router";
 import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext";
+import { useEmpresaContext } from "@/app/GlobalContext/EmpresaReservaGlobalContext";
 import lapisImg from "../../../../assets/images/lapis.png";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
 import StartFirebase from "@/app/crud/firebaseConfig";
 import defaultProfileImg from "../../../../assets/images/user.jpeg";
 import ProfileImage from "@/components/ProfileImage";
+
+interface EmpresaData {
+  userId: string;
+  fotoPerfil?: string;
+  nome?: string;
+}
 
 type RootStackParamList = {
   ClienteConfig: undefined;
   EmpresaInfoMoneyScreen: undefined;
   ChangeEmpresaInfo: undefined;
+  EmpresaInfoScreen: undefined;
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -24,6 +32,9 @@ const UserScreen: React.FC = () => {
   const { db } = StartFirebase();
   const navigation = useNavigation<NavigationProp>();
   const [userData, setUserData] = useState<any>(null);
+  const [favoritos, setFavoritos] = useState<{ id: string; foto: string }[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { setAll } = useEmpresaContext();
   const {
     nome: nomeGlobal,
     senha: senhaGlobal,
@@ -38,25 +49,36 @@ const UserScreen: React.FC = () => {
   } = useUserGlobalContext();
 
   const fetchUserData = async () => {
+    setIsLoading(true);
     try {
-      const usersRef = collection(db, "users");
-      const userQuery = await getDocs(query(usersRef, where("email", "==", emailGlobal)));
+      console.log("Buscando dados para userId:", userId);
+      const userGlobalRef = doc(db, "users", userId);
+      const userGlobalSnap = await getDoc(userGlobalRef);
       
-      if (!userQuery.empty) {
-        const userDoc = userQuery.docs[0];
-        const data = userDoc.data();
-        setUserData({ ...data, id: userDoc.id });
+      if (userGlobalSnap.exists()) {
+        const userData = userGlobalSnap.data();
+        console.log("Dados do usuário:", userData);
+        console.log("Favoritos:", userData.favoritos);
+        
+        setUserData(userData);
+        setFavoritos(userData.favoritos || []);
+      } else {
+        console.log("Usuário não encontrado");
+        setFavoritos([]);
       }
     } catch (error) {
       console.error("Erro ao buscar dados do usuário:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    if (emailGlobal) {
+    if (userId) {
+      console.log("Iniciando busca para userId:", userId);
       fetchUserData();
     }
-  }, [emailGlobal]);
+  }, [userId]);
 
   const handleClickEngrenagem = () => {
     if (usuarioGlobal === "Cliente") {
@@ -64,6 +86,53 @@ const UserScreen: React.FC = () => {
     }
     if (usuarioGlobal === "Empresa") {
       navigation.navigate("EmpresaInfoMoneyScreen");
+    }
+  };
+
+  const handleEmpresaClick = async (empresa: EmpresaData) => {
+    try {
+      console.log("Buscando empresa com ID:", empresa.userId);
+      const empresasRef = collection(db, "empresas");
+      const empresaDoc = await getDoc(doc(db, "empresas", empresa.userId));
+      
+      if (empresaDoc.exists()) {
+        const empresaData = empresaDoc.data();
+        const enderecoData = empresaData.endereco || {};
+        
+        const usersRef = collection(db, "users");
+        const userDoc = await getDocs(query(usersRef, where("__name__", "==", empresaData.userId)));
+        const fotoPerfil = userDoc.docs[0]?.data()?.fotoPerfil || empresa.fotoPerfil || '';
+        
+        const dadosAtualizados = {
+          id: empresaDoc.id,
+          nome: empresaData.nome || '',
+          email: empresaData.email || '',
+          endereco: {
+            cep: enderecoData.cep || '',
+            cidade: enderecoData.cidade || '',
+            complemento: enderecoData.complemento || '',
+            numero: enderecoData.numero || '',
+            rua: enderecoData.rua || ''
+          },
+          funcionarios: empresaData.funcionarios || [],
+          servicos: empresaData.servicos || [],
+          telefone: empresaData.telefone || '',
+          createdAt: empresaData.createdAt ? new Date(empresaData.createdAt.seconds * 1000) : null,
+          updatedAt: empresaData.updatedAt ? new Date(empresaData.updatedAt.seconds * 1000) : null,
+          userId: empresaData.userId || '',
+          fotoPerfil: fotoPerfil,
+          linkInstagram: empresaData.linkInstagram || '',
+          linkSite: empresaData.linkSite || ''
+        };
+
+        console.log("Dados atualizados da empresa:", dadosAtualizados);
+        setAll(dadosAtualizados);
+        navigation.navigate('EmpresaInfoScreen');
+      } else {
+        console.error("Empresa não encontrada");
+      }
+    } catch (error) {
+      console.error("Erro ao buscar dados da empresa:", error);
     }
   };
 
@@ -163,36 +232,34 @@ const UserScreen: React.FC = () => {
                   horizontal={true}
                   style={UserScreenStyle.userInfoBoxFavorito}
                 >
-                  <View style={UserScreenStyle.viewImageFavoritos}>
-                    <Image
-                      source={defaultProfileImg}
-                      style={UserScreenStyle.imageFavoritos}
-                    />
-                  </View>
-                  <View style={UserScreenStyle.viewImageFavoritos}>
-                    <Image
-                      source={defaultProfileImg}
-                      style={UserScreenStyle.imageFavoritos}
-                    />
-                  </View>
-                  <View style={UserScreenStyle.viewImageFavoritos}>
-                    <Image
-                      source={defaultProfileImg}
-                      style={UserScreenStyle.imageFavoritos}
-                    />
-                  </View>
-                  <View style={UserScreenStyle.viewImageFavoritos}>
-                    <Image
-                      source={defaultProfileImg}
-                      style={UserScreenStyle.imageFavoritos}
-                    />
-                  </View>
-                  <View style={UserScreenStyle.viewImageFavoritos}>
-                    <Image
-                      source={defaultProfileImg}
-                      style={UserScreenStyle.imageFavoritos}
-                    />
-                  </View>
+                  {isLoading ? (
+                    <Text style={{ color: 'white' }}>Carregando favoritos...</Text>
+                  ) : favoritos.length > 0 ? (
+                    favoritos.map((fav, idx) => (
+                      <View key={fav.id} style={UserScreenStyle.viewImageFavoritos}>
+                        <TouchableOpacity onPress={() => handleEmpresaClick({ userId: fav.id, fotoPerfil: fav.foto })}>
+                          <Image
+                            source={fav.foto ? { uri: fav.foto } : defaultProfileImg}
+                            style={[
+                              UserScreenStyle.imageFavoritos,
+                              { width: 50, height: 50, borderRadius: 25 }
+                            ]}
+                            onError={(e) => console.log("Erro ao carregar imagem:", fav.foto)}
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    ))
+                  ) : (
+                    <View style={UserScreenStyle.viewImageFavoritos}>
+                      <Image
+                        source={defaultProfileImg}
+                        style={[
+                          UserScreenStyle.imageFavoritos,
+                          { width: 50, height: 50, borderRadius: 25 }
+                        ]}
+                      />
+                    </View>
+                  )}
                 </ScrollView>
               </View>
             </View>
