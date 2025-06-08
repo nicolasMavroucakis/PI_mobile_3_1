@@ -67,7 +67,6 @@ const SignCliente = () => {
         }
 
         try {
-            // Check if user already exists
             const usersRef = collection(db, "users");
             const userQuery = await getDocs(query(usersRef, where("email", "==", emailId)));
             
@@ -76,7 +75,6 @@ const SignCliente = () => {
                 return;
             }
 
-            // Create user document
             const userData = {
                 nome,
                 email: emailId,
@@ -97,7 +95,6 @@ const SignCliente = () => {
 
             const userRef = await addDoc(usersRef, userData);
 
-            // Update global context
             setNomeGlobal(nome);
             setSenhaGlobal(senha);
             setUsuarioGlobal(emailId);

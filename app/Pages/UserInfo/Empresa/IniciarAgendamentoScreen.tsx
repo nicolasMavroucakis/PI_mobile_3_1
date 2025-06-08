@@ -1,4 +1,4 @@
-import { View, ScrollView, Image, Text, TouchableOpacity } from "react-native";
+import { View, ScrollView, Image, Text, TouchableOpacity, Alert } from "react-native";
 import EmpresaInfoMoneyScreenStyle from "./EmpresaInfoMoneyScreenStyle";
 import ImgExemplo from "../../../../assets/images/user.jpeg";
 import { AntDesign } from "@expo/vector-icons";
@@ -68,57 +68,46 @@ const IniciarAgendamentoScreen = () => {
         return format(dataObj, "dd/MM/yyyy", { locale: ptBR });
     };
 
-    const atualizarStatusAgendamento = async (novoStatus: string) => {
-        if (!agendamentoState?.id || isLoading) return;
+    const atualizarStatusAgendamento = async () => {
+        if (!agendamentoState?.id || isLoading || agendamentoState.status !== "agendado") return;
 
         setIsLoading(true);
         try {
-            console.log("Iniciando atualização de status:", {
+            console.log("Iniciando agendamento:", {
                 agendamentoId: agendamentoState.id,
-                statusAtual: agendamentoState.status,
-                novoStatus: novoStatus
+                statusAtual: agendamentoState.status
             });
 
             const agendamentoRef = doc(collection(db, "agendamentos"), agendamentoState.id);
             await updateDoc(agendamentoRef, {
-                status: novoStatus
+                status: "em_andamento"
             });
 
-            console.log("Status atualizado com sucesso no Firebase");
+            console.log("Agendamento iniciado com sucesso");
 
             setAgendamentoState(prev => ({
                 ...prev!,
-                status: novoStatus
+                status: "em_andamento"
             }));
 
-            console.log("Estado local atualizado");
-
             setTimeout(() => {
-                console.log("Navegando de volta para a tela anterior");
                 navigation.goBack();
             }, 500);
 
         } catch (error) {
-            console.error("Erro ao atualizar status:", error);
+            console.error("Erro ao iniciar agendamento:", error);
+            Alert.alert(
+                "Erro",
+                "Não foi possível iniciar o agendamento. Tente novamente."
+            );
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleButtonPress = () => {
-        console.log("Botão pressionado. Status atual:", agendamentoState?.status);
-        if (agendamentoState?.status === "agendado") {
-            console.log("Iniciando agendamento...");
-            atualizarStatusAgendamento("em_andamento");
-        } else if (agendamentoState?.status === "em_andamento") {
-            console.log("Finalizando agendamento...");
-            atualizarStatusAgendamento("finalizado");
-        }
-    };
-
     const getButtonStyle = () => {
-        const baseStyle = {
-            backgroundColor: agendamentoState?.status === "em_andamento" ? '#FF0000' : '#00C20A',
+        return {
+            backgroundColor: '#00C20A',
             width: '94%' as any,
             padding: 15,
             borderRadius: 8,
@@ -127,16 +116,14 @@ const IniciarAgendamentoScreen = () => {
             marginBottom: 20,
             opacity: isLoading ? 0.7 : 1
         };
-        return baseStyle;
     };
 
     const getButtonText = () => {
-        if (isLoading) return "Processando...";
-        if (agendamentoState?.status === "em_andamento") return "Finalizar Agendamento";
+        if (isLoading) return "Iniciando...";
         return "Iniciar Agendamento";
     };
 
-    const shouldShowButton = agendamentoState?.status !== "finalizado";
+    const shouldShowButton = agendamentoState?.status === "agendado";
 
     return (
         <ScrollView style={EmpresaInfoMoneyScreenStyle.containerIniciarAgendamento}>
@@ -150,7 +137,7 @@ const IniciarAgendamentoScreen = () => {
                     />
                 </TouchableOpacity>
                 <Text style={{color: '#fff', fontSize: 20, fontWeight: 'bold'}}>
-                    Detalhes do Agendamento
+                    Iniciar Agendamento
                 </Text>
                 <TouchableOpacity style={{width: 30, height: 30}}/>
             </View>
@@ -168,7 +155,7 @@ const IniciarAgendamentoScreen = () => {
             </View>
             <View style={EmpresaInfoMoneyScreenStyle.containerInformacoesdoAgendamentoTitulo}>
                 <Text style={{color: '#fff', fontSize: 18, fontWeight: 'bold', marginTop: 10, marginBottom: 10}}>
-                    Informações do Agendamento
+                    Detalhes do Agendamento
                 </Text>
             </View>
             <View style={{ marginLeft: 20 }}>
@@ -190,33 +177,29 @@ const IniciarAgendamentoScreen = () => {
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 8 }}>
                     <Text style={{ color: '#717171', fontSize: 16, marginRight: 8 }}>
-                        Hora de Inicio:
+                        Horário:
                     </Text>
                     <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>
-                        {agendamentoState?.horaInicio || '--:--'}
-                    </Text>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 8 }}>
-                    <Text style={{ color: '#717171', fontSize: 16, marginRight: 8 }}>
-                        Hora de Fim:
-                    </Text>
-                    <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>
-                        {agendamentoState?.horaFim || '--:--'}
+                        {`${agendamentoState?.horaInicio || '--:--'} - ${agendamentoState?.horaFim || '--:--'}`}
                     </Text>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 8 }}>
                     <Text style={{ color: '#717171', fontSize: 16, marginRight: 8 }}>
                         Status:
                     </Text>
-                    <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>
-                        {agendamentoState?.status || 'Não definido'}
+                    <Text style={{ 
+                        color: agendamentoState?.status === "agendado" ? '#00C20A' : '#717171', 
+                        fontSize: 18, 
+                        fontWeight: 'bold' 
+                    }}>
+                        {agendamentoState?.status === "agendado" ? "Aguardando Início" : agendamentoState?.status || 'Não definido'}
                     </Text>
                 </View>
             </View>
             {shouldShowButton && (
                 <TouchableOpacity 
                     style={getButtonStyle()}
-                    onPress={handleButtonPress}
+                    onPress={atualizarStatusAgendamento}
                     disabled={isLoading}
                 >
                     <Text style={{

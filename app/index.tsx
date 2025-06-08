@@ -29,6 +29,10 @@ import IniciarAgendamentoScreen from "./Pages/UserInfo/Empresa/IniciarAgendament
 import AgendamentosScreen from "./Pages/PrincipalApp/AgendamentosScreen/AgendamentosScreen";
 import DetalhesAgendamentoStatusChangeScreen from "./Pages/PrincipalApp/AgendamentosScreen/DetalhesAgendamentoScreen";
 import EmpresaEditarServico from "./Pages/PrincipalApp/CategoriaScreen/EmpresaEditarServico";
+import FuncionarioHomeScreen from "./Pages/PrincipalApp/FuncionarioScreen/FuncionarioHomeScreen";
+import FuncionarioAgendamentoScreen from "./Pages/PrincipalApp/FuncionarioScreen/FuncionarioAgendamentoScreen";
+import FuncionarioScreen from "./Pages/PrincipalApp/FuncionarioScreen/FuncionarioScreen";
+import FuncionarioChangeInfo from "./Pages/PrincipalApp/FuncionarioScreen/FuncionarioChangeInfo";
 
 import { UserGlobalContextProvider } from "./GlobalContext/UserGlobalContext";
 import { EmpresaGlobalContextProvider } from "./GlobalContext/EmpresaGlobalContext";
@@ -65,6 +69,10 @@ type RootStackParamList = {
   AgendamentosScreen: undefined;
   DetalhesAgendamentoStatusChangeScreen: undefined;
   EmpresaEditarServico: undefined;
+  FuncionarioHomeScreen: undefined;
+  FuncionarioAgendamentoScreen: undefined;
+  FuncionarioScreen: undefined;
+  FuncionarioChangeInfo: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -105,6 +113,10 @@ export default function Page() {
               <Stack.Screen name="AgendamentosScreen" component={AgendamentosScreen} options={{ headerShown: false }} />
               <Stack.Screen name="DetalhesAgendamentoStatusChangeScreen" component={DetalhesAgendamentoStatusChangeScreen} options={{ headerShown: false }} />
               <Stack.Screen name="EmpresaEditarServico" component={EmpresaEditarServico} options={{ headerShown: false }} />
+              <Stack.Screen name="FuncionarioHomeScreen" component={FuncionarioHomeScreen} options={{ headerShown: false }} />
+              <Stack.Screen name="FuncionarioAgendamentoScreen" component={FuncionarioAgendamentoScreen} options={{ headerShown: false }} />
+              <Stack.Screen name="FuncionarioScreen" component={FuncionarioScreen} options={{ headerShown: false }} />
+              <Stack.Screen name="FuncionarioChangeInfo" component={FuncionarioChangeInfo} options={{ headerShown: false }} />
             </Stack.Navigator>      
           </AgendamentoServicosProvider>
         </EmpresaProvider>

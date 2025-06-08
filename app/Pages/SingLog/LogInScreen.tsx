@@ -25,6 +25,7 @@ type RootStackParamList = {
     AdicionarCategoriaScreen: undefined;
     ReservaScreen: undefined;
     IniciarAgendamentoScreen: undefined;
+    FuncionarioHomeScreen: undefined;
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
@@ -73,7 +74,6 @@ const LogInScreen = () => {
             if (!querySnapshot.empty) {
                 const userDoc = querySnapshot.docs[0];
                 const userData = userDoc.data();
-                // Setando os dados no contexto global
                 setNomeGlobal(userData.nome || '');
                 setSenhaGlobal(userData.senha || '');
                 setUsuarioGlobal(userData.tipoUsuario);
@@ -97,7 +97,11 @@ const LogInScreen = () => {
                     console.error("Erro ao carregar foto de perfil:", error);
                 }
 
-                navigation.navigate("HomeApp");
+                if (userData.tipoUsuario === "Funcionario") {
+                    navigation.navigate("FuncionarioHomeScreen");
+                } else {
+                    navigation.navigate("HomeApp");
+                }
             } else {
                 Alert.alert("Erro", "Usuário ou senha incorretos.");
             }
@@ -154,7 +158,7 @@ const LogInScreen = () => {
                 <TouchableOpacity style={stylesSingLog.botaoCadastro} onPress={handleLogin}>
                     <Text style={stylesSingLog.botaoTexto}>Entre</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => navigation.navigate('HomeApp')}>
+                <TouchableOpacity onPress={() => navigation.navigate('FuncionarioHomeScreen')}>
                     <Text>
                         Dev
                     </Text>    
