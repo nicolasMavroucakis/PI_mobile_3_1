@@ -5,6 +5,7 @@ import AdicionarServicoStyle from "./AdicionarServicoStyle";
 import stylesSingLog from "../../SingLog/SignLogStyle";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "expo-router";
+import { useRoute } from "@react-navigation/native";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { collection, query, where, getDocs, updateDoc, arrayUnion, Timestamp, doc, getDoc } from "firebase/firestore";
 import StartFirebase from "@/app/crud/firebaseConfig";
@@ -22,12 +23,12 @@ type RootStackParamList = {
   SignCliente: undefined;
   HomeApp: undefined;
   AdicionarCategoriaScreen: undefined;
-  AdicionarServico: undefined;
+  EmpresaEditarServico: undefined;
 };
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList, "AdicionarServico">;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, "EmpresaEditarServico">;
 
-const AdicionarServico = () => {
+const EmpresaEditarServico = () => {
   const [servico, setServico] = useState("");
   const [categoria, setCategoria] = useState("");
   const [valor, setValor] = useState("");
@@ -40,6 +41,8 @@ const AdicionarServico = () => {
   const [modalCategoriaVisible, setModalCategoriaVisible] = useState(false);
 
   const navigation = useNavigation<NavigationProp>();
+  const route = useRoute();
+  const { servico: servicoParam } = route.params as { servico: any };
   const { storage, db } = StartFirebase();
   const { id: userId } = useUserGlobalContext();
   const { carregarServicos } = useEmpresaGlobalContext();
@@ -60,6 +63,18 @@ const AdicionarServico = () => {
     fetchCategorias();
   }, []);
 
+  useEffect(() => {
+    if (servicoParam) {
+      setServico(servicoParam.nome || "");
+      setCategoria(servicoParam.categoria || "");
+      setValor(servicoParam.preco?.toString() || "");
+      setDuracao(servicoParam.duracao?.toString() || "");
+      setDescricao(servicoParam.descricao || "");
+      setTipoServico(servicoParam.tipoServico === "pagamento no final" ? "final" : "inicio");
+      setImagens(servicoParam.imagensUrl || []);
+    }
+  }, [servicoParam]);
+
   const handleSalvar = async () => {
     if (servico.trim() === "" || valor.trim() === "" || duracao.trim() === "" || tipoServico.trim() === "") {
       Alert.alert("Erro", "Por favor, preencha todos os campos obrigatórios.");
@@ -70,17 +85,19 @@ const AdicionarServico = () => {
       const uploadedImageUrls: string[] = [];
       for (let i = 0; i < imagens.length; i++) {
         const imageUri = imagens[i];
+        if (imageUri.startsWith("http")) {
+          uploadedImageUrls.push(imageUri);
+          continue;
+        }
         const storageRef = ref(
           storage,
           `servicos/${userId}/${servico}/${i + 1}`
         );
-
         const response = await fetch(imageUri);
         if (!response.ok) {
           throw new Error(`Erro ao carregar a imagem: ${response.status}`);
         }
         const blob = await response.blob();
-
         await uploadBytes(storageRef, blob);
         const downloadURL = await getDownloadURL(storageRef);
         uploadedImageUrls.push(downloadURL);
@@ -96,34 +113,30 @@ const AdicionarServico = () => {
       if (!querySnapshot.empty) {
         const empresaDoc = querySnapshot.docs[0];
         const empresaRef = empresaDoc.ref;
+        const empresaData = empresaDoc.data();
+        const servicos = empresaData.servicos || [];
 
-        await updateDoc(empresaRef, {
-          servicos: arrayUnion({
-            id: uuidv4(),
-            nome: servico,
-            categoria,
-            preco: parseFloat(valor),
-            duracao: parseInt(duracao, 10),
-            descricao,
-            imagensUrl: uploadedImageUrls,
-            tipoServico: pagamento,
-            ValorFinalMuda: valorFinalMuda,
-            createdAt: Timestamp.now(),
-            updatedAt: Timestamp.now(),
-          }),
-        });
+        // Atualize o serviço no array
+        const servicosAtualizados = servicos.map((s: any) =>
+          s.id === servicoParam.id
+            ? {
+                ...s,
+                nome: servico,
+                categoria,
+                preco: parseFloat(valor),
+                duracao: parseInt(duracao, 10),
+                descricao,
+                imagensUrl: uploadedImageUrls.length > 0 ? uploadedImageUrls : s.imagensUrl,
+                tipoServico: pagamento,
+                ValorFinalMuda: valorFinalMuda,
+                updatedAt: Timestamp.now(),
+              }
+            : s
+        );
 
-        Alert.alert("Sucesso", `Serviço "${servico}" salvo com sucesso!`);
+        await updateDoc(empresaRef, { servicos: servicosAtualizados });
 
-        carregarServicos(categoria);
-
-        setServico("");
-        setCategoria("");
-        setValor("");
-        setDuracao("");
-        setDescricao("");
-        setImagens([]);
-        setTipoServico("");
+        Alert.alert("Sucesso", `Serviço "${servico}" atualizado com sucesso!`);
         navigation.goBack();
       } else {
         Alert.alert("Erro", "Empresa não encontrada.");
@@ -338,5 +351,5 @@ const AdicionarServico = () => {
   );
 };
 
-export default AdicionarServico;
+export default EmpresaEditarServico;
 

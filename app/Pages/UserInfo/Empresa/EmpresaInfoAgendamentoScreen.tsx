@@ -1,4 +1,4 @@
-import { ScrollView, TouchableOpacity, View, Image, Text, Modal, Alert } from "react-native";
+import { ScrollView, TouchableOpacity, View, Image, Text, Modal, Alert, StyleSheet, FlatList } from "react-native";
 import UserScreenStyle from "../../PrincipalApp/UserScreen/UserScreenStyle";
 import EmpresaNavBar from "@/components/EmpresaNavBar";
 import EmpresaInfoMoneyScreenStyle from "./EmpresaInfoMoneyScreenStyle";
@@ -38,9 +38,11 @@ interface Funcionario {
 }
 
 interface Servico {
-    duracao: number;
+    id: string;
     nome: string;
     preco: number;
+    duracao: number;
+    categoria: string;
 }
 
 type StatusAgendamento = 'agendado' | 'confirmado' | 'em_andamento' | 'finalizado' | 'cancelado';
@@ -60,11 +62,12 @@ interface Agendamento {
 }
 
 const EmpresaInfoAgendamentoScreen = () => {
-    const [selectedService, setSelectedService] = useState("Corte de cabelo");
+    const [selectedService, setSelectedService] = useState("Todos");
     const [modalVisible, setModalVisible] = useState(false);
     const [date, setDate] = useState(new Date());
     const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
     const [carregandoAgendamentos, setCarregandoAgendamentos] = useState(false);
+    const [servicos, setServicos] = useState<Servico[]>([]);
     const navigation = useNavigation<NavigationProp>();
     const { db } = StartFirebase();
     const { id: userId } = useUserGlobalContext();
@@ -114,17 +117,6 @@ const EmpresaInfoAgendamentoScreen = () => {
         }
     };
 
-    useEffect(() => {
-        const inicializar = async () => {
-            const empresaDoc = await carregarEmpresa();
-            if (empresaDoc) {
-                await carregarFuncionarios(empresaDoc);
-                await buscarAgendamentosDoDia(date);
-            }
-        };
-        inicializar();
-    }, [userId]);
-
     const buscarAgendamentosDoDia = async (selectedDate: Date) => {
         if (!empresaId) return;
         
@@ -147,13 +139,19 @@ const EmpresaInfoAgendamentoScreen = () => {
             );
 
             const querySnapshot = await getDocs(q);
-            const agendamentosDoDia = querySnapshot.docs.map(doc => ({
+            let agendamentosDoDia = querySnapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             })) as Agendamento[];
 
+            if (selectedService && selectedService !== "Todos") {
+                agendamentosDoDia = agendamentosDoDia.filter(
+                    agendamento => agendamento.servico.nome === selectedService
+                );
+            }
+
             setAgendamentos(agendamentosDoDia);
-            console.log(`Encontrados ${agendamentosDoDia.length} agendamentos para ${format(selectedDate, 'dd/MM/yyyy')}`);
+            console.log(`Encontrados ${agendamentosDoDia.length} agendamentos para ${format(selectedDate, 'dd/MM/yyyy')}${selectedService !== "Todos" ? ` do serviço ${selectedService}` : ''}`);
         } catch (error) {
             console.error("Erro ao buscar agendamentos:", error);
             Alert.alert(
@@ -162,6 +160,43 @@ const EmpresaInfoAgendamentoScreen = () => {
             );
         } finally {
             setCarregandoAgendamentos(false);
+        }
+    };
+
+    useEffect(() => {
+        if (empresaId) {
+            buscarAgendamentosDoDia(date);
+        }
+    }, [selectedService, date, empresaId]);
+
+    useEffect(() => {
+        const inicializar = async () => {
+            const empresaDoc = await carregarEmpresa();
+            if (empresaDoc) {
+                await carregarFuncionarios(empresaDoc);
+                await carregarServicos(empresaDoc);
+            }
+        };
+        inicializar();
+    }, [userId]);
+
+    const carregarServicos = async (empresaDoc: any) => {
+        if (!empresaDoc) return;
+        try {
+            const servicosData = empresaDoc.data().servicos || [];
+            const servicosList: Servico[] = servicosData.map((servico: any) => ({
+                id: servico.id,
+                nome: servico.nome,
+                preco: servico.preco,
+                duracao: servico.duracao,
+                categoria: servico.categoria
+            }));
+            setServicos(servicosList);
+            if (servicosList.length > 0) {
+                setSelectedService(servicosList[0].nome);
+            }
+        } catch (error) {
+            console.error("Erro ao carregar serviços:", error);
         }
     };
 
@@ -272,6 +307,20 @@ const EmpresaInfoAgendamentoScreen = () => {
         );
     };
 
+    const renderServiceItem = ({ item }: { item: Servico | { id: string; nome: string } }) => (
+        <TouchableOpacity
+            style={styles.serviceItem}
+            onPress={() => {
+                setSelectedService(item.nome);
+                setModalVisible(false);
+            }}
+        >
+            <Text numberOfLines={1} ellipsizeMode="tail" style={styles.serviceItemText}>
+                {item.nome}
+            </Text>
+        </TouchableOpacity>
+    );
+
     return (
         <View style={{ flex: 1, backgroundColor: "#000" }}>
             <View style={[EmpresaInfoMoneyScreenStyle.containerTitle]}>
@@ -311,7 +360,9 @@ const EmpresaInfoAgendamentoScreen = () => {
                                 onPress={() => setModalVisible(true)}
                                 style={[EmpresaInfoMoneyScreenStyle.containerFilterFiltrosEsquerda, { backgroundColor: "rgba(50, 50, 50, 0.8)", padding: 10, borderRadius: 8, justifyContent: 'flex-end', }]}
                             >
-                                <Text style={{ color: "white" }}>{selectedService}</Text>
+                                <Text numberOfLines={1} ellipsizeMode="tail" style={{ color: "white", maxWidth: 150 }}>
+                                    {selectedService || "Selecione um serviço"}
+                                </Text>
                                 <Image source={ferramentaImg} style={[EmpresaInfoMoneyScreenStyle.imgFiltros, { marginLeft: 10 }]} />
                             </TouchableOpacity>
                         </View>
@@ -323,23 +374,20 @@ const EmpresaInfoAgendamentoScreen = () => {
             </ScrollView>
             <EmpresaNavBar />
             <Modal visible={modalVisible} transparent animationType="slide">
-                <View style={EmpresaInfoMoneyScreenStyle.modalContainer}>
-                    <View style={EmpresaInfoMoneyScreenStyle.modalContent}>
-                        <Text style={EmpresaInfoMoneyScreenStyle.modalTitle}>Selecione o serviço</Text>
-                        <View style={{ backgroundColor: "#f0f0f0", borderRadius: 8, width: "100%" }}>
-                            <Picker
-                                selectedValue={selectedService}
-                                onValueChange={(itemValue) => setSelectedService(itemValue)}
-                                itemStyle={{ color: "black", fontSize: 16 }}
-                                dropdownIconColor="black"
-                            >
-                                {["Corte de cabelo", "Barba", "Manicure", "Massagem"].map((servico) => (
-                                    <Picker.Item key={servico} label={servico} value={servico} />
-                                ))}
-                            </Picker>
-                        </View>
-                        <TouchableOpacity onPress={() => setModalVisible(false)} style={EmpresaInfoMoneyScreenStyle.modalButton}>
-                            <Text style={{ color: "white" }}>Fechar</Text>
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Selecione o serviço</Text>
+                        <FlatList
+                            data={[{ id: "todos", nome: "Todos" }, ...servicos]}
+                            renderItem={renderServiceItem}
+                            keyExtractor={(item) => item.id}
+                            style={styles.serviceList}
+                        />
+                        <TouchableOpacity 
+                            onPress={() => setModalVisible(false)} 
+                            style={styles.modalButton}
+                        >
+                            <Text style={styles.modalButtonText}>Fechar</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -347,6 +395,53 @@ const EmpresaInfoAgendamentoScreen = () => {
         </View>
     );
 };
+
+const styles = StyleSheet.create({
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        backgroundColor: 'white',
+        borderRadius: 8,
+        padding: 20,
+        width: '80%',
+        maxHeight: '80%',
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 15,
+        textAlign: 'center',
+    },
+    serviceList: {
+        maxHeight: 300,
+    },
+    serviceItem: {
+        paddingVertical: 12,
+        paddingHorizontal: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+    },
+    serviceItemText: {
+        fontSize: 16,
+        color: 'black',
+    },
+    modalButton: {
+        backgroundColor: '#007AFF',
+        padding: 12,
+        borderRadius: 8,
+        marginTop: 15,
+        alignItems: 'center',
+    },
+    modalButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+});
 
 export default EmpresaInfoAgendamentoScreen;
 

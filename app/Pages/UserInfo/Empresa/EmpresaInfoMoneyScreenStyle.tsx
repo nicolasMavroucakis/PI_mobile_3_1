@@ -60,7 +60,7 @@ const EmpresaInfoMoneyScreenStyle = StyleSheet.create({
         height: 40,
     },
     containerFilterFiltrosEsquerda: {
-        width: width * 0.4,
+        width: width * 0.35,
         height: 50,
         flexDirection: 'row',
         justifyContent: 'flex-start',

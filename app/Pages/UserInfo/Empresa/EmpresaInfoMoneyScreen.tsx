@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ScrollView, View, Text, TouchableOpacity, Image, Modal, StyleSheet, Alert } from "react-native";
+import { ScrollView, View, Text, TouchableOpacity, Image, Modal, StyleSheet, Alert, TextInput } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
 import EmpresaNavBar from "@/components/EmpresaNavBar";
@@ -28,6 +28,7 @@ interface Servico {
     nome: string;
     preco: number;
     categoria: string;
+    ValorFinalMuda?: boolean;
 }
 
 interface AgendamentoDoc {
@@ -38,9 +39,9 @@ interface AgendamentoDoc {
         nome: string;
         preco: number;
         duracao: number;
+        ValorFinalMuda?: boolean;
     };
 }
-
 
 const EmpresaInfoMoneyScreen = () => {
     const navigation = useNavigation<NavigationProp>();
@@ -63,6 +64,10 @@ const EmpresaInfoMoneyScreen = () => {
 
     const [quantidadeServicosRealizados, setQuantidadeServicosRealizados] = useState(0);
     const [valorTotalServicosRealizados, setValorTotalServicosRealizados] = useState(0);
+
+    const [modalValorFinalVisible, setModalValorFinalVisible] = useState(false);
+    const [valorFinal, setValorFinal] = useState("");
+    const [agendamentoSelecionado, setAgendamentoSelecionado] = useState<string | null>(null);
 
     const onChangeServicosRealizados = (event: any, selectedDate: any) => {
         const currentDate = selectedDate || dateServicosRealizados;
@@ -105,12 +110,10 @@ const EmpresaInfoMoneyScreen = () => {
                 };
             });
 
-            // Primeiro, vamos separar todos os agendamentos em andamento
             const todosAgendamentosEmAndamento = agendamentosList.filter(
                 agendamento => agendamento.status === "em_andamento"
             );
 
-            // Agora, vamos filtrar apenas os agendamentos de hoje para as outras estatísticas
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             const todayISO = today.toISOString().split("T")[0];
@@ -133,7 +136,6 @@ const EmpresaInfoMoneyScreen = () => {
                 data: a.data?.toDate?.().toISOString()
             })));
 
-            // Atualizando os estados com os novos dados
             setAgendamentosEmAndamento(todosAgendamentosEmAndamento);
             setAgendamentos(agendamentosList);
             setAgendamentosFinalizadosHoje(finalizadosHoje.length);
@@ -146,7 +148,6 @@ const EmpresaInfoMoneyScreen = () => {
         }
     };
 
-    // Adiciona o efeito de foco para recarregar os dados
     useFocusEffect(
         useCallback(() => {
             carregarAgendamentos();
@@ -231,7 +232,6 @@ const EmpresaInfoMoneyScreen = () => {
         }
     }, [dateServicosRealizados, selectedServico, agendamentos, servicos, loading]);
 
-    // --- CARREGAR SERVICOS DA EMPRESA ---
     useEffect(() => {
         const carregarServicos = async () => {
             try {
@@ -272,19 +272,56 @@ const EmpresaInfoMoneyScreen = () => {
 
     const handleFinalizarServico = async (agendamentoId: string) => {
         try {
+            const agendamento = agendamentosEmAndamento.find(a => a.id === agendamentoId);
+            if (!agendamento) return;
+
+            if (agendamento.servico.ValorFinalMuda) {
+                setAgendamentoSelecionado(agendamentoId);
+                setValorFinal(agendamento.servico.preco.toString());
+                setModalValorFinalVisible(true);
+                return;
+            }
+
+            await finalizarAgendamento(agendamentoId);
+        } catch (error) {
+            console.error("Erro ao finalizar serviço:", error);
+            Alert.alert("Erro", "Não foi possível finalizar o serviço.");
+        }
+    };
+
+    const finalizarAgendamento = async (agendamentoId: string, valorFinalServico?: number) => {
+        try {
             const agendamentoRef = doc(db, "agendamentos", agendamentoId);
-            await updateDoc(agendamentoRef, {
+            const updateData: any = {
                 status: "esperando_confirmacao"
-            });
-            
-            // Atualizar a lista localmente
+            };
+
+            if (valorFinalServico !== undefined) {
+                updateData["servico.preco"] = valorFinalServico;
+            }
+
+            await updateDoc(agendamentoRef, updateData);
             carregarAgendamentos();
-            
             Alert.alert("Sucesso", "Aguardando confirmação do cliente!");
         } catch (error) {
             console.error("Erro ao finalizar serviço:", error);
             Alert.alert("Erro", "Não foi possível finalizar o serviço.");
         }
+    };
+
+    const handleConfirmarValorFinal = () => {
+        if (!agendamentoSelecionado) return;
+
+        const valor = parseFloat(valorFinal);
+        if (isNaN(valor) || valor <= 0) {
+            Alert.alert("Erro", "Por favor, insira um valor válido.");
+            return;
+        }
+
+        finalizarAgendamento(agendamentoSelecionado, valor);
+        setModalValorFinalVisible(false);
+        setAgendamentoSelecionado(null);
+        setValorFinal("");
     };
 
     return (
@@ -546,6 +583,46 @@ const EmpresaInfoMoneyScreen = () => {
                         <TouchableOpacity onPress={() => setModalServicoVisible(false)} style={EmpresaInfoMoneyScreenStyle.modalButton}>
                             <Text style={{ color: "white" }}>Fechar</Text>
                         </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+            <Modal visible={modalValorFinalVisible} transparent animationType="slide">
+                <View style={EmpresaInfoMoneyScreenStyle.modalContainer}>
+                    <View style={EmpresaInfoMoneyScreenStyle.modalContent}>
+                        <Text style={EmpresaInfoMoneyScreenStyle.modalTitle}>Valor Final do Serviço</Text>
+                        <TextInput
+                            style={{
+                                backgroundColor: "#f0f0f0",
+                                borderRadius: 8,
+                                padding: 10,
+                                width: "100%",
+                                marginVertical: 10,
+                                color: "black"
+                            }}
+                            value={valorFinal}
+                            onChangeText={setValorFinal}
+                            keyboardType="decimal-pad"
+                            placeholder="Digite o valor final"
+                            placeholderTextColor="#666"
+                        />
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                            <TouchableOpacity 
+                                onPress={() => {
+                                    setModalValorFinalVisible(false);
+                                    setAgendamentoSelecionado(null);
+                                    setValorFinal("");
+                                }} 
+                                style={[EmpresaInfoMoneyScreenStyle.modalButton, { backgroundColor: '#ff4444', marginRight: 5 }]}
+                            >
+                                <Text style={{ color: "white" }}>Cancelar</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                                onPress={handleConfirmarValorFinal} 
+                                style={[EmpresaInfoMoneyScreenStyle.modalButton, { backgroundColor: '#00C20A', marginLeft: 5 }]}
+                            >
+                                <Text style={{ color: "white" }}>Confirmar</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
             </Modal>

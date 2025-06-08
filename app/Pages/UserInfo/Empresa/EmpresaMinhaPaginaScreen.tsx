@@ -21,6 +21,7 @@ type RootStackParamList = {
     AdicionarServico: undefined;
     ConfigEmpresaInfo: undefined;
     EmpresaInfoScreen: undefined;
+    EmpresaEditarServico: { servico: any };
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -134,7 +135,7 @@ const EmpresaMinhaPaginaScreen = () => {
                                     <TouchableOpacity onPress={() => deleteServico(servico.id)}>
                                         <Image source={deleteImg} style={EmpresaInfoMoneyScreenStyle.iconesAddDeleteActionsMinhaPagina} />
                                     </TouchableOpacity>
-                                    <TouchableOpacity>
+                                    <TouchableOpacity onPress={() => navigation.navigate("EmpresaEditarServico", { servico })}>
                                         <Image source={lapisImg} style={EmpresaInfoMoneyScreenStyle.iconesAddDeleteActionsMinhaPagina} />
                                     </TouchableOpacity>
                                     </View>

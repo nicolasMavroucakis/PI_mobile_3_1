@@ -5,6 +5,8 @@ import imageExp from "../../assets/images/imageExemplo.png";
 import { useEmpresaContext } from "@/app/GlobalContext/EmpresaReservaGlobalContext";
 import { useAgendamentoServicos } from "@/app/GlobalContext/AgendamentoServicosGlobalContext";
 import { useNavigation } from "@react-navigation/native";
+import { doc, getDoc } from "firebase/firestore";
+import StartFirebase from "@/app/crud/firebaseConfig";
 
 interface Servico {
     createdAt: Date;
@@ -17,6 +19,7 @@ interface Servico {
     id: string;
     imagensUrl?: string[];
     tipoServico: string;
+    ValorFinalMuda: boolean;
 }
 
 interface CategoriaExpandida {
@@ -157,6 +160,8 @@ const EmpresaServicos = () => {
     const empresa = useEmpresaContext();
     const { adicionarServico, limparSelecao } = useAgendamentoServicos();
     const [categorias, setCategorias] = useState<CategoriaExpandida[]>([]);
+    const [categoriasEmpresa, setCategoriasEmpresa] = useState<string[]>([]);
+    const { db } = StartFirebase();
 
     React.useEffect(() => {
         if (empresa.servicos) {
@@ -169,6 +174,22 @@ const EmpresaServicos = () => {
             setCategorias(categoriasExpandidas);
         }
     }, [empresa.servicos]);
+
+    React.useEffect(() => {
+        const fetchCategorias = async () => {
+            try {
+                const empresaRef = doc(db, "empresas", empresa.id || "VNIJrXvjnlMAYO3cnRiH");
+                const empresaSnap = await getDoc(empresaRef);
+                if (empresaSnap.exists()) {
+                    const data = empresaSnap.data();
+                    setCategoriasEmpresa(data.categorias || []);
+                }
+            } catch (error) {
+                console.error("Erro ao buscar categorias da empresa:", error);
+            }
+        };
+        fetchCategorias();
+    }, [empresa.id]);
 
     const toggleCategoria = (categoriaNome: string) => {
         setCategorias(cats => 
@@ -199,28 +220,28 @@ const EmpresaServicos = () => {
 
     return (
         <ScrollView style={EmpresaInfoScreenStyle.styleContainerServico}>
-            {categorias.map((categoria) => (
-                <View key={categoria.nome}>
+            {categoriasEmpresa.map((categoria) => (
+                <View key={categoria}>
                     <TouchableOpacity
-                        onPress={() => toggleCategoria(categoria.nome)}
+                        onPress={() => toggleCategoria(categoria)}
                         style={EmpresaInfoScreenStyle.moduloServicoButton}
                     >
                         <Text style={EmpresaInfoScreenStyle.moduloServico}>
-                            {categoria.nome}
+                            {categoria}
                         </Text>
                         <Image 
                             source={require("../assets/Images/Arrow.png")} 
                             style={{
                                 ...EmpresaInfoScreenStyle.arrowImage,
-                                transform: [{ rotate: categoria.expandida ? '180deg' : '0deg' }]
+                                transform: [{ rotate: categorias.find(c => c.nome === categoria)?.expandida ? '180deg' : '0deg' }]
                             }}
                         />
                     </TouchableOpacity>
 
-                    {categoria.expandida && (
+                    {categorias.find(c => c.nome === categoria)?.expandida && (
                         <View style={EmpresaInfoScreenStyle.moduloContainer}>
                             {servicos
-                                .filter(servico => servico.categoria === categoria.nome)
+                                .filter(servico => servico.categoria === categoria)
                                 .map((servico, index, array) => (
                                     <React.Fragment key={servico.id}>
                                         <View style={EmpresaInfoScreenStyle.servicoContainer}>
@@ -243,6 +264,9 @@ const EmpresaServicos = () => {
                                                     </Text>
                                                 </TouchableOpacity>
                                                 <View style={EmpresaInfoScreenStyle.containerTextPrice}>
+                                                    <Text style={{color: 'white', fontWeight: 'bold', fontSize: 14}}>
+                                                        {servico.ValorFinalMuda ? 'A partir de ' : ''}
+                                                    </Text>
                                                     <Text style={{color: 'white', fontWeight: 'bold', fontSize: 14}}>
                                                         R$ {servico.preco.toFixed(2)}
                                                     </Text>

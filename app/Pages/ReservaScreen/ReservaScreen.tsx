@@ -33,6 +33,7 @@ interface Servico {
     duracao: number;
     nome: string;
     preco: number;
+    ValorFinalMuda?: boolean;
 }
 
 type StatusAgendamento = 'agendado' | 'confirmado' | 'em_andamento' | 'finalizado' | 'cancelado';
@@ -400,7 +401,7 @@ const ReservaScreen = () => {
         data: Date,
         empresaId: string,
         funcionarioId: string,
-        servico: Servico,
+        servico: Servico & { ValorFinalMuda?: boolean },
         horaInicio: string
     }) => {
         const agora = Timestamp.now();
@@ -632,16 +633,25 @@ const ReservaScreen = () => {
 
             const servicosNomes = servicosSelecionados.map(s => s.nome).join(" + ");
 
+            let valorFinalMuda = false;
+            if (empresa?.servicos && servicosSelecionados.length === 1) {
+                const servicoEmpresa = empresa.servicos.find((s: any) => s.nome === servicosSelecionados[0].nome);
+                valorFinalMuda = !!servicoEmpresa?.ValorFinalMuda;
+            }
+
+            const servicoAgendamento: Servico = {
+                nome: servicosNomes,
+                duracao: duracaoTotal,
+                preco: valorTotal,
+                ValorFinalMuda: valorFinalMuda
+            };
+
             const novoAgendamento = criarNovoAgendamento({
                 clienteId: userId,
                 data: dataAgendamento,
                 empresaId: empresa.id,
                 funcionarioId: funcionarioId,
-                servico: {
-                    nome: servicosNomes,
-                    duracao: duracaoTotal,
-                    preco: valorTotal
-                },
+                servico: servicoAgendamento,
                 horaInicio: horaInicioSelecionada
             });
 

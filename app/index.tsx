@@ -28,6 +28,7 @@ import AdicionarLicenca from "./Pages/UserInfo/Empresa/AdicionarLicenca";
 import IniciarAgendamentoScreen from "./Pages/UserInfo/Empresa/IniciarAgendamentoScreen";
 import AgendamentosScreen from "./Pages/PrincipalApp/AgendamentosScreen/AgendamentosScreen";
 import DetalhesAgendamentoStatusChangeScreen from "./Pages/PrincipalApp/AgendamentosScreen/DetalhesAgendamentoScreen";
+import EmpresaEditarServico from "./Pages/PrincipalApp/CategoriaScreen/EmpresaEditarServico";
 
 import { UserGlobalContextProvider } from "./GlobalContext/UserGlobalContext";
 import { EmpresaGlobalContextProvider } from "./GlobalContext/EmpresaGlobalContext";
@@ -63,6 +64,7 @@ type RootStackParamList = {
   IniciarAgendamentoScreen: undefined;
   AgendamentosScreen: undefined;
   DetalhesAgendamentoStatusChangeScreen: undefined;
+  EmpresaEditarServico: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -102,6 +104,7 @@ export default function Page() {
               <Stack.Screen name="IniciarAgendamentoScreen" component={IniciarAgendamentoScreen} options={{ headerShown: false }} />
               <Stack.Screen name="AgendamentosScreen" component={AgendamentosScreen} options={{ headerShown: false }} />
               <Stack.Screen name="DetalhesAgendamentoStatusChangeScreen" component={DetalhesAgendamentoStatusChangeScreen} options={{ headerShown: false }} />
+              <Stack.Screen name="EmpresaEditarServico" component={EmpresaEditarServico} options={{ headerShown: false }} />
             </Stack.Navigator>      
           </AgendamentoServicosProvider>
         </EmpresaProvider>
