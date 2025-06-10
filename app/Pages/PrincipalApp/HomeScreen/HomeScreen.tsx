@@ -16,24 +16,28 @@ import DescontoImg from "../../../../assets/images/descontoImg.png"
 import HomeNavBar from "@/components/HomeNavBar";
 import EmpresaInfoScreen from "../EmpresaInfoScreen/EmpresaInfoScreen";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useNavigation } from "expo-router";
+import { useRouter } from "expo-router";
 import { RFPercentage } from "react-native-responsive-fontsize";
 import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext";
 import { useEmpresaContext } from "@/app/GlobalContext/EmpresaReservaGlobalContext";
 import { useEffect, useState } from "react";
 import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
 import StartFirebase from "@/app/crud/firebaseConfig";
+import { useNavigation } from "@react-navigation/native";
 
 type RootStackParamList = {
     UserScreen: undefined;
-    CategoriaScreen: undefined; 
+    CategoriaScreen: { categoria: string };
     EmpresaInfoScreen: undefined;
+    CategoriasDeEmpresasScreen: { categoria: string };
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const HomeScreen = () => {
-    const navigation = useNavigation<NavigationProp>();
+    const router = useRouter();
+    const navigation = useNavigation<any>();
+    const { setCategoriaSelecionada } = useUserGlobalContext();
 
     const {
         nome: nomeGlobal,
@@ -186,13 +190,19 @@ const HomeScreen = () => {
 
                 console.log("Dados que serão enviados para o contexto:", dadosAtualizados);
                 setAll(dadosAtualizados);
-                navigation.navigate('EmpresaInfoScreen');
+                router.push("/EmpresaInfoScreen/EmpresaInfoScreen" as any);
             } else {
                 console.error("Empresa não encontrada");
             }
         } catch (error) {
             console.error("Erro ao buscar dados da empresa:", error);
         }
+    };
+
+    // Função para navegar para a tela de categorias filtrando pela categoria
+    const handleCategoriaClick = (categoria: string) => {
+        setCategoriaSelecionada(categoria);
+        navigation.navigate('CategoriasDeEmpresasScreen');
     };
 
     return(
@@ -216,55 +226,39 @@ const HomeScreen = () => {
                 </View>
                 <View style={HomeScreenStyle.topPageCategorias}>
                     <View style={HomeScreenStyle.topPageCategoriasContainer}>
-                        <TouchableOpacity style={HomeScreenStyle.topPageCategoriasContainerButton}>
+                        <TouchableOpacity style={HomeScreenStyle.topPageCategoriasContainerButton} onPress={() => handleCategoriaClick('Aulas')}>
                             <Image source={AulasImg} />
-                            <Text style={[HomeScreenStyle.text, {fontSize: RFPercentage(1) }]}>
-                                Aulas
-                            </Text>
+                            <Text style={[HomeScreenStyle.text, {fontSize: RFPercentage(1) }]}>Aulas</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={HomeScreenStyle.topPageCategoriasContainerButton}>
+                        <TouchableOpacity style={HomeScreenStyle.topPageCategoriasContainerButton} onPress={() => handleCategoriaClick('Eletricista')}>
                             <Image source={EletricistaImg} />
-                            <Text style={[HomeScreenStyle.text, {fontSize: RFPercentage(1) }]}>
-                                Eletricista
-                            </Text>
+                            <Text style={[HomeScreenStyle.text, {fontSize: RFPercentage(1) }]}>Eletricista</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={HomeScreenStyle.topPageCategoriasContainerButton} onPress={() => navigation.navigate('CategoriaScreen')}>
+                        <TouchableOpacity style={HomeScreenStyle.topPageCategoriasContainerButton} onPress={() => handleCategoriaClick('Beleza')}>
                             <Image source={CabelereiroImg} />
-                            <Text style={[HomeScreenStyle.text, {fontSize: RFPercentage(1) }]}>
-                                Cabelereiro
-                            </Text>
+                            <Text style={[HomeScreenStyle.text, {fontSize: RFPercentage(1) }]}>Beleza</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={HomeScreenStyle.topPageCategoriasContainerButton}>
+                        <TouchableOpacity style={HomeScreenStyle.topPageCategoriasContainerButton} onPress={() => handleCategoriaClick('Limpesa')}>
                             <Image source={DiaristaImg} />
-                            <Text style={[HomeScreenStyle.text, {fontSize: RFPercentage(1) }]}>
-                                Diarista
-                            </Text>
+                            <Text style={[HomeScreenStyle.text, {fontSize: RFPercentage(1) }]}>Limpeza</Text>
                         </TouchableOpacity>
                     </View>
                     <View style={HomeScreenStyle.topPageCategoriasContainer}>
-                        <TouchableOpacity style={HomeScreenStyle.topPageCategoriasContainerButton}>
+                        <TouchableOpacity style={HomeScreenStyle.topPageCategoriasContainerButton} onPress={() => handleCategoriaClick('TI')}>
                             <Image source={TecImg} />
-                            <Text style={[HomeScreenStyle.text, {fontSize: RFPercentage(1) }]}>
-                                Tec.Ti
-                            </Text>
+                            <Text style={[HomeScreenStyle.text, {fontSize: RFPercentage(1) }]}>TI</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={HomeScreenStyle.topPageCategoriasContainerButton}>
+                        <TouchableOpacity style={HomeScreenStyle.topPageCategoriasContainerButton} onPress={() => handleCategoriaClick('Encanador')}>
                             <Image source={EncanadorImg} />
-                            <Text style={[HomeScreenStyle.text, {fontSize: RFPercentage(1) }]}>
-                                Encanador
-                            </Text>
+                            <Text style={[HomeScreenStyle.text, {fontSize: RFPercentage(1) }]}>Encanador</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={HomeScreenStyle.topPageCategoriasContainerButton}>
+                        <TouchableOpacity style={HomeScreenStyle.topPageCategoriasContainerButton} onPress={() => handleCategoriaClick('Massagem')}>
                             <Image source={MassagemImg} />
-                            <Text style={[HomeScreenStyle.text, {fontSize: RFPercentage(1) }]}>
-                                Massagem
-                            </Text>
+                            <Text style={[HomeScreenStyle.text, {fontSize: RFPercentage(1) }]}>Massagem</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={HomeScreenStyle.topPageCategoriasContainerButton}>
+                        <TouchableOpacity style={HomeScreenStyle.topPageCategoriasContainerButton} onPress={() => handleCategoriaClick('Mecanico')}>
                             <Image source={MecanicoImg} />
-                            <Text style={[HomeScreenStyle.text, {fontSize: RFPercentage(1) }]}>
-                                Mecanico
-                            </Text>
+                            <Text style={[HomeScreenStyle.text, {fontSize: RFPercentage(1) }]}>Mecanico</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -379,7 +373,7 @@ const HomeScreen = () => {
                         Descontos
                     </Text>
                     <View style={HomeScreenStyle.containerDesconto}>
-                        <TouchableOpacity style={HomeScreenStyle.containerDescontoDentro} onPress={() => navigation.navigate('EmpresaInfoScreen')}>
+                        <TouchableOpacity style={HomeScreenStyle.containerDescontoDentro} onPress={() => router.push("/EmpresaInfoScreen/EmpresaInfoScreen" as any)}>
                             <Image
                                 source={ImgExemplo}
                                 style={HomeScreenStyle.containerDescontoDentroImg}

@@ -119,7 +119,6 @@ const AgendamentoScreen = () => {
                 status: "em_andamento"
             });
             
-            // Atualizar a lista localmente
             fetchAgendamentos();
             
             Alert.alert("Aviso", "Serviço retornado para 'Em andamento'");
@@ -148,7 +147,6 @@ const AgendamentoScreen = () => {
             const hoje = new Date();
             console.log("Data atual (hoje):", hoje);
 
-            // Separar agendamentos por status
             const emAndamento = agendamentos.filter(agendamento => 
                 agendamento.status === "em_andamento"
             );

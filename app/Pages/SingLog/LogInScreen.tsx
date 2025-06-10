@@ -26,6 +26,7 @@ type RootStackParamList = {
     ReservaScreen: undefined;
     IniciarAgendamentoScreen: undefined;
     FuncionarioHomeScreen: undefined;
+    CategoriasDeEmpresasScreen: undefined;
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
@@ -158,7 +159,7 @@ const LogInScreen = () => {
                 <TouchableOpacity style={stylesSingLog.botaoCadastro} onPress={handleLogin}>
                     <Text style={stylesSingLog.botaoTexto}>Entre</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => navigation.navigate('FuncionarioHomeScreen')}>
+                <TouchableOpacity onPress={() => navigation.navigate('CategoriasDeEmpresasScreen')}>
                     <Text>
                         Dev
                     </Text>    

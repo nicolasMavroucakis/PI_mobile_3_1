@@ -33,6 +33,7 @@ import FuncionarioHomeScreen from "./Pages/PrincipalApp/FuncionarioScreen/Funcio
 import FuncionarioAgendamentoScreen from "./Pages/PrincipalApp/FuncionarioScreen/FuncionarioAgendamentoScreen";
 import FuncionarioScreen from "./Pages/PrincipalApp/FuncionarioScreen/FuncionarioScreen";
 import FuncionarioChangeInfo from "./Pages/PrincipalApp/FuncionarioScreen/FuncionarioChangeInfo";
+import CategoriasDeEmpresasScreen from "./Pages/PrincipalApp/CategoriaScreen/CategoriasDeEmpresasScreen";
 
 import { UserGlobalContextProvider } from "./GlobalContext/UserGlobalContext";
 import { EmpresaGlobalContextProvider } from "./GlobalContext/EmpresaGlobalContext";
@@ -73,6 +74,7 @@ type RootStackParamList = {
   FuncionarioAgendamentoScreen: undefined;
   FuncionarioScreen: undefined;
   FuncionarioChangeInfo: undefined;
+  CategoriasDeEmpresasScreen: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -117,6 +119,7 @@ export default function Page() {
               <Stack.Screen name="FuncionarioAgendamentoScreen" component={FuncionarioAgendamentoScreen} options={{ headerShown: false }} />
               <Stack.Screen name="FuncionarioScreen" component={FuncionarioScreen} options={{ headerShown: false }} />
               <Stack.Screen name="FuncionarioChangeInfo" component={FuncionarioChangeInfo} options={{ headerShown: false }} />
+              <Stack.Screen name="CategoriasDeEmpresasScreen" component={CategoriasDeEmpresasScreen} options={{ headerShown: false }} />
             </Stack.Navigator>      
           </AgendamentoServicosProvider>
         </EmpresaProvider>

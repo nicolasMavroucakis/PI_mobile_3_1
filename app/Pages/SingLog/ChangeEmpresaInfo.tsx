@@ -1,4 +1,4 @@
-import { ScrollView, TextInput, TouchableOpacity, View, Text, Alert } from "react-native";
+import { ScrollView, TextInput, TouchableOpacity, View, Text, Alert, Modal, FlatList } from "react-native";
 import stylesSingLog from "./SignLogStyle";
 import { useState, useEffect } from "react";
 import { useNavigation } from "expo-router";
@@ -38,6 +38,8 @@ const ChangeEmpresaInfo = () => {
     const [intervaloServicos, setIntervaloServicos] = useState('');
     const [sobreNos, setSobreNos] = useState('');
     const { id: userId } = useUserGlobalContext();
+    const [modalCategoriaVisible, setModalCategoriaVisible] = useState(false);
+    const [categorias, setCategorias] = useState<string[]>([]);
 
     const {
         setNome: setNomeGlobal,
@@ -117,59 +119,92 @@ const ChangeEmpresaInfo = () => {
     useEffect(() => {
         const fetchEmpresa = async () => {
             if (!userId) return;
-            // Buscar empresa pelo campo userId
-            const empresasRef = collection(db, "empresas");
-            const q = query(empresasRef, where("userId", "==", userId));
-            const querySnapshot = await getDocs(q);
-            if (!querySnapshot.empty) {
-                const empresaDoc = querySnapshot.docs[0];
-                const data = empresaDoc.data();
-                setNome(data.nome || "");
-                setEmail(data.email || "");
-                setTelefone(data.telefone || "");
-                setCategoria(data.categoria || "");
-                setLinkSite(data.linkSite || "");
-                setLinkInstagram(data.linkInstagram || "");
-                setIntervaloServicos(data.intervaloEntreServicos ? String(data.intervaloEntreServicos) : "");
-                setCep(data.endereco?.cep || "");
-                setCidade(data.endereco?.cidade || "");
-                setEndereco(data.endereco?.rua || "");
-                setNumero(data.endereco?.numero || "");
-                setComplemento(data.endereco?.complemento || "");
-                setSobreNos(data.sobre_nos || "");
-                // Preencher horários e abertos se existirem
-                if (data.horarioFuncionamento) {
-                    const horariosFirestore = data.horarioFuncionamento;
-                    setHorarios(prev => {
-                        const novo = { ...prev };
-                        diasSemana.forEach(dia => {
-                            if (horariosFirestore[dia.toLowerCase()]) {
-                                const diaData = horariosFirestore[dia.toLowerCase()];
-                                const horariosArr = diaData.horarios || [];
-                                novo[dia] = {
-                                    inicio: horariosArr[0]?.inicio || "",
-                                    fim: horariosArr[horariosArr.length-1]?.fim || "",
-                                    almocoInicio: horariosArr[0]?.fim || "",
-                                    almocoFim: horariosArr[1]?.inicio || ""
-                                };
-                            }
-                        });
-                        return novo;
-                    });
-                    setAbertos(prev => {
-                        const novo = { ...prev };
-                        diasSemana.forEach(dia => {
-                            if (horariosFirestore[dia.toLowerCase()]) {
-                                novo[dia] = horariosFirestore[dia.toLowerCase()].aberto ?? false;
-                            }
-                        });
-                        return novo;
-                    });
+            try {
+                const userRef = doc(db, "users", userId);
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists()) {
+                    const userData = userSnap.data();
+                    setSenha(userData.senha || "");
                 }
+
+                const empresasRef = collection(db, "empresas");
+                const q = query(empresasRef, where("userId", "==", userId));
+                const querySnapshot = await getDocs(q);
+                if (!querySnapshot.empty) {
+                    const empresaDoc = querySnapshot.docs[0];
+                    const data = empresaDoc.data();
+                    setNome(data.nome || "");
+                    setEmail(data.email || "");
+                    setTelefone(data.telefone || "");
+                    setCategoria(data.categoria || "");
+                    setLinkSite(data.linkSite || "");
+                    setLinkInstagram(data.linkInstagram || "");
+                    setIntervaloServicos(data.intervaloEntreServicos ? String(data.intervaloEntreServicos) : "");
+                    setCep(data.endereco?.cep || "");
+                    setCidade(data.endereco?.cidade || "");
+                    setEndereco(data.endereco?.rua || "");
+                    setNumero(data.endereco?.numero || "");
+                    setComplemento(data.endereco?.complemento || "");
+                    setSobreNos(data.sobre_nos || "");
+                    // Preencher horários e abertos se existirem
+                    if (data.horarioFuncionamento) {
+                        const horariosFirestore = data.horarioFuncionamento;
+                        setHorarios(prev => {
+                            const novo = { ...prev };
+                            diasSemana.forEach(dia => {
+                                if (horariosFirestore[dia.toLowerCase()]) {
+                                    const diaData = horariosFirestore[dia.toLowerCase()];
+                                    const horariosArr = diaData.horarios || [];
+                                    novo[dia] = {
+                                        inicio: horariosArr[0]?.inicio || "",
+                                        fim: horariosArr[horariosArr.length-1]?.fim || "",
+                                        almocoInicio: horariosArr[0]?.fim || "",
+                                        almocoFim: horariosArr[1]?.inicio || ""
+                                    };
+                                }
+                            });
+                            return novo;
+                        });
+                        setAbertos(prev => {
+                            const novo = { ...prev };
+                            diasSemana.forEach(dia => {
+                                if (horariosFirestore[dia.toLowerCase()]) {
+                                    novo[dia] = horariosFirestore[dia.toLowerCase()].aberto ?? false;
+                                }
+                            });
+                            return novo;
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error("Erro ao buscar dados:", error);
+                Alert.alert("Erro", "Não foi possível carregar os dados da empresa.");
             }
         };
         fetchEmpresa();
     }, [userId]);
+
+    useEffect(() => {
+        const carregarCategorias = async () => {
+            try {
+                const categoriasRef = collection(db, "categorias");
+                const categoriasSnapshot = await getDocs(categoriasRef);
+                
+                // Transformar o objeto de categorias em um array de strings
+                const categoriasArray = categoriasSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return Object.keys(data).filter(key => key !== 'id');
+                }).flat();
+
+                setCategorias(categoriasArray);
+            } catch (error) {
+                console.error("Erro ao carregar categorias:", error);
+                Alert.alert("Erro", "Não foi possível carregar as categorias.");
+            }
+        };
+
+        carregarCategorias();
+    }, []);
 
     const handleCadastro = async () => {
         const emailId = email.trim().toLowerCase();
@@ -184,8 +219,12 @@ const ChangeEmpresaInfo = () => {
             const q = query(empresasRef, where("userId", "==", userId));
             const querySnapshot = await getDocs(q);
             let empresaDocRef;
+            let empresaId = null;
+            let categoriaAnterior = null;
             if (!querySnapshot.empty) {
                 empresaDocRef = querySnapshot.docs[0].ref;
+                empresaId = querySnapshot.docs[0].id;
+                categoriaAnterior = querySnapshot.docs[0].data().categoria;
             } else {
                 Alert.alert("Erro", "Empresa não encontrada para este usuário.");
                 return;
@@ -225,6 +264,26 @@ const ChangeEmpresaInfo = () => {
                 { merge: true }
             );
 
+            // Atualizar o documento de categorias
+            const categoriasRef = collection(db, "categorias");
+            const categoriasSnapshot = await getDocs(categoriasRef);
+            if (!categoriasSnapshot.empty && empresaId) {
+                const categoriasDocRef = categoriasSnapshot.docs[0].ref;
+                const categoriasData = categoriasSnapshot.docs[0].data();
+                // Remover da categoria anterior se mudou
+                if (categoriaAnterior && categoriaAnterior !== categoria && Array.isArray(categoriasData[categoriaAnterior])) {
+                    categoriasData[categoriaAnterior] = categoriasData[categoriaAnterior].filter((id: string) => id !== empresaId);
+                }
+                // Adicionar à nova categoria
+                if (!Array.isArray(categoriasData[categoria])) {
+                    categoriasData[categoria] = [];
+                }
+                if (!categoriasData[categoria].includes(empresaId)) {
+                    categoriasData[categoria].push(empresaId);
+                }
+                await setDoc(categoriasDocRef, categoriasData, { merge: true });
+            }
+
             setNomeGlobal(nome);
             setSenhaGlobal(senha);
             setUsuarioGlobal(emailId);
@@ -252,7 +311,6 @@ const ChangeEmpresaInfo = () => {
         { label: 'Número', value: numero, set: setNumero },
         { label: 'Complemento', value: complemento, set: setComplemento },
         { label: 'Telefone', value: telefone, set: setTelefone },
-        { label: 'Categoria', value: categoria, set: setCategoria },
         { label: 'Link Site', value: linkSite, set: setLinkSite },
         { label: 'Link Instagram', value: linkInstagram, set: setLinkInstagram },
         { label: 'Intervalo entre Serviços (minutos)', value: intervaloServicos, set: setIntervaloServicos },
@@ -294,6 +352,61 @@ const ChangeEmpresaInfo = () => {
                         />
                     </View>
                 ))}
+
+                <View
+                    style={[
+                        stylesSingLog.inputContainerOneInput,
+                        { backgroundColor: 'transparent' },
+                        stylesSingLog.inpuitDeBaixo
+                    ]}
+                >
+                    <Text style={{ color: '#00C20A' }}>Categoria</Text>
+                    <TouchableOpacity
+                        style={[stylesSingLog.input, { backgroundColor: 'transparent', justifyContent: 'center' }]}
+                        onPress={() => setModalCategoriaVisible(true)}
+                    >
+                        <Text style={{ color: categoria ? "#fff" : "#ccc" }}>
+                            {categoria || "Selecione uma categoria"}
+                        </Text>
+                    </TouchableOpacity>
+
+                    <Modal
+                        visible={modalCategoriaVisible}
+                        transparent
+                        animationType="slide"
+                        onRequestClose={() => setModalCategoriaVisible(false)}
+                    >
+                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                            <View style={{ backgroundColor: '#fff', borderRadius: 10, padding: 20, width: 300 }}>
+                                <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 10, color: '#00C20A' }}>
+                                    Selecione uma categoria
+                                </Text>
+                                <FlatList
+                                    data={categorias}
+                                    keyExtractor={(item) => item}
+                                    renderItem={({ item }) => (
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                setCategoria(item);
+                                                setModalCategoriaVisible(false);
+                                            }}
+                                            style={{ padding: 15, borderBottomWidth: 1, borderBottomColor: '#eee' }}
+                                        >
+                                            <Text style={{ color: '#333', fontSize: 16 }}>{item}</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                />
+                                <TouchableOpacity 
+                                    onPress={() => setModalCategoriaVisible(false)} 
+                                    style={{ marginTop: 10, alignItems: 'center' }}
+                                >
+                                    <Text style={{ color: '#B10000' }}>Cancelar</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </Modal>
+                </View>
+
                 <View>
                     <Text style={{fontSize: 22, fontWeight: 'bold', color: '#fff', marginBottom: 20, marginTop: 20, margin: 'auto'}}>
                         Horarios de Funcionamento
