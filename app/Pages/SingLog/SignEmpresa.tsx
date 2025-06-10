@@ -150,23 +150,10 @@ const SignEmpresa = () => {
 
             const empresaRef = await addDoc(collection(db, "empresas"), empresaData);
 
-            // Atualizar ou criar a categoria com o ID da nova empresa
-            const categoriaRef = doc(db, "categorias", categoriaId);
-            try {
-                // Tenta atualizar o documento existente
-                await updateDoc(categoriaRef, {
-                    empresas: arrayUnion(empresaRef.id)
-                });
-            } catch (error) {
-                // Se o documento não existir, cria um novo
-                await setDoc(categoriaRef, {
-                    id: categoriaId,
-                    nome: categoriaId,
-                    empresas: [empresaRef.id],
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp()
-                });
-            }
+            const categoriasRef = doc(db, "categorias", "categorias"); 
+            await updateDoc(categoriasRef, {
+                [categoriaId]: arrayUnion(empresaRef.id)
+            });
 
             setNomeGlobal(nome);
             setSenhaGlobal(senha);

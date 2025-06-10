@@ -3,7 +3,7 @@ import stylesSingLog from "../../SingLog/SignLogStyle";
 import { useState, useEffect } from "react";
 import { useNavigation } from "expo-router";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { doc, updateDoc, getDoc } from "firebase/firestore";
+import { doc, updateDoc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import StartFirebase from "@/app/crud/firebaseConfig";
 import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext";
 import UserScreenStyle from "../UserScreen/UserScreenStyle";
@@ -11,6 +11,7 @@ import FuncionarioNavBar from "@/components/FuncionarioNavBar";
 import { AntDesign } from "@expo/vector-icons";
 import setaImg from "../../../../assets/images/seta.png";
 import EmpresaInfoMoneyScreenStyle from "../../UserInfo/Empresa/EmpresaInfoMoneyScreenStyle";
+import { useEmpresaGlobalContext } from "@/app/GlobalContext/EmpresaGlobalContext";
 
 type RootStackParamList = {
     FuncionarioScreen: undefined;
@@ -44,7 +45,9 @@ const FuncionarioChangeInfo = () => {
         setComplemento: setComplementoGlobal,
         setNumeroTelefone: setTelefoneGlobal,
     } = useUserGlobalContext();
-
+    const { servicos } = useEmpresaGlobalContext();
+    const [servicosSelecionados, setServicosSelecionados] = useState<string[]>([]);
+    const [isEmpresa, setIsEmpresa] = useState(false);
     const [nome, setNome] = useState(nomeGlobal);
     const [senha, setSenha] = useState(senhaGlobal);
     const [email, setEmail] = useState(emailGlobal);
@@ -118,8 +121,12 @@ const FuncionarioChangeInfo = () => {
                     setNumero(endereco.numero || numeroGlobal);
                     setComplemento(endereco.complemento || complementoGlobal);
                     setTelefone(userData.telefone || telefoneGlobal);
+  
+                    const empresaRef = collection(db, "empresas");
+                    const q = query(empresaRef, where("userId", "==", userId));
+                    const querySnapshot = await getDocs(q);
+                    setIsEmpresa(!querySnapshot.empty);
 
-                    // Carregar horários se existirem
                     if (userData.horarioFuncionamento) {
                         const horariosFirestore = userData.horarioFuncionamento;
                         setHorarios(prev => {
@@ -148,6 +155,10 @@ const FuncionarioChangeInfo = () => {
                             return novo;
                         });
                     }
+
+                    if (userData.servicos) {
+                        setServicosSelecionados(userData.servicos);
+                    }
                 }
             } catch (error) {
                 console.error("Erro ao carregar dados do usuário:", error);
@@ -158,6 +169,16 @@ const FuncionarioChangeInfo = () => {
         carregarDadosUsuario();
     }, [userId]);
 
+    const handleServicoToggle = (servicoId: string) => {
+        setServicosSelecionados(prev => {
+            if (prev.includes(servicoId)) {
+                return prev.filter(id => id !== servicoId);
+            } else {
+                return [...prev, servicoId];
+            }
+        });
+    };
+
     const handleAtualizar = async () => {
         if (!nome || !email || !telefone || !cep || !cidade || !rua || !numero) {
             Alert.alert("Erro", "Preencha todos os campos obrigatórios.");
@@ -166,7 +187,6 @@ const FuncionarioChangeInfo = () => {
 
         setLoading(true);
         try {
-            // Montar objeto de horários para Firestore
             const horarioFuncionamentoFirestore: { [key: string]: any } = {};
             diasSemana.forEach(dia => {
                 horarioFuncionamentoFirestore[dia.toLowerCase()] = {
@@ -179,7 +199,7 @@ const FuncionarioChangeInfo = () => {
             });
 
             const userRef = doc(db, "users", userId);
-            await updateDoc(userRef, {
+            const updateData: any = {
                 nome,
                 email: email.trim().toLowerCase(),
                 senha,
@@ -193,7 +213,13 @@ const FuncionarioChangeInfo = () => {
                 },
                 horarioFuncionamento: horarioFuncionamentoFirestore,
                 updatedAt: new Date()
-            });
+            };
+
+            if (!isEmpresa) {
+                updateData.servicos = servicosSelecionados;
+            }
+
+            await updateDoc(userRef, updateData);
 
             setNomeGlobal(nome);
             setEmailGlobal(email);
@@ -348,6 +374,47 @@ const FuncionarioChangeInfo = () => {
                                 ))}
                             </View>
                         </View>
+
+                        {!isEmpresa && (
+                            <View style={{ marginTop: 20 }}>
+                                <Text style={{ fontSize: 22, fontWeight: 'bold', color: '#fff', marginBottom: 20 }}>
+                                    Serviços Disponíveis
+                                </Text>
+                                <View style={{ gap: 10 }}>
+                                    {servicos.map((servico: any) => (
+                                        <TouchableOpacity
+                                            key={servico.id}
+                                            style={[
+                                                stylesSingLog.inputContainerOneInput,
+                                                {
+                                                    backgroundColor: servicosSelecionados.includes(servico.id) ? '#00C20A20' : 'transparent',
+                                                    borderColor: servicosSelecionados.includes(servico.id) ? '#00C20A' : '#ccc',
+                                                    borderWidth: 1,
+                                                    borderRadius: 8,
+                                                    padding: 10,
+                                                    flexDirection: 'row',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center'
+                                                }
+                                            ]}
+                                            onPress={() => handleServicoToggle(servico.id)}
+                                        >
+                                            <View>
+                                                <Text style={{ color: '#fff', fontSize: 16 }}>
+                                                    {servico.nome}
+                                                </Text>
+                                                <Text style={{ color: '#ccc', fontSize: 14 }}>
+                                                    {servico.categoria}
+                                                </Text>
+                                            </View>
+                                            {servicosSelecionados.includes(servico.id) && (
+                                                <AntDesign name="checkcircle" size={24} color="#00C20A" />
+                                            )}
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            </View>
+                        )}
 
                         <TouchableOpacity 
                             style={[stylesSingLog.botaoCadastro, loading && { opacity: 0.7 }]} 
