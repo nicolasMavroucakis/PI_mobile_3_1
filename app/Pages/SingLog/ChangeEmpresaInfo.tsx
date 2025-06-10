@@ -120,32 +120,35 @@ const ChangeEmpresaInfo = () => {
         const fetchEmpresa = async () => {
             if (!userId) return;
             try {
+                // Buscar dados do usuário
                 const userRef = doc(db, "users", userId);
                 const userSnap = await getDoc(userRef);
                 if (userSnap.exists()) {
                     const userData = userSnap.data();
                     setSenha(userData.senha || "");
+                    setEmail(userData.email || ""); // Email vem do documento do usuário
+                    setNome(userData.nome || ""); // Nome também vem do documento do usuário
+                    setTelefone(userData.telefone || "");
+                    setCidade(userData.endereco?.cidade || "");
+                    setEndereco(userData.endereco?.rua || "");
+                    setNumero(userData.endereco?.numero || "");
+                    setComplemento(userData.endereco?.complemento || "");
+                    setCep(userData.endereco?.cep || "");
                 }
 
+                // Buscar dados específicos da empresa
                 const empresasRef = collection(db, "empresas");
                 const q = query(empresasRef, where("userId", "==", userId));
                 const querySnapshot = await getDocs(q);
                 if (!querySnapshot.empty) {
                     const empresaDoc = querySnapshot.docs[0];
                     const data = empresaDoc.data();
-                    setNome(data.nome || "");
-                    setEmail(data.email || "");
-                    setTelefone(data.telefone || "");
-                    setCategoria(data.categoria || "");
+                    setCategoria(data.categoriaId || ""); // Mudando de categoria para categoriaId
                     setLinkSite(data.linkSite || "");
                     setLinkInstagram(data.linkInstagram || "");
                     setIntervaloServicos(data.intervaloEntreServicos ? String(data.intervaloEntreServicos) : "");
-                    setCep(data.endereco?.cep || "");
-                    setCidade(data.endereco?.cidade || "");
-                    setEndereco(data.endereco?.rua || "");
-                    setNumero(data.endereco?.numero || "");
-                    setComplemento(data.endereco?.complemento || "");
                     setSobreNos(data.sobre_nos || "");
+                    
                     // Preencher horários e abertos se existirem
                     if (data.horarioFuncionamento) {
                         const horariosFirestore = data.horarioFuncionamento;
@@ -264,17 +267,14 @@ const ChangeEmpresaInfo = () => {
                 { merge: true }
             );
 
-            // Atualizar o documento de categorias
             const categoriasRef = collection(db, "categorias");
             const categoriasSnapshot = await getDocs(categoriasRef);
             if (!categoriasSnapshot.empty && empresaId) {
                 const categoriasDocRef = categoriasSnapshot.docs[0].ref;
                 const categoriasData = categoriasSnapshot.docs[0].data();
-                // Remover da categoria anterior se mudou
                 if (categoriaAnterior && categoriaAnterior !== categoria && Array.isArray(categoriasData[categoriaAnterior])) {
                     categoriasData[categoriaAnterior] = categoriasData[categoriaAnterior].filter((id: string) => id !== empresaId);
                 }
-                // Adicionar à nova categoria
                 if (!Array.isArray(categoriasData[categoria])) {
                     categoriasData[categoria] = [];
                 }
