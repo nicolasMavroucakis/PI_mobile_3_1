@@ -11,8 +11,7 @@ import { format } from 'date-fns';
 import { useEffect, useState } from "react";
 import { useEmpresaContext } from "@/app/GlobalContext/EmpresaReservaGlobalContext";
 import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext";
-import { useRouter } from "expo-router";
-import { useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 const { db } = StartFirebase();
@@ -33,7 +32,7 @@ interface Servico {
     duracao: number;
     nome: string;
     preco: number;
-    ValorFinalMuda?: boolean;
+    valorFinalMuda?: boolean;
 }
 
 type StatusAgendamento = 'agendado' | 'confirmado' | 'em_andamento' | 'finalizado' | 'cancelado';
@@ -53,7 +52,7 @@ interface Agendamento {
 }
 
 const ReservaScreen = () => {
-    const router = useRouter();
+    const navigation = useNavigation<any>();
     const route = useRoute();
     const { empresaId } = (route.params || {}) as { empresaId?: string };
     const { setAll } = useEmpresaContext();
@@ -401,7 +400,7 @@ const ReservaScreen = () => {
         data: Date,
         empresaId: string,
         funcionarioId: string,
-        servico: Servico & { ValorFinalMuda?: boolean },
+        servico: Servico & { valorFinalMuda?: boolean },
         horaInicio: string
     }) => {
         const agora = Timestamp.now();
@@ -545,7 +544,7 @@ const ReservaScreen = () => {
     };
 
     const handleVoltar = () => {
-        router.back();
+        navigation.goBack();
     };
 
     const handleContinuar = async () => {
@@ -635,15 +634,15 @@ const ReservaScreen = () => {
 
             let valorFinalMuda = false;
             if (empresa?.servicos && servicosSelecionados.length === 1) {
-                const servicoEmpresa = empresa.servicos.find((s: any) => s.nome === servicosSelecionados[0].nome);
-                valorFinalMuda = !!servicoEmpresa?.ValorFinalMuda;
+                const servicoEmpresa = empresa.servicos.find((s: any) => s.nome === servicosSelecionados[0].nome) as Servico;
+                valorFinalMuda = !!servicoEmpresa?.valorFinalMuda;
             }
 
             const servicoAgendamento: Servico = {
                 nome: servicosNomes,
                 duracao: duracaoTotal,
                 preco: valorTotal,
-                ValorFinalMuda: valorFinalMuda
+                valorFinalMuda: valorFinalMuda
             };
 
             const novoAgendamento = criarNovoAgendamento({
@@ -667,7 +666,7 @@ const ReservaScreen = () => {
                     {
                         text: "OK",
                         onPress: () => {
-                            router.back();
+                            navigation.goBack();
                         }
                     }
                 ]

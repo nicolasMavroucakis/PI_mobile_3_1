@@ -5,6 +5,7 @@ interface Servico {
     nome: string;
     preco: number;
     duracao: number;
+    valorFinalMuda?: boolean;
 }
 
 interface Funcionario {

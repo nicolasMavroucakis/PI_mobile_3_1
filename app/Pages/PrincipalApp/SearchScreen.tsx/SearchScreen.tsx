@@ -86,15 +86,9 @@ const SearchScreen = () => {
                         <Image source={BuscaImg} style={SearchScreenStyle.ImagesTextInput}/>
                         <TextInput style={{flex: 1}} placeholder="Pesquise serviços ou empresas" placeholderTextColor="#4F4F4F" onChangeText={setSearchText}/>
                     </View>
-                    <View style={SearchScreenStyle.containerSmallInputs}>
-                        <View style={[SearchScreenStyle.inputBox, SearchScreenStyle.inputBoxSmall]}>
-                            <Image source={LocationImg} style={SearchScreenStyle.ImagesTextInput}/>
-                            <TextInput style={{flex: 1}} placeholder="A onde?" placeholderTextColor="#4F4F4F" onChangeText={setCity}/>
-                        </View>
-                        <View style={[SearchScreenStyle.inputBox, SearchScreenStyle.inputBoxSmall]}>
-                            <Image source={CalendarioImg} style={SearchScreenStyle.ImagesTextInput}/>
-                            <TextInput style={{flex: 1}} placeholder="Quando?" placeholderTextColor="#4F4F4F" />
-                        </View>
+                    <View style={[SearchScreenStyle.inputBox, SearchScreenStyle.inputBoxBig]}>
+                        <Image source={LocationImg} style={SearchScreenStyle.ImagesTextInput}/>
+                        <TextInput style={{flex: 1}} placeholder="A onde?" placeholderTextColor="#4F4F4F" onChangeText={setCity}/>
                     </View>
                     <TouchableOpacity style={SearchScreenStyle.TouchableOpacityPesquisa} onPress={handleSearch}>
                         <Text style={{color: '#FFFFFF', fontSize: 16, fontWeight: 'bold'}}>

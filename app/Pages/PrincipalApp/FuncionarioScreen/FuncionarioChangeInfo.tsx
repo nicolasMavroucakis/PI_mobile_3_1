@@ -9,6 +9,8 @@ import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext";
 import UserScreenStyle from "../UserScreen/UserScreenStyle";
 import FuncionarioNavBar from "@/components/FuncionarioNavBar";
 import { AntDesign } from "@expo/vector-icons";
+import setaImg from "../../../../assets/images/seta.png";
+import EmpresaInfoMoneyScreenStyle from "../../UserInfo/Empresa/EmpresaInfoMoneyScreenStyle";
 
 type RootStackParamList = {
     FuncionarioScreen: undefined;
@@ -214,13 +216,16 @@ const FuncionarioChangeInfo = () => {
 
     return (
         <View style={{ flex: 1, backgroundColor: "#000" }}>
-            <View style={UserScreenStyle.containerTitle}>
+            <View style={[UserScreenStyle.containerTitle, {justifyContent: 'space-between', flexDirection: 'row'}]}>
+                <TouchableOpacity onPress={() => navigation.goBack()}>
+                    <Image source={setaImg} style={EmpresaInfoMoneyScreenStyle.tamanhoImagensContainerTitle} />
+                </TouchableOpacity>
                 <Text style={UserScreenStyle.textTitle}>Editar Perfil</Text>
-                <View style={{ width: 30 }} />
+                <TouchableOpacity style={{ width: 30, height: 30, marginRight: 10 }}/>
             </View>
 
             <ScrollView style={{ flex: 1 }}>
-                <View style={[stylesSingLog.container, { height: 'auto', paddingBottom: 100 }]}>
+                <View style={[stylesSingLog.container, { height: 'auto', paddingBottom: 100, borderTopRightRadius: 20, borderTopLeftRadius: 20 }]}>
                     <View style={stylesSingLog.containerInput}>
                         {[
                             { label: 'Nome', value: nome, set: setNome },

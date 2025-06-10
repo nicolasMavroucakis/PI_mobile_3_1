@@ -16,14 +16,13 @@ import DescontoImg from "../../../../assets/images/descontoImg.png"
 import HomeNavBar from "@/components/HomeNavBar";
 import EmpresaInfoScreen from "../EmpresaInfoScreen/EmpresaInfoScreen";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useRouter } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
 import { RFPercentage } from "react-native-responsive-fontsize";
 import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext";
 import { useEmpresaContext } from "@/app/GlobalContext/EmpresaReservaGlobalContext";
 import { useEffect, useState } from "react";
 import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
 import StartFirebase from "@/app/crud/firebaseConfig";
-import { useNavigation } from "@react-navigation/native";
 
 type RootStackParamList = {
     UserScreen: undefined;
@@ -34,8 +33,23 @@ type RootStackParamList = {
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
+interface Empresa {
+    id: string;
+    userId: string;
+    nome: string;
+    fotoPerfil: string | null;
+    [key: string]: any;
+}
+
+interface EmpresaData {
+    id: string;
+    userId: string;
+    [key: string]: any;
+}
+
+const CATEGORIAS = ['Beleza', 'Limpeza', 'Massagem', 'Eletricista', 'Encanador', 'Mecanico', 'TI', 'Aulas'];
+
 const HomeScreen = () => {
-    const router = useRouter();
     const navigation = useNavigation<any>();
     const { setCategoriaSelecionada } = useUserGlobalContext();
 
@@ -53,6 +67,8 @@ const HomeScreen = () => {
     const [meusAgendamentos, setMeusAgendamentos] = useState<any[]>([]);
     const [ultimasEmpresas, setUltimasEmpresas] = useState<any[]>([]);
     const [empresasRecomendadas, setEmpresasRecomendadas] = useState<any[]>([]);
+    const [categoriasAleatorias, setCategoriasAleatorias] = useState<string[]>([]);
+    const [empresasPorCategoria, setEmpresasPorCategoria] = useState<Record<string, Empresa[]>>({});
 
     const { setAll } = useEmpresaContext();
 
@@ -100,6 +116,7 @@ const HomeScreen = () => {
                     const empresasInfo = usersSnapshot.docs.map(doc => ({
                         nome: doc.data().nome,
                         fotoPerfil: doc.data().fotoPerfil,
+                        userId: doc.id
                     }));
                     console.log("Informações das empresas:", empresasInfo);
                     setUltimasEmpresas(empresasInfo);
@@ -149,6 +166,78 @@ const HomeScreen = () => {
         fetchEmpresasRecomendadas();
     }, [db]);
 
+    const selecionarCategoriasAleatorias = () => {
+        const categoriasEmbaralhadas = [...CATEGORIAS].sort(() => Math.random() - 0.5);
+        setCategoriasAleatorias(categoriasEmbaralhadas.slice(0, 3));
+    };
+
+    useEffect(() => {
+        selecionarCategoriasAleatorias();
+    }, []);
+
+    useEffect(() => {
+        const fetchEmpresasPorCategoria = async () => {
+            try {
+                const empresasRef = collection(db, "empresas");
+                const categoriasRef = collection(db, "categorias");
+                const categoriasSnapshot = await getDocs(categoriasRef);
+                
+                if (!categoriasSnapshot.empty) {
+                    const data = categoriasSnapshot.docs[0].data() as Record<string, string[]>;
+                    const empresasPorCat: Record<string, Empresa[]> = {};
+
+                    for (const categoria of categoriasAleatorias) {
+                        const empresaIds = (data[categoria] || []) as string[];
+                        if (empresaIds.length > 0) {
+                            const empresasQuery = query(
+                                empresasRef,
+                                where("__name__", "in", empresaIds.slice(0, 10))
+                            );
+                            const empresasSnapshot = await getDocs(empresasQuery);
+                            
+                            const empresas = empresasSnapshot.docs.map(doc => ({
+                                id: doc.id,
+                                ...doc.data()
+                            })) as EmpresaData[];
+
+                            const userIds = empresas.map(empresa => empresa.userId);
+                            const usersRef = collection(db, "users");
+                            const usersQuery = query(usersRef, where("__name__", "in", userIds));
+                            const usersSnapshot = await getDocs(usersQuery);
+
+                            const usersMap = usersSnapshot.docs.reduce<Record<string, { nome: string; fotoPerfil: string | null }>>((acc, doc) => {
+                                acc[doc.id] = {
+                                    nome: doc.data().nome,
+                                    fotoPerfil: doc.data().fotoPerfil
+                                };
+                                return acc;
+                            }, {});
+
+                            const empresasComInfo: Empresa[] = empresas.map(empresa => ({
+                                ...empresa,
+                                nome: usersMap[empresa.userId]?.nome || empresa.nome,
+                                fotoPerfil: usersMap[empresa.userId]?.fotoPerfil || null,
+                                userId: empresa.userId
+                            }));
+
+                            empresasPorCat[categoria] = empresasComInfo;
+                        } else {
+                            empresasPorCat[categoria] = [];
+                        }
+                    }
+
+                    setEmpresasPorCategoria(empresasPorCat);
+                }
+            } catch (error) {
+                console.error("Erro ao buscar empresas por categoria:", error);
+            }
+        };
+
+        if (categoriasAleatorias.length > 0) {
+            fetchEmpresasPorCategoria();
+        }
+    }, [categoriasAleatorias]);
+
     const handleEmpresaClick = async (empresa: any) => {
         try {
             const empresasRef = collection(db, "empresas");
@@ -190,7 +279,7 @@ const HomeScreen = () => {
 
                 console.log("Dados que serão enviados para o contexto:", dadosAtualizados);
                 setAll(dadosAtualizados);
-                router.push("/EmpresaInfoScreen/EmpresaInfoScreen" as any);
+                navigation.navigate("EmpresaInfoScreen" as never);
             } else {
                 console.error("Empresa não encontrada");
             }
@@ -199,7 +288,6 @@ const HomeScreen = () => {
         }
     };
 
-    // Função para navegar para a tela de categorias filtrando pela categoria
     const handleCategoriaClick = (categoria: string) => {
         setCategoriaSelecionada(categoria);
         navigation.navigate('CategoriasDeEmpresasScreen');
@@ -207,7 +295,7 @@ const HomeScreen = () => {
 
     return(
         <View style={{ flex: 1 }}>
-            <ScrollView contentContainerStyle={HomeScreenStyle.container}>
+            <ScrollView contentContainerStyle={[HomeScreenStyle.container,{paddingBottom: 200}]}>
                 <View style={HomeScreenStyle.topNav}>
                     <View style={[HomeScreenStyle.itensTop, {alignItems: 'flex-start'}]}>
                         <Text style={[HomeScreenStyle.text, {fontSize: 15, marginLeft: 10}]}>Ola {primeiroNome}</Text>
@@ -368,89 +456,47 @@ const HomeScreen = () => {
                         )}
                     </ScrollView>
                 </View>
-                <View>
-                    <Text style={{color: '#fff', fontSize: 20, fontWeight: 'bold', marginBottom: 20, marginTop: 20, marginLeft: 10}}>
-                        Descontos
-                    </Text>
-                    <View style={HomeScreenStyle.containerDesconto}>
-                        <TouchableOpacity style={HomeScreenStyle.containerDescontoDentro} onPress={() => router.push("/EmpresaInfoScreen/EmpresaInfoScreen" as any)}>
-                            <Image
-                                source={ImgExemplo}
-                                style={HomeScreenStyle.containerDescontoDentroImg}
-                                resizeMode="cover"
-                            />
-                            <Text style={{color: '#fff', fontSize: 17, fontWeight: 'bold', marginBottom: 5, marginTop: 10, marginLeft: 0}}>
-                                Mecanico do seu Zé
+                {categoriasAleatorias.map((categoria, index) => (
+                    <View key={categoria}>
+                        <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+                            <Text style={{color: '#fff', fontSize: 20, fontWeight: 'bold', marginBottom: 20, marginTop: 20, marginLeft: 10}}>
+                                Empresas de {categoria}
                             </Text>
-                            <Text  style={{color: '#fff', fontSize: 13, fontWeight: 'bold', marginBottom: 15, marginTop: 1, marginLeft: 0}}>
-                                Rua das bananeiras 320, São Paulo, São Paulo
-                            </Text>
-                            <View style={HomeScreenStyle.descontoContainer}>
-                                <Image source={DescontoImg}/>
-                                <Text>
-                                    Economia de até 10%
+                            <TouchableOpacity style={{flexDirection: 'row', alignItems: 'center', marginLeft: 10}} onPress={() => handleCategoriaClick(categoria)}>
+                                <Text style={{color: '#00C20A', fontSize: 15, fontWeight: 'bold'}}>
+                                    Ver todas
                                 </Text>
-                            </View>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={HomeScreenStyle.containerDescontoDentro}>
-                            <Image
-                                source={ImgExemplo}
-                                style={HomeScreenStyle.containerDescontoDentroImg}
-                                resizeMode="cover"
-                            />
-                            <Text style={{color: '#fff', fontSize: 17, fontWeight: 'bold', marginBottom: 5, marginTop: 10, marginLeft: 0}}>
-                                Mecanico do seu Zé
-                            </Text>
-                            <Text  style={{color: '#fff', fontSize: 13, fontWeight: 'bold', marginBottom: 15, marginTop: 1, marginLeft: 0}}>
-                                Rua das bananeiras 320, São Paulo, São Paulo
-                            </Text>
-                            <View style={HomeScreenStyle.descontoContainer}>
-                                <Image source={DescontoImg}/>
-                                <Text>
-                                    Economia de até 10%
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={HomeScreenStyle.containerDescontoDentro}>
-                            <Image
-                                source={ImgExemplo}
-                                style={HomeScreenStyle.containerDescontoDentroImg}
-                                resizeMode="cover"
-                            />
-                            <Text style={{color: '#fff', fontSize: 17, fontWeight: 'bold', marginBottom: 5, marginTop: 10, marginLeft: 0}}>
-                                Mecanico do seu Zé
-                            </Text>
-                            <Text  style={{color: '#fff', fontSize: 13, fontWeight: 'bold', marginBottom: 15, marginTop: 1, marginLeft: 0}}>
-                                Rua das bananeiras 320, São Paulo, São Paulo
-                            </Text>
-                            <View style={HomeScreenStyle.descontoContainer}>
-                                <Image source={DescontoImg}/>
-                                <Text>
-                                    Economia de até 10%
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={HomeScreenStyle.containerDescontoDentro}>
-                            <Image
-                                source={ImgExemplo}
-                                style={HomeScreenStyle.containerDescontoDentroImg}
-                                resizeMode="cover"
-                            />
-                            <Text style={{color: '#fff', fontSize: 17, fontWeight: 'bold', marginBottom: 5, marginTop: 10, marginLeft: 0}}>
-                                Mecanico do seu Zé
-                            </Text>
-                            <Text  style={{color: '#fff', fontSize: 13, fontWeight: 'bold', marginBottom: 15, marginTop: 1, marginLeft: 0}}>
-                                Rua das bananeiras 320, São Paulo, São Paulo
-                            </Text>
-                            <View style={HomeScreenStyle.descontoContainer}>
-                                <Image source={DescontoImg}/>
-                                <Text>
-                                    Economia de até 10%
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
+                                <AntDesign name="right" size={20} color="#00C20A" style={{marginLeft: 5, fontWeight: 'bold'}} />
+                            </TouchableOpacity>
+                        </View>
+                        <ScrollView style={HomeScreenStyle.containerUltimosServicos} horizontal={true}>
+                            {(!empresasPorCategoria[categoria] || empresasPorCategoria[categoria].length === 0) ? (
+                                <Text style={{ color: "#fff", marginLeft: 10 }}>Nenhuma empresa encontrada.</Text>
+                            ) : (
+                                empresasPorCategoria[categoria].map((empresa, index) => (
+                                    <TouchableOpacity
+                                        key={empresa.id || index}
+                                        style={HomeScreenStyle.containerUltimosServicosDentro}
+                                        onPress={() => handleEmpresaClick(empresa)}
+                                    >
+                                        <View style={HomeScreenStyle.ImgUltServiView}>
+                                            <Image
+                                                source={empresa.fotoPerfil ? { uri: empresa.fotoPerfil } : require("../../../../assets/images/user.jpeg")}
+                                                style={HomeScreenStyle.ImgUltServi}
+                                                resizeMode="cover"
+                                            />
+                                        </View>
+                                        <View style={[HomeScreenStyle.ImgUltServiView, {width: '80%', alignItems: 'center', margin: 'auto'}]}>
+                                            <Text style={{ fontSize: RFPercentage(1), fontWeight: "bold", color: "#fff", textAlign: 'center' }}>
+                                                {empresa.nome}
+                                            </Text>
+                                        </View>
+                                    </TouchableOpacity>
+                                ))
+                            )}
+                        </ScrollView>
                     </View>
-                </View>
+                ))}
             </ScrollView>
             <HomeNavBar/>
         </View>

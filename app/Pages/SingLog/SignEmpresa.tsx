@@ -2,7 +2,7 @@ import { ScrollView, TextInput, TouchableOpacity, View, Text, Alert, Modal, Flat
 import stylesSingLog from "./SignLogStyle";
 import { useState, useEffect } from "react";
 import { useNavigation } from "expo-router";
-import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, updateDoc, arrayUnion } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, updateDoc, arrayUnion, setDoc } from "firebase/firestore";
 import StartFirebase from "@/app/crud/firebaseConfig";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext";
@@ -150,11 +150,23 @@ const SignEmpresa = () => {
 
             const empresaRef = await addDoc(collection(db, "empresas"), empresaData);
 
-            // Atualizar a categoria selecionada com o ID da nova empresa
+            // Atualizar ou criar a categoria com o ID da nova empresa
             const categoriaRef = doc(db, "categorias", categoriaId);
-            await updateDoc(categoriaRef, {
-                empresas: arrayUnion(empresaRef.id)
-            });
+            try {
+                // Tenta atualizar o documento existente
+                await updateDoc(categoriaRef, {
+                    empresas: arrayUnion(empresaRef.id)
+                });
+            } catch (error) {
+                // Se o documento não existir, cria um novo
+                await setDoc(categoriaRef, {
+                    id: categoriaId,
+                    nome: categoriaId,
+                    empresas: [empresaRef.id],
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                });
+            }
 
             setNomeGlobal(nome);
             setSenhaGlobal(senha);

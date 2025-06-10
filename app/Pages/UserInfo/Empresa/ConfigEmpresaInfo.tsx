@@ -20,6 +20,7 @@ type RootStackParamList = {
     FecharAgendaDia: undefined;
     AdicionarFerias: undefined;
     AdicionarLicenca: undefined;
+    EditarDeletarFuncionario: undefined;
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -42,6 +43,12 @@ const ConfigEmpresaInfo = () => {
                 <View>
                     <TouchableOpacity style={EmpresaInfoMoneyScreenStyle.touchableOpacityAdd} onPress={() => navigation.navigate("SignFuncionario")}>
                         <Text style={{color: 'white', fontWeight: 'bold',fontSize: 18}}>Adicionar Funcionário</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={EmpresaInfoMoneyScreenStyle.touchableOpacityAdd} 
+                        onPress={() => navigation.navigate("EditarDeletarFuncionario")}
+                    >
+                        <Text style={{color: 'white', fontWeight: 'bold',fontSize: 18}}>Gerenciar Funcionários</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={EmpresaInfoMoneyScreenStyle.touchableOpacityAdd} onPress={() => navigation.navigate("FecharAgendaDia")}>
                         <Text style={{color: 'white', fontWeight: 'bold',fontSize: 18}}>Fechar Agenda de um Dia</Text>

@@ -15,7 +15,18 @@ import { collection, query, where, getDocs, updateDoc, doc } from "firebase/fire
 import StartFirebase from "../crud/firebaseConfig";
 import { start } from "repl";
 
+interface EmpresaData {
+    id: string;
+    userId: string;
+    funcionarios: string[];
+    categorias: string[];
+    servicos: any[];
+    [key: string]: any;
+}
+
 interface EmpresaGlobalContextType {
+    empresa: EmpresaData | null;
+    setEmpresa: Dispatch<SetStateAction<any>>;
     categorias: string[];
     setCategorias: Dispatch<SetStateAction<string[]>>;
     addCategoria: (categoria: string) => void;
@@ -24,11 +35,14 @@ interface EmpresaGlobalContextType {
     setServicos: Dispatch<SetStateAction<any[]>>;
     funcionarios: any[];
     setFuncionarios: Dispatch<SetStateAction<any[]>>;
-    carregarServicos: (categoria: string) => void;
+    carregarServicos: () => void;
     deleteServico: (servicos: string) => void;
+    carregarEmpresa: () => Promise<void>;
 }
 
 export const EmpresaGlobalContext = createContext<EmpresaGlobalContextType>({
+    empresa: null,
+    setEmpresa: () => {},
     categorias: [],
     setCategorias: () => {},
     addCategoria: () => {},
@@ -39,14 +53,45 @@ export const EmpresaGlobalContext = createContext<EmpresaGlobalContextType>({
     setFuncionarios: () => {},
     carregarServicos: () => {},
     deleteServico: () => {},
+    carregarEmpresa: async () => {},
 });
 
 export const EmpresaGlobalContextProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+    const [empresa, setEmpresa] = useState<any>(null);
     const [categorias, setCategorias] = useState<string[]>([]);
     const [servicos, setServicos] = useState<any[]>([]);
     const [funcionarios, setFuncionarios] = useState<any[]>([]);
     const { id: userId } = useUserGlobalContext();
     const { db } = StartFirebase();
+
+    const carregarEmpresa = async () => {
+        if (!userId) return;
+        
+        try {
+            const empresasRef = collection(db, "empresas");
+            const q = query(empresasRef, where("userId", "==", userId));
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                const empresaDoc = querySnapshot.docs[0];
+                const empresaData: EmpresaData = {
+                    id: empresaDoc.id,
+                    ...empresaDoc.data()
+                } as EmpresaData;
+                setEmpresa(empresaData);
+                setCategorias(empresaData.categorias || []);
+                setServicos(empresaData.servicos || []);
+                setFuncionarios(empresaData.funcionarios || []);
+                console.log("Empresa carregada:", empresaData);
+            } else {
+                console.log("Nenhuma empresa encontrada para o usuário.");
+                setEmpresa(null);
+            }
+        } catch (error) {
+            console.error("Erro ao carregar empresa:", error);
+            setEmpresa(null);
+        }
+    };
 
     const addCategoria = async (categoria: string) => {
         if (!userId) return;
@@ -91,26 +136,6 @@ export const EmpresaGlobalContextProvider: React.FC<{ children: ReactNode }> = (
             }
         } catch (error) {
             console.error("Erro ao remover categoria:", error);
-        }
-    };
-
-    const carregarCategorias = async () => {
-        if (!userId) return;
-        try {
-            const empresasRef = collection(db, "empresas");
-            const q = query(empresasRef, where("userId", "==", userId));
-            const querySnapshot = await getDocs(q);
-
-            if (!querySnapshot.empty) {
-                const empresaDoc = querySnapshot.docs[0];
-                const categoriasAtuais = empresaDoc.data().categorias || [];
-                setCategorias(categoriasAtuais); 
-                console.log("Categorias carregadas:", categoriasAtuais);
-            } else {
-                console.log("Nenhuma empresa encontrada para o usuário.");
-            }
-        } catch (error) {
-            console.error("Erro ao carregar categorias:", error);
         }
     };
 
@@ -164,13 +189,14 @@ export const EmpresaGlobalContextProvider: React.FC<{ children: ReactNode }> = (
     };
     
     useEffect(() => {
-        carregarCategorias();
-        carregarServicos();
+        carregarEmpresa();
     }, [userId]);
 
     return (
         <EmpresaGlobalContext.Provider
             value={{
+                empresa,
+                setEmpresa,
                 categorias,
                 setCategorias,
                 addCategoria,
@@ -179,8 +205,9 @@ export const EmpresaGlobalContextProvider: React.FC<{ children: ReactNode }> = (
                 setServicos,
                 funcionarios,
                 setFuncionarios,
-                carregarServicos, 
-                deleteServico
+                carregarServicos,
+                deleteServico,
+                carregarEmpresa
             }}
         >
             {children}
