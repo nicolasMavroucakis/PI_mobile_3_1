@@ -47,18 +47,22 @@ const AdicionarServico = () => {
   useEffect(() => {
     const fetchCategorias = async () => {
       try {
-        const empresaRef = doc(db, "empresas", "VNIJrXvjnlMAYO3cnRiH");
-        const empresaSnap = await getDoc(empresaRef);
-        if (empresaSnap.exists()) {
-          const data = empresaSnap.data();
+        const empresasRef = collection(db, "empresas");
+        const q = query(empresasRef, where("userId", "==", userId));
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+          const empresaDoc = querySnapshot.docs[0];
+          const data = empresaDoc.data();
           setCategoriasEmpresa(data.categorias || []);
         }
       } catch (error) {
         console.error("Erro ao buscar categorias:", error);
+        Alert.alert("Erro", "Não foi possível carregar as categorias da empresa.");
       }
     };
     fetchCategorias();
-  }, []);
+  }, [userId]);
 
   const handleSalvar = async () => {
     if (servico.trim() === "" || valor.trim() === "" || duracao.trim() === "" || tipoServico.trim() === "") {
@@ -161,7 +165,7 @@ const AdicionarServico = () => {
     <ScrollView contentContainerStyle={AdicionarServicoStyle.container}>
       <View style={AdicionarServicoStyle.containerTituloPagina}>
         <Text style={[AdicionarServicoStyle.subtitulo, { marginBottom: 0 }]}>
-          Adicionar serviço
+          Adicionar Serviço
         </Text>
       </View>
       <View style={[stylesSingLog.inputContainerOneInput, { backgroundColor: "transparent", margin: "auto", marginTop: 30, marginBottom: 0 }]}>
