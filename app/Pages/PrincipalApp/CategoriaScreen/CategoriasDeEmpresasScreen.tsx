@@ -171,16 +171,24 @@ const CategoriasDeEmpresasScreen = () => {
         <Text style={UserScreenStyle.textTitle}>Empresas da categoria: {categoriaSelecionada}</Text>
       </View>
       <ScrollView showsVerticalScrollIndicator={false} style={{ backgroundColor: "#323232", borderTopLeftRadius: 20, borderTopRightRadius: 20 }}>
-        <View style={{ padding: 16 }}>
+        <View style={{
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          justifyContent: 'space-between',
+          padding: 16
+        }}>
           {empresas.length === 0 ? (
-            <Text style={{ color: "#FFF", textAlign: "center", marginTop: 20 }}>
+            <Text style={{ color: "#FFF", textAlign: "center", marginTop: 20, width: '100%' }}>
               Nenhuma empresa encontrada.
             </Text>
           ) : (
             empresas.map((empresa, index) => (
               <TouchableOpacity
                 key={empresa.id || index}
-                style={HomeScreenStyle.containerDescontoDentro}
+                style={[
+                  HomeScreenStyle.containerDescontoDentro,
+                  { width: '48%', marginBottom: 15 }
+                ]}
                 onPress={() => handleEmpresaClick(empresa)}
               >
                 <Image
@@ -192,7 +200,11 @@ const CategoriasDeEmpresasScreen = () => {
                   {empresa.nome}
                 </Text>
                 <Text style={{ color: '#fff', fontSize: 13, fontWeight: 'bold', marginBottom: 15, marginTop: 1, marginLeft: 0 }}>
-                  {empresa.endereco?.rua}, {empresa.endereco?.numero}, {empresa.endereco?.cidade}
+                  {[
+                    empresa.endereco?.rua,
+                    empresa.endereco?.numero,
+                    empresa.endereco?.cidade
+                  ].filter(Boolean).join(', ') || 'Endereço não disponível'}
                 </Text>
               </TouchableOpacity>
             ))
