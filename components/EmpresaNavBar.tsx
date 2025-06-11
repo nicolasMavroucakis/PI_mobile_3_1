@@ -43,7 +43,7 @@ const EmpresaNavBar = () => {
                 onPress={() => navigation.navigate('EmpresaInfoAgendamentoScreen')}
             >
                 <Image source={CalendarioImg} style={HomeNavBarStyle.tamanhoImagem} />
-                <Text style={HomeNavBarStyle.text}>Agendamento</Text>
+                <Text style={HomeNavBarStyle.text}>Agenda</Text>
             </TouchableOpacity>
             <TouchableOpacity 
                 style={HomeNavBarStyle.tamanhoBotao}

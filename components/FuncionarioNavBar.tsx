@@ -34,7 +34,7 @@ const FuncionarioNavBar = () => {
                 onPress={() => navigation.navigate('FuncionarioAgendamentoScreen')}
             >
                 <Image source={CalendarioImg} style={HomeNavBarStyle.tamanhoImagem} />
-                <Text style={HomeNavBarStyle.text}>Agendamentos</Text>
+                <Text style={HomeNavBarStyle.text}>Agenda</Text>
             </TouchableOpacity>
             <TouchableOpacity 
                 style={HomeNavBarStyle.tamanhoBotao}
