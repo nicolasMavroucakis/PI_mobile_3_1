@@ -1,7 +1,6 @@
 import HomeNavBar from "@/components/HomeNavBar";
 import { ScrollView, View, Text, Image, TouchableOpacity, Alert } from "react-native";
 import ImgExemplo from "../../../../assets/images/imageExemplo.png";
-import ImgComp from "../../../../assets/images/compartilhar.png";
 import EmpresaInfoScreenStyle from "./EmpresaInfoScreenStyle";
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import { useState, useEffect } from "react";
@@ -174,10 +173,7 @@ const EmpresaInfoScreen = () => {
                             </Text>
                         </View>
                         <View style={EmpresaInfoScreenStyle.containerFavoritoComp}>
-                            <TouchableOpacity>
-                                <Image source={ImgComp} style={EmpresaInfoScreenStyle.imgComp}/>
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={toggleFavorito}>
+                            <TouchableOpacity onPress={toggleFavorito} style={{ marginRight: 40 }}>
                                 <AntDesign 
                                     name={favoritado ? "heart" : "hearto"} 
                                     size={30} 

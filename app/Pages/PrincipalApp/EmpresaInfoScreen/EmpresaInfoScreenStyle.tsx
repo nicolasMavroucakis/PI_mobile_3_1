@@ -48,7 +48,7 @@ const EmpresaInfoScreenStyle = StyleSheet.create({
   containerFavoritoComp: {
     display: 'flex',
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
     alignItems: 'center',
     width: width * 0.4,
     height: 60,
