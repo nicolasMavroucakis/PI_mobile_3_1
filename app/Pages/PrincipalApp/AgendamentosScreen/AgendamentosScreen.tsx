@@ -141,34 +141,29 @@ const AgendamentoScreen = () => {
                 ...doc.data()
             })) as Agendamento[];
 
+            console.log("Agendamento específico:", agendamentos.find(a => a.id === "d4PX4qnmDkZL6DDU59q"));
             console.log("Todos os agendamentos:", agendamentos);
 
             agendamentos.sort((a, b) => b.data.seconds - a.data.seconds);
             const hoje = new Date();
             console.log("Data atual (hoje):", hoje);
 
-            const emAndamento = agendamentos.filter(agendamento => 
-                agendamento.status === "em_andamento"
-            );
-
-            const esperandoConfirmacao = agendamentos.filter(agendamento =>
-                agendamento.status === "esperando_confirmacao"
-            );
-
             const ativos = agendamentos.filter(agendamento => {
                 const dataAgendamento = new Date(agendamento.data.seconds * 1000);
-                console.log("Verificando agendamento:", {
-                    id: agendamento.id,
-                    data: dataAgendamento,
-                    status: agendamento.status,
-                    ehFuturo: dataAgendamento >= hoje
-                });
-                return (
+                const shouldShow = (
                     agendamento.status === "agendado" || 
                     (agendamento.status !== "em_andamento" && 
                      agendamento.status !== "esperando_confirmacao" && 
                      agendamento.status !== "finalizado")
                 );
+                console.log("Verificando agendamento:", {
+                    id: agendamento.id,
+                    data: dataAgendamento,
+                    status: agendamento.status,
+                    shouldShow,
+                    isFuture: dataAgendamento >= hoje
+                });
+                return shouldShow;
             });
 
             console.log("Agendamentos ativos filtrados:", ativos);
@@ -178,8 +173,8 @@ const AgendamentoScreen = () => {
                 return dataAgendamento < hoje && agendamento.status === "finalizado";
             });
 
-            setAgendamentosEmAndamento(emAndamento);
-            setAgendamentosEsperandoConfirmacao(esperandoConfirmacao);
+            setAgendamentosEmAndamento(agendamentos.filter(a => a.status === "em_andamento"));
+            setAgendamentosEsperandoConfirmacao(agendamentos.filter(a => a.status === "esperando_confirmacao"));
             setAgendamentosAtivos(ativos);
 
             const enrichedHistorico = await enrichHistoricoWithUserInfo(historico);

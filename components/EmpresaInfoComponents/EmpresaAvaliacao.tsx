@@ -84,6 +84,9 @@ const EmpresaAvaliacao = () => {
   });
   const average = total > 0 ? (sum / total).toFixed(1) : "0.0";
 
+  // Filtrar avaliações que têm comentário para exibição
+  const avaliacoesComComentario = avaliacoes.filter(av => av.comentario && av.comentario.trim() !== '');
+
   return (
     <ScrollView style={{ flex: 1 }}>
       <View style={[EmpresaInfoScreenStyle.styleContainerServico, { paddingLeft: 0, paddingTop: 0, paddingBottom: 400 }]}>  
@@ -111,10 +114,10 @@ const EmpresaAvaliacao = () => {
             {loading ? (
               <Text style={{ color: 'white' }}>Carregando avaliações...</Text>
             ) : (
-              avaliacoes.length === 0 ? (
-                <Text style={{ color: 'white' }}>Nenhuma avaliação ainda.</Text>
+              avaliacoesComComentario.length === 0 ? (
+                <Text style={{ color: 'white' }}>Nenhuma avaliação com comentário ainda.</Text>
               ) : (
-                avaliacoes.map((av, idx) => (
+                avaliacoesComComentario.map((av, idx) => (
                   <View key={av.id || idx} style={EmpresaInfoScreenStyle.containerAvalaicaoUser}>
                     <View style={EmpresaInfoScreenStyle.containerUserImageName}>
                       <View>
