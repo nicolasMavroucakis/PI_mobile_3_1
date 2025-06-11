@@ -6,6 +6,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { collection, addDoc, getDocs, query, where, serverTimestamp, doc, updateDoc, arrayUnion } from "firebase/firestore";
 import StartFirebase from "@/app/crud/firebaseConfig";
 import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext";
+import { Ionicons } from '@expo/vector-icons';
 
 type RootStackParamList = {
     UserScreen: undefined;
@@ -113,9 +114,21 @@ const SignFuncionario = () => {
     return (
         <ScrollView style={{flex: 1}}>
             <View style={[stylesSingLog.container, {height: 1100}]}>
-                <View style={stylesSingLog.containerTitleOther}>
+                <TouchableOpacity 
+                    style={{
+                        position: 'absolute',
+                        top: 40,
+                        left: 20,
+                        zIndex: 1,
+                        padding: 10
+                    }}
+                    onPress={() => navigation.goBack()}
+                >
+                    <Ionicons name="arrow-back" size={24} color="#00C20A" />
+                </TouchableOpacity>
+                <View style={[stylesSingLog.containerTitleOther, { marginTop: 80 }]}>
                     <Text style={stylesSingLog.Title}>
-                        Adicione suas Informações
+                        Adicione as info do Funcionário
                     </Text>
                 </View>
                 <View style={stylesSingLog.containerInput}>

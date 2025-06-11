@@ -146,22 +146,12 @@ const LogInScreen = () => {
                         onChangeText={setPassword}
                     />
                 </View>
-                <View style={stylesSingLog.esqueceuSenha}>
-                    <View>
-                        <Text style={{ color: '#fff', fontSize: 18, marginLeft: 10 }}>Esqueceu</Text>
-                    </View>
-                    <View>
-                        <TouchableOpacity onPress={() => navigation.navigate('IniciarAgendamentoScreen')} style={stylesSingLog.buttonSenha}>
-                            <Text style={stylesSingLog.buttonText}>a sua Senha?</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
                 <TouchableOpacity style={stylesSingLog.botaoCadastro} onPress={handleLogin}>
                     <Text style={stylesSingLog.botaoTexto}>Entre</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => navigation.navigate('CategoriasDeEmpresasScreen')}>
                     <Text>
-                        Dev
+                        
                     </Text>    
                 </TouchableOpacity>
             </View>
