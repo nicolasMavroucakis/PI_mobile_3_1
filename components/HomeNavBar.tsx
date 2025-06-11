@@ -41,7 +41,7 @@ const HomeNavBar = () => {
                 onPress={() => navigation.navigate('AgendamentoScreen')}
             >
                 <Image source={CalendarioImg} style={HomeNavBarStyle.tamanhoImagem} />
-                <Text style={HomeNavBarStyle.text}>Agendamento</Text>
+                <Text style={HomeNavBarStyle.text}>Agenda</Text>
             </TouchableOpacity>
             <TouchableOpacity 
                 style={HomeNavBarStyle.tamanhoBotao}

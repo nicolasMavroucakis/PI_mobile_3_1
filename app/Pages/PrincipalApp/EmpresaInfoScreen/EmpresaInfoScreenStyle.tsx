@@ -85,7 +85,7 @@ const EmpresaInfoScreenStyle = StyleSheet.create({
     backgroundColor: '#252525',
   },
   tipoPagEmpresaButton: {
-    width: width * 0.25,
+    width: width * 0.3333,
     height: 40,
     alignItems: 'center',
     justifyContent: 'center'

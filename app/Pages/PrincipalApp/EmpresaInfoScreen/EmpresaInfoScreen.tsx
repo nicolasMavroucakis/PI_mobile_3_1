@@ -5,7 +5,6 @@ import EmpresaInfoScreenStyle from "./EmpresaInfoScreenStyle";
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import { useState, useEffect } from "react";
 import EmpresaServicos from "@/components/EmpresaInfoComponents/EmpresaServicos";
-import EmpresaCartaoPresente from "@/components/EmpresaInfoComponents/EmpresaCartaoPresente";
 import EmpresaDetalhes from "@/components/EmpresaInfoComponents/EmpresaDetalhes";
 import EmpresaAvaliacao from "@/components/EmpresaInfoComponents/EmpresaAvaliacao";
 import { calcularMediaEAvaliacoes } from "@/components/utils/avaliacaoUtils";
@@ -18,7 +17,6 @@ const EmpresaInfoScreen = () => {
     const [favoritado, setFavoritado] = useState(false); 
     const [servico, setServico] = useState(true)
     const [avaliacao, setAvaliacao] = useState(false)
-    const [cartaoPresente, setCartaoPresente] = useState(false)
     const [detalhes, setDetalhes] = useState(false)
     const empresa = useEmpresaContext();
     console.log('Empresa data in EmpresaInfoScreen:', empresa);
@@ -117,22 +115,14 @@ const EmpresaInfoScreen = () => {
         if (tipo == 'servico') {
             setServico(true)
             setAvaliacao(false)
-            setCartaoPresente(false)
             setDetalhes(false)
         } else if (tipo == 'avaliacao') {
             setServico(false)
             setAvaliacao(true)
-            setCartaoPresente(false)
-            setDetalhes(false)
-        } else if ( tipo == 'cartPresente') {
-            setServico(false)
-            setAvaliacao(false)
-            setCartaoPresente(true)
             setDetalhes(false)
         } else {
             setServico(false)
             setAvaliacao(false)
-            setCartaoPresente(false)
             setDetalhes(true)
         }
     }
@@ -193,11 +183,6 @@ const EmpresaInfoScreen = () => {
                                 Avaliação
                             </Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={cartaoPresente == true ? [EmpresaInfoScreenStyle.tipoPagEmpresaButton, EmpresaInfoScreenStyle.buttonPagSelecionada] : EmpresaInfoScreenStyle.tipoPagEmpresaButton} onPress={() => handleTrocaTipoPagina('cartPresente')}>
-                            <Text style={EmpresaInfoScreenStyle.textPag}>
-                                Cart. Pres
-                            </Text>
-                        </TouchableOpacity>
                         <TouchableOpacity style={detalhes == true ? [EmpresaInfoScreenStyle.tipoPagEmpresaButton, EmpresaInfoScreenStyle.buttonPagSelecionada] : EmpresaInfoScreenStyle.tipoPagEmpresaButton} onPress={() => handleTrocaTipoPagina('Detalhes')}>
                             <Text style={EmpresaInfoScreenStyle.textPag}>
                                 Detalhes
@@ -205,7 +190,6 @@ const EmpresaInfoScreen = () => {
                         </TouchableOpacity>
                     </View>
                     {servico === true && <EmpresaServicos />}
-                    {cartaoPresente === true && <EmpresaCartaoPresente />}
                     {detalhes === true && <EmpresaDetalhes empresa={empresa} />}
                     {avaliacao === true && <EmpresaAvaliacao />}
                 </View>
