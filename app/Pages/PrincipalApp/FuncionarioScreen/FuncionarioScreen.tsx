@@ -94,11 +94,17 @@ const FuncionarioScreen: React.FC = () => {
       
       if (empresaDoc.exists()) {
         const empresaData = empresaDoc.data();
-        const enderecoData = empresaData.endereco || {};
         
+        // Buscar dados do usuário para pegar a foto de perfil e endereço
         const usersRef = collection(db, "users");
         const userDoc = await getDocs(query(usersRef, where("__name__", "==", empresaData.userId)));
-        const fotoPerfil = userDoc.docs[0]?.data()?.fotoPerfil || empresa.fotoPerfil || '';
+        const userData = userDoc.docs[0]?.data() || {};
+        const fotoPerfil = userData.fotoPerfil || empresa.fotoPerfil || '';
+        const enderecoData = userData.endereco || {};
+        
+        console.log("Dados brutos do Firebase:", empresaData);
+        console.log("Dados do usuário:", userData);
+        console.log("Dados do endereço:", enderecoData);
         
         const dadosAtualizados = {
           id: empresaDoc.id,

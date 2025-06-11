@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, Alert, ScrollView, TouchableOpacity, Image, Modal, FlatList, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, Alert, ScrollView, TouchableOpacity, Image, Modal, FlatList, ActivityIndicator, StyleSheet } from "react-native";
 import { Picker } from '@react-native-picker/picker';
 import AdicionarServicoStyle from "./AdicionarServicoStyle";
 import stylesSingLog from "../../SingLog/SignLogStyle";
@@ -64,6 +64,7 @@ const AdicionarServico = () => {
   const [funcionariosEmpresa, setFuncionariosEmpresa] = useState<Funcionario[]>([]);
   const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const navigation = useNavigation<NavigationProp>();
   const { storage, db } = StartFirebase();
@@ -134,6 +135,7 @@ const AdicionarServico = () => {
       return;
     }
 
+    setIsLoading(true);
     try {
       const newUploadedImageUrls: string[] = [...uploadedImageUrls];
       
@@ -210,6 +212,8 @@ const AdicionarServico = () => {
     } catch (error) {
       console.error("Erro ao salvar o serviço:", error);
       Alert.alert("Erro", "Não foi possível salvar o serviço. Tente novamente.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -287,319 +291,354 @@ const AdicionarServico = () => {
   };
 
   return (
-    <ScrollView contentContainerStyle={AdicionarServicoStyle.container}>
-      <View style={[AdicionarServicoStyle.containerTituloPagina, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={{
-            padding: 10,
-            marginRight: 10,
-          }}
-        >
-          <Ionicons name="arrow-back" size={24} color="#00C20A" />
-        </TouchableOpacity>
-        <Text style={[AdicionarServicoStyle.subtitulo, { marginBottom: 0, flex: 1 }]}>
-          Adicionar Serviço
-        </Text>
-      </View>
-      <View style={[stylesSingLog.inputContainerOneInput, { backgroundColor: "transparent", margin: "auto", marginTop: 30, marginBottom: 0 }]}>
-        <Text style={{ color: "#00C20A" }}>Nome do Serviço</Text>
-        <TextInput
-          style={[stylesSingLog.input, { backgroundColor: "transparent" }]}
-          placeholder=""
-          placeholderTextColor="#ccc"
-          value={servico}
-          onChangeText={setServico}
-        />
-      </View>
-      <View style={[stylesSingLog.inputContainerOneInput, { backgroundColor: "transparent", margin: "auto", marginTop: 20, marginBottom: 0 }]}>
-        <Text style={{ color: "#00C20A" }}>Categoria Pertencente</Text>
-        <TouchableOpacity
-          style={[stylesSingLog.input, { backgroundColor: "transparent", justifyContent: 'center' }]}
-          onPress={() => setModalCategoriaVisible(true)}
-        >
-          <Text style={{ color: categoria ? "#fff" : "#ccc" }}>
-            {categoria || "Selecione uma categoria"}
-          </Text>
-        </TouchableOpacity>
-        <Modal
-          visible={modalCategoriaVisible}
-          transparent
-          animationType="slide"
-          onRequestClose={() => setModalCategoriaVisible(false)}
-        >
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <View style={{ backgroundColor: '#fff', borderRadius: 10, padding: 20, width: 300 }}>
-              <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 10, color: '#00C20A' }}>Selecione uma categoria</Text>
-              <FlatList
-                data={categoriasEmpresa}
-                keyExtractor={(item) => item}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    onPress={() => {
-                      setCategoria(item);
-                      setModalCategoriaVisible(false);
-                    }}
-                    style={{ padding: 15, borderBottomWidth: 1, borderBottomColor: '#eee' }}
-                  >
-                    <Text style={{ color: '#333', fontSize: 16 }}>{item}</Text>
-                  </TouchableOpacity>
-                )}
-              />
-              <TouchableOpacity onPress={() => setModalCategoriaVisible(false)} style={{ marginTop: 10, alignItems: 'center' }}>
-                <Text style={{ color: '#B10000' }}>Cancelar</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-      </View>
-      <Text style={AdicionarServicoStyle.linkTexto}>Não possui uma categoria?</Text>
-      <View style={{ marginTop: 20, marginBottom: 20 }}>
-        <Text style={AdicionarServicoStyle.subtitulo}>Qual o tipo do serviço?</Text>
-        <View style={AdicionarServicoStyle.containerTipoServico}>
-          <View style={AdicionarServicoStyle.containerTipoServicoMetade}>
-            <Text style={AdicionarServicoStyle.linkTexto}>Valor no inicio</Text>
-            <TouchableOpacity
-              style={[
-                AdicionarServicoStyle.botaoTipoServico,
-                { backgroundColor: tipoServico === "inicio" ? "#00C20A" : "#ccc" },
-              ]}
-              onPress={() => {
-                setTipoServico("inicio");
-              }}
-            />
-          </View>
-          <View style={AdicionarServicoStyle.containerTipoServicoMetade}>
-            <Text style={AdicionarServicoStyle.linkTexto}>Valor no final</Text>
-            <TouchableOpacity
-              style={[
-                AdicionarServicoStyle.botaoTipoServico,
-                { backgroundColor: tipoServico === "final" ? "#00C20A" : "#ccc" },
-              ]}
-              onPress={() => {
-                setTipoServico("final");
-              }}
-            />
+    <View style={{ flex: 1, backgroundColor: '#000' }}>
+      {isLoading && (
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingContent}>
+            <ActivityIndicator size="large" color="#00C20A" />
+            <Text style={styles.loadingText}>Adicionando serviço...</Text>
           </View>
         </View>
-      </View>
-      <View style={AdicionarServicoStyle.linha}>
-        <View style={AdicionarServicoStyle.inputContainerTwoInputs}>
-          <Text style={{ color: "#00C20A" }}>
-            Valor {tipoServico === "inicio" ? "fixo" : "inicial"}
+      )}
+      <ScrollView contentContainerStyle={AdicionarServicoStyle.container}>
+        <View style={[AdicionarServicoStyle.containerTituloPagina, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={{
+              padding: 10,
+              marginRight: 10,
+            }}
+          >
+            <Ionicons name="arrow-back" size={24} color="#00C20A" />
+          </TouchableOpacity>
+          <Text style={[AdicionarServicoStyle.subtitulo, { marginBottom: 0, flex: 1 }]}>
+            Adicionar Serviço
           </Text>
+        </View>
+        <View style={[stylesSingLog.inputContainerOneInput, { backgroundColor: "transparent", margin: "auto", marginTop: 30, marginBottom: 0 }]}>
+          <Text style={{ color: "#00C20A" }}>Nome do Serviço</Text>
           <TextInput
             style={[stylesSingLog.input, { backgroundColor: "transparent" }]}
             placeholder=""
             placeholderTextColor="#ccc"
-            value={valor}
-            onChangeText={setValor}
+            value={servico}
+            onChangeText={setServico}
           />
         </View>
-        <View style={AdicionarServicoStyle.inputContainerTwoInputs}>
-          <Text style={{ color: "#00C20A" }}>Duração</Text>
-          <TextInput
-            style={[stylesSingLog.input, { backgroundColor: "transparent" }]}
-            placeholder=""
-            placeholderTextColor="#ccc"
-            value={duracao}
-            onChangeText={setDuracao}
-          />
-        </View>
-      </View>
-      <View style={[stylesSingLog.inputContainerOneInput, { backgroundColor: "transparent", margin: "auto", marginTop: 20, marginBottom: 0, height: 80 }]}>
-        <Text style={{ color: "#00C20A" }}>Descrição</Text>
-        <TextInput
-          style={[stylesSingLog.input, { backgroundColor: "transparent" }]}
-          placeholder=""
-          placeholderTextColor="#ccc"
-          value={descricao}
-          onChangeText={setDescricao}
-        />
-      </View>
-      <View style={[stylesSingLog.inputContainerOneInput, { backgroundColor: "transparent", margin: "auto", marginTop: 20, marginBottom: 20, height: 80 }]}>
-        <Text style={{ color: "#00C20A" }}>Funcionários desse Serviço</Text>
-        <TouchableOpacity
-          style={[stylesSingLog.input, { backgroundColor: "transparent", justifyContent: 'center' }]}
-          onPress={() => setModalFuncionariosVisible(true)}
-        >
-          <Text style={{ color: funcionariosSelecionados.length > 0 ? "#fff" : "#ccc" }}>
-            {funcionariosSelecionados.length > 0 
-              ? `${funcionariosSelecionados.length} funcionário(s) selecionado(s)`
-              : "Selecione os funcionários"}
-          </Text>
-        </TouchableOpacity>
-        <Modal
-          visible={modalFuncionariosVisible}
-          transparent
-          animationType="slide"
-          onRequestClose={() => setModalFuncionariosVisible(false)}
-        >
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <View style={{ backgroundColor: '#fff', borderRadius: 10, padding: 20, width: '90%', maxHeight: '80%' }}>
-              <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 10, color: '#00C20A' }}>
-                Selecione os Funcionários
-              </Text>
-              <FlatList
-                data={funcionariosEmpresa}
-                keyExtractor={(item) => `funcionario-${item.id}`}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    key={`funcionario-item-${item.id}`}
-                    onPress={() => toggleFuncionario(item)}
-                    style={{
-                      padding: 15,
-                      borderBottomWidth: 1,
-                      borderBottomColor: '#eee',
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      backgroundColor: funcionariosSelecionados.some(f => f.id === item.id)
-                        ? 'rgba(0,194,10,0.1)'
-                        : 'transparent'
-                    }}
-                  >
-                    <View style={{
-                      width: 24,
-                      height: 24,
-                      borderRadius: 12,
-                      borderWidth: 2,
-                      borderColor: '#00C20A',
-                      marginRight: 10,
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      backgroundColor: funcionariosSelecionados.some(f => f.id === item.id)
-                        ? '#00C20A'
-                        : 'transparent'
-                    }}>
-                      {funcionariosSelecionados.some(f => f.id === item.id) && (
-                        <Text style={{ color: '#fff', fontSize: 16 }}>✓</Text>
-                      )}
-                    </View>
-                    <Text style={{ color: '#333', fontSize: 16 }}>{item.nome}</Text>
-                  </TouchableOpacity>
-                )}
-              />
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
-                <TouchableOpacity
-                  onPress={() => setModalFuncionariosVisible(false)}
-                  style={{
-                    padding: 10,
-                    backgroundColor: '#B10000',
-                    borderRadius: 5,
-                    minWidth: 100,
-                    alignItems: 'center'
-                  }}
-                >
-                  <Text style={{ color: '#fff' }}>Cancelar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => setModalFuncionariosVisible(false)}
-                  style={{
-                    padding: 10,
-                    backgroundColor: '#00C20A',
-                    borderRadius: 5,
-                    minWidth: 100,
-                    alignItems: 'center'
-                  }}
-                >
-                  <Text style={{ color: '#fff' }}>Confirmar</Text>
+        <View style={[stylesSingLog.inputContainerOneInput, { backgroundColor: "transparent", margin: "auto", marginTop: 20, marginBottom: 0 }]}>
+          <Text style={{ color: "#00C20A" }}>Categoria Pertencente</Text>
+          <TouchableOpacity
+            style={[stylesSingLog.input, { backgroundColor: "transparent", justifyContent: 'center' }]}
+            onPress={() => setModalCategoriaVisible(true)}
+          >
+            <Text style={{ color: categoria ? "#fff" : "#ccc" }}>
+              {categoria || "Selecione uma categoria"}
+            </Text>
+          </TouchableOpacity>
+          <Modal
+            visible={modalCategoriaVisible}
+            transparent
+            animationType="slide"
+            onRequestClose={() => setModalCategoriaVisible(false)}
+          >
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+              <View style={{ backgroundColor: '#fff', borderRadius: 10, padding: 20, width: 300 }}>
+                <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 10, color: '#00C20A' }}>Selecione uma categoria</Text>
+                <FlatList
+                  data={categoriasEmpresa}
+                  keyExtractor={(item) => item}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      onPress={() => {
+                        setCategoria(item);
+                        setModalCategoriaVisible(false);
+                      }}
+                      style={{ padding: 15, borderBottomWidth: 1, borderBottomColor: '#eee' }}
+                    >
+                      <Text style={{ color: '#333', fontSize: 16 }}>{item}</Text>
+                    </TouchableOpacity>
+                  )}
+                />
+                <TouchableOpacity onPress={() => setModalCategoriaVisible(false)} style={{ marginTop: 10, alignItems: 'center' }}>
+                  <Text style={{ color: '#B10000' }}>Cancelar</Text>
                 </TouchableOpacity>
               </View>
             </View>
-          </View>
-        </Modal>
-      </View>
-      <View style={[AdicionarServicoStyle.inputContainerBig, { margin: "auto", marginBottom: 20, paddingTop: 40 }]}>
-        <View style={{ width: "100%", alignItems: "flex-start", marginBottom: 10, marginLeft: 20, marginTop: 10 }}>
-          <Text style={{ color: "#00C20A", textAlign: "left" }}>Adicionar Imagens</Text>
+          </Modal>
         </View>
-        <TouchableOpacity
-          style={{
-            width: 250,
-            height: 50,
-            justifyContent: "center",
-            alignItems: "center",
-            borderWidth: 2,
-            borderColor: "#00C20A",
-            borderRadius: 10,
-            backgroundColor: "transparent",
-          }}
-          onPress={selecionarImagens}
-        >
-          <Text style={{ color: "#ccc" }}>Clique para selecionar imagens</Text>
-        </TouchableOpacity>
-        <View style={{ marginTop: 10 }}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 10 }}
-          >
-            {imagens.map((uri, index) => (
+        <Text style={AdicionarServicoStyle.linkTexto}>Não possui uma categoria?</Text>
+        <View style={{ marginTop: 20, marginBottom: 20 }}>
+          <Text style={AdicionarServicoStyle.subtitulo}>Qual o tipo do serviço?</Text>
+          <View style={AdicionarServicoStyle.containerTipoServico}>
+            <View style={AdicionarServicoStyle.containerTipoServicoMetade}>
+              <Text style={AdicionarServicoStyle.linkTexto}>Valor no inicio</Text>
               <TouchableOpacity
-                key={index}
-                onPress={() => deletarImagem(index)}
-                style={{
-                  position: 'relative',
-                  marginRight: 10,
-                  opacity: isDeleting === index ? 0.5 : 1,
+                style={[
+                  AdicionarServicoStyle.botaoTipoServico,
+                  { backgroundColor: tipoServico === "inicio" ? "#00C20A" : "#ccc" },
+                ]}
+                onPress={() => {
+                  setTipoServico("inicio");
                 }}
-                disabled={isDeleting === index}
-              >
-                <Image
-                  source={{ uri }}
-                  style={{
-                    width: 60,
-                    height: 60,
-                    borderRadius: 10,
-                    borderWidth: 2,
-                    borderColor: "#00C20A",
-                  }}
-                />
-                {isDeleting === index ? (
-                  <View
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      backgroundColor: 'rgba(0,0,0,0.3)',
-                      borderRadius: 10,
-                    }}
-                  >
-                    <ActivityIndicator color="#fff" />
-                  </View>
-                ) : (
-                  <View
-                    style={{
-                      position: 'absolute',
-                      top: -8,
-                      right: -8,
-                      backgroundColor: '#B10000',
-                      borderRadius: 12,
-                      width: 24,
-                      height: 24,
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      borderWidth: 2,
-                      borderColor: '#fff',
-                    }}
-                  >
-                    <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>×</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+              />
+            </View>
+            <View style={AdicionarServicoStyle.containerTipoServicoMetade}>
+              <Text style={AdicionarServicoStyle.linkTexto}>Valor no final</Text>
+              <TouchableOpacity
+                style={[
+                  AdicionarServicoStyle.botaoTipoServico,
+                  { backgroundColor: tipoServico === "final" ? "#00C20A" : "#ccc" },
+                ]}
+                onPress={() => {
+                  setTipoServico("final");
+                }}
+              />
+            </View>
+          </View>
         </View>
-      </View>
-      <TouchableOpacity style={AdicionarServicoStyle.botao} onPress={handleSalvar}>
-        <Text style={AdicionarServicoStyle.botaoTexto}>Salvar Alterações</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <View style={AdicionarServicoStyle.linha}>
+          <View style={AdicionarServicoStyle.inputContainerTwoInputs}>
+            <Text style={{ color: "#00C20A" }}>
+              Valor {tipoServico === "inicio" ? "fixo" : "inicial"}
+            </Text>
+            <TextInput
+              style={[stylesSingLog.input, { backgroundColor: "transparent" }]}
+              placeholder=""
+              placeholderTextColor="#ccc"
+              value={valor}
+              onChangeText={setValor}
+            />
+          </View>
+          <View style={AdicionarServicoStyle.inputContainerTwoInputs}>
+            <Text style={{ color: "#00C20A" }}>Duração</Text>
+            <TextInput
+              style={[stylesSingLog.input, { backgroundColor: "transparent" }]}
+              placeholder=""
+              placeholderTextColor="#ccc"
+              value={duracao}
+              onChangeText={setDuracao}
+            />
+          </View>
+        </View>
+        <View style={[stylesSingLog.inputContainerOneInput, { backgroundColor: "transparent", margin: "auto", marginTop: 20, marginBottom: 0, height: 80 }]}>
+          <Text style={{ color: "#00C20A" }}>Descrição</Text>
+          <TextInput
+            style={[stylesSingLog.input, { backgroundColor: "transparent" }]}
+            placeholder=""
+            placeholderTextColor="#ccc"
+            value={descricao}
+            onChangeText={setDescricao}
+          />
+        </View>
+        <View style={[stylesSingLog.inputContainerOneInput, { backgroundColor: "transparent", margin: "auto", marginTop: 20, marginBottom: 20, height: 80 }]}>
+          <Text style={{ color: "#00C20A" }}>Funcionários desse Serviço</Text>
+          <TouchableOpacity
+            style={[stylesSingLog.input, { backgroundColor: "transparent", justifyContent: 'center' }]}
+            onPress={() => setModalFuncionariosVisible(true)}
+          >
+            <Text style={{ color: funcionariosSelecionados.length > 0 ? "#fff" : "#ccc" }}>
+              {funcionariosSelecionados.length > 0 
+                ? `${funcionariosSelecionados.length} funcionário(s) selecionado(s)`
+                : "Selecione os funcionários"}
+            </Text>
+          </TouchableOpacity>
+          <Modal
+            visible={modalFuncionariosVisible}
+            transparent
+            animationType="slide"
+            onRequestClose={() => setModalFuncionariosVisible(false)}
+          >
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+              <View style={{ backgroundColor: '#fff', borderRadius: 10, padding: 20, width: '90%', maxHeight: '80%' }}>
+                <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 10, color: '#00C20A' }}>
+                  Selecione os Funcionários
+                </Text>
+                <FlatList
+                  data={funcionariosEmpresa}
+                  keyExtractor={(item) => `funcionario-${item.id}`}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      key={`funcionario-item-${item.id}`}
+                      onPress={() => toggleFuncionario(item)}
+                      style={{
+                        padding: 15,
+                        borderBottomWidth: 1,
+                        borderBottomColor: '#eee',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: funcionariosSelecionados.some(f => f.id === item.id)
+                          ? 'rgba(0,194,10,0.1)'
+                          : 'transparent'
+                      }}
+                    >
+                      <View style={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: 12,
+                        borderWidth: 2,
+                        borderColor: '#00C20A',
+                        marginRight: 10,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        backgroundColor: funcionariosSelecionados.some(f => f.id === item.id)
+                          ? '#00C20A'
+                          : 'transparent'
+                      }}>
+                        {funcionariosSelecionados.some(f => f.id === item.id) && (
+                          <Text style={{ color: '#fff', fontSize: 16 }}>✓</Text>
+                        )}
+                      </View>
+                      <Text style={{ color: '#333', fontSize: 16 }}>{item.nome}</Text>
+                    </TouchableOpacity>
+                  )}
+                />
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
+                  <TouchableOpacity
+                    onPress={() => setModalFuncionariosVisible(false)}
+                    style={{
+                      padding: 10,
+                      backgroundColor: '#B10000',
+                      borderRadius: 5,
+                      minWidth: 100,
+                      alignItems: 'center'
+                    }}
+                  >
+                    <Text style={{ color: '#fff' }}>Cancelar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setModalFuncionariosVisible(false)}
+                    style={{
+                      padding: 10,
+                      backgroundColor: '#00C20A',
+                      borderRadius: 5,
+                      minWidth: 100,
+                      alignItems: 'center'
+                    }}
+                  >
+                    <Text style={{ color: '#fff' }}>Confirmar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
+        </View>
+        <View style={[AdicionarServicoStyle.inputContainerBig, { margin: "auto", marginBottom: 20, paddingTop: 40 }]}>
+          <View style={{ width: "100%", alignItems: "flex-start", marginBottom: 10, marginLeft: 20, marginTop: 10 }}>
+            <Text style={{ color: "#00C20A", textAlign: "left" }}>Adicionar Imagens</Text>
+          </View>
+          <TouchableOpacity
+            style={{
+              width: 250,
+              height: 50,
+              justifyContent: "center",
+              alignItems: "center",
+              borderWidth: 2,
+              borderColor: "#00C20A",
+              borderRadius: 10,
+              backgroundColor: "transparent",
+            }}
+            onPress={selecionarImagens}
+          >
+            <Text style={{ color: "#ccc" }}>Clique para selecionar imagens</Text>
+          </TouchableOpacity>
+          <View style={{ marginTop: 10 }}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 10 }}
+            >
+              {imagens.map((uri, index) => (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => deletarImagem(index)}
+                  style={{
+                    position: 'relative',
+                    marginRight: 10,
+                    opacity: isDeleting === index ? 0.5 : 1,
+                  }}
+                  disabled={isDeleting === index}
+                >
+                  <Image
+                    source={{ uri }}
+                    style={{
+                      width: 60,
+                      height: 60,
+                      borderRadius: 10,
+                      borderWidth: 2,
+                      borderColor: "#00C20A",
+                    }}
+                  />
+                  {isDeleting === index ? (
+                    <View
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        backgroundColor: 'rgba(0,0,0,0.3)',
+                        borderRadius: 10,
+                      }}
+                    >
+                      <ActivityIndicator color="#fff" />
+                    </View>
+                  ) : (
+                    <View
+                      style={{
+                        position: 'absolute',
+                        top: -8,
+                        right: -8,
+                        backgroundColor: '#B10000',
+                        borderRadius: 12,
+                        width: 24,
+                        height: 24,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        borderWidth: 2,
+                        borderColor: '#fff',
+                      }}
+                    >
+                      <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>×</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+        <TouchableOpacity style={AdicionarServicoStyle.botao} onPress={handleSalvar}>
+          <Text style={AdicionarServicoStyle.botaoTexto}>Salvar Alterações</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999,
+  },
+  loadingContent: {
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#fff',
+    marginTop: 10,
+    fontSize: 16,
+  },
+});
 
 export default AdicionarServico;

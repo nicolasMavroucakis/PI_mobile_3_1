@@ -245,14 +245,16 @@ const HomeScreen = () => {
             
             if (!empresaDoc.empty) {
                 const empresaData = empresaDoc.docs[0].data();
-                const enderecoData = empresaData.endereco || {};
                 
-                // Buscar dados do usuário para pegar a foto de perfil
+                // Buscar dados do usuário para pegar a foto de perfil e endereço
                 const usersRef = collection(db, "users");
                 const userDoc = await getDocs(query(usersRef, where("__name__", "==", empresa.userId)));
-                const fotoPerfil = userDoc.docs[0]?.data()?.fotoPerfil || '';
+                const userData = userDoc.docs[0]?.data() || {};
+                const fotoPerfil = userData.fotoPerfil || '';
+                const enderecoData = userData.endereco || {};
                 
                 console.log("Dados brutos do Firebase:", empresaData);
+                console.log("Dados do usuário:", userData);
                 console.log("Dados do endereço:", enderecoData);
 
                 const dadosAtualizados = {

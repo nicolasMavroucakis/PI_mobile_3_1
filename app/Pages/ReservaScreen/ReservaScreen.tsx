@@ -33,6 +33,23 @@ interface Servico {
     nome: string;
     preco: number;
     valorFinalMuda?: boolean;
+    funcionariosIds: string[];
+    categoria?: string;
+    descricao?: string;
+    imagensUrl?: string[];
+    tipoServico?: string;
+    createdAt?: Timestamp;
+    updatedAt?: Timestamp;
+}
+
+interface ServicoEmpresa extends Servico {
+    funcionariosIds: string[];
+    categoria: string;
+    descricao: string;
+    imagensUrl: string[];
+    tipoServico: string;
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
 }
 
 type StatusAgendamento = 'agendado' | 'confirmado' | 'em_andamento' | 'finalizado' | 'cancelado';
@@ -49,6 +66,20 @@ interface Agendamento {
     status: StatusAgendamento;
     horaInicio: string;
     horaFim: string;
+}
+
+interface EmpresaContextData {
+    id: string;
+    nome: string;
+    email: string;
+    endereco: any;
+    funcionarios: string[];
+    servicos: Servico[];
+    telefone: string;
+    createdAt: Date | null;
+    updatedAt: Date | null;
+    userId: string;
+    fotoPerfil: string;
 }
 
 const ReservaScreen = () => {
@@ -100,7 +131,25 @@ const ReservaScreen = () => {
             });
 
             const funcionariosDetalhados = await Promise.all(funcionariosPromises);
-            setFuncionarios(funcionariosDetalhados.filter((f): f is NonNullable<typeof f> => f !== null) as Funcionario[]);
+            const funcionariosFiltrados = funcionariosDetalhados.filter((f): f is NonNullable<typeof f> => f !== null);
+
+            if (servicosSelecionados.length > 0) {
+                const servicoEmpresa = (empresa.servicos.find(s => s.nome === servicosSelecionados[0].nome) as any);
+                if (servicoEmpresa?.funcionariosIds?.length) {
+                    const funcionariosAutorizados = funcionariosFiltrados.filter(f => 
+                        servicoEmpresa.funcionariosIds.includes(f.id)
+                    );
+                    setFuncionarios(funcionariosAutorizados);
+                    
+                    if (funcionarioSelecionado && !servicoEmpresa.funcionariosIds.includes(funcionarioSelecionado.id)) {
+                        selecionarFuncionario(null);
+                    }
+                } else {
+                    setFuncionarios(funcionariosFiltrados);
+                }
+            } else {
+                setFuncionarios(funcionariosFiltrados);
+            }
         } catch (error) {
             console.error("Erro ao carregar funcionários:", error);
             Alert.alert(
@@ -111,8 +160,10 @@ const ReservaScreen = () => {
     };
 
     useEffect(() => {
-        carregarFuncionarios();
-    }, [empresa.funcionarios]);
+        if (servicosSelecionados.length > 0) {
+            carregarFuncionarios();
+        }
+    }, [servicosSelecionados]);
 
     useEffect(() => {
         if (empresaId && (!empresa.id || empresa.id !== empresaId)) {
@@ -126,7 +177,7 @@ const ReservaScreen = () => {
                         email: empresaData.email || '',
                         endereco: empresaData.endereco || {},
                         funcionarios: empresaData.funcionarios || [],
-                        servicos: empresaData.servicos || [],
+                        servicos: (empresaData.servicos || []) as Servico[],
                         telefone: empresaData.telefone || '',
                         createdAt: empresaData.createdAt ? new Date(empresaData.createdAt.seconds * 1000) : null,
                         updatedAt: empresaData.updatedAt ? new Date(empresaData.updatedAt.seconds * 1000) : null,
@@ -272,6 +323,17 @@ const ReservaScreen = () => {
     };
 
     const handleSelecionarFuncionario = async (funcionario: any) => {
+        if (servicosSelecionados.length > 0) {
+            const servicoEmpresa = (empresa.servicos.find(s => s.nome === servicosSelecionados[0].nome) as any);
+            if (funcionario && servicoEmpresa?.funcionariosIds?.length && !servicoEmpresa.funcionariosIds.includes(funcionario.id)) {
+                Alert.alert(
+                    "Funcionário não autorizado",
+                    "Este funcionário não está autorizado a realizar este serviço."
+                );
+                return;
+            }
+        }
+        
         selecionarFuncionario(funcionario);
         if (dataAgendamento) {
             await verificarDisponibilidadeHorarioSelecionado();
@@ -573,6 +635,16 @@ const ReservaScreen = () => {
             return;
         }
 
+        const servicoEmpresa = (empresa.servicos.find(s => s.nome === servicosSelecionados[0].nome) as any);
+        if (servicoEmpresa?.funcionariosIds?.length && funcionarioSelecionado && 
+            !servicoEmpresa.funcionariosIds.includes(funcionarioSelecionado.id)) {
+            Alert.alert(
+                "Funcionário não autorizado",
+                "O funcionário selecionado não está autorizado a realizar este serviço."
+            );
+            return;
+        }
+
         const disponivel = await verificarDisponibilidadeHorarioSelecionado();
         if (!disponivel) return;
 
@@ -616,18 +688,35 @@ const ReservaScreen = () => {
                     ...doc.data()
                 })) as Agendamento[];
 
-                const funcionarioAleatorio = encontrarFuncionarioDisponivel(
-                    agendamentosNoDia,
-                    horaInicioSelecionada,
-                    horaFimSelecionada
-                );
+                if (servicoEmpresa?.funcionariosIds?.length) {
+                    const funcionariosAutorizados = funcionarios.filter(f => 
+                        servicoEmpresa.funcionariosIds.includes(f.id)
+                    );
+                    
+                    if (funcionariosAutorizados.length === 0) {
+                        Alert.alert(
+                            "Erro",
+                            "Não há funcionários autorizados disponíveis para este serviço."
+                        );
+                        return;
+                    }
 
-                if (!funcionarioAleatorio) {
-                    Alert.alert("Erro", "Não foi possível encontrar um profissional disponível");
-                    return;
+                    const funcionarioAleatorio = encontrarFuncionarioDisponivel(
+                        agendamentosNoDia,
+                        horaInicioSelecionada,
+                        horaFimSelecionada
+                    );
+
+                    if (!funcionarioAleatorio || !servicoEmpresa.funcionariosIds.includes(funcionarioAleatorio)) {
+                        Alert.alert(
+                            "Erro",
+                            "Não foi possível encontrar um profissional autorizado disponível."
+                        );
+                        return;
+                    }
+
+                    funcionarioId = funcionarioAleatorio;
                 }
-
-                funcionarioId = funcionarioAleatorio;
             }
 
             const servicosNomes = servicosSelecionados.map(s => s.nome).join(" + ");
@@ -642,7 +731,8 @@ const ReservaScreen = () => {
                 nome: servicosNomes,
                 duracao: duracaoTotal,
                 preco: valorTotal,
-                valorFinalMuda: valorFinalMuda
+                valorFinalMuda: valorFinalMuda,
+                funcionariosIds: servicoEmpresa?.funcionariosIds || []
             };
 
             const novoAgendamento = criarNovoAgendamento({
@@ -720,7 +810,7 @@ const ReservaScreen = () => {
                                     style={{zIndex: 1000}}
                                     minimumDate={new Date()}
                                 />
-                                <View style={{ backgroundColor: 'white', width: 110, height: 30, position: 'relative', top: 0, borderRadius:4, left: -113}} />
+                                <View style={{ backgroundColor: 'black', width: 110, height: 30, position: 'relative', top: 0, borderRadius:4, left: -113}} />
                             </View>
                         </View>
                         <View>
@@ -737,7 +827,7 @@ const ReservaScreen = () => {
                                     minuteInterval={10}
                                     style={{zIndex: 1000, position: 'relative', right: -50}}
                                 />
-                                <View style={{ backgroundColor: 'white', width: 70, height: 30, position: 'relative', top: 0, borderRadius:4, left: -20}} />
+                                <View style={{ backgroundColor: 'black', width: 70, height: 30, position: 'relative', top: 0, borderRadius:4, left: -20}} />
                                 <View>
                                     <Image source={RelogioImg} style={{width: 40, height: 40}}/>
                                 </View>
@@ -753,46 +843,56 @@ const ReservaScreen = () => {
                         showsHorizontalScrollIndicator={false}
                     >
                         <View style={ReservaScreenStyle.containerFuncionarios}>
-                            <TouchableOpacity 
-                                style={[
-                                    ReservaScreenStyle.containerSelecionarFuncionarioImagemTexto,
-                                    !funcionarioSelecionado && ReservaScreenStyle.funcionarioSelecionado
-                                ]}
-                                onPress={() => handleSelecionarFuncionario(null)}
-                            >
-                                <Image source={require('../../../assets/images/user.jpeg')} style={{width: 50, height: 50, borderRadius: 50}}/>
-                                <Text style={{fontSize: 15, color: '#fff', textAlign: 'center'}}>
-                                    Sem Preferencia
-                                </Text>
-                            </TouchableOpacity>
-                            <View style={ReservaScreenStyle.linha}/>
-                            {funcionarios.map((funcionario) => (
-                                <TouchableOpacity 
-                                    key={funcionario.id}
-                                    style={[
-                                        ReservaScreenStyle.containerSelecionarFuncionarioImagemTexto,
-                                        funcionarioSelecionado?.id === funcionario.id && ReservaScreenStyle.funcionarioSelecionado
-                                    ]}
-                                    onPress={() => handleSelecionarFuncionario(funcionario)}
-                                >
-                                    <Image 
-                                        source={
-                                            funcionario.fotoPerfil 
-                                                ? { uri: funcionario.fotoPerfil } 
-                                                : require('../../../assets/images/user.jpeg')
-                                        } 
-                                        style={{width: 50, height: 50, borderRadius: 50}}
-                                    />
+                            {funcionarios.length === 0 ? (
+                                <View style={[ReservaScreenStyle.containerSelecionarFuncionarioImagemTexto, { opacity: 0.7 }]}>
                                     <Text style={{fontSize: 15, color: '#fff', textAlign: 'center'}}>
-                                        {funcionario.nome}
+                                        Nenhum profissional disponível para este serviço
                                     </Text>
-                                    {funcionario.especialidade && (
-                                        <Text style={{fontSize: 12, color: 'rgba(255, 255, 255, 0.7)', textAlign: 'center'}}>
-                                            {funcionario.especialidade}
+                                </View>
+                            ) : (
+                                <>
+                                    <TouchableOpacity 
+                                        style={[
+                                            ReservaScreenStyle.containerSelecionarFuncionarioImagemTexto,
+                                            !funcionarioSelecionado && ReservaScreenStyle.funcionarioSelecionado
+                                        ]}
+                                        onPress={() => handleSelecionarFuncionario(null)}
+                                    >
+                                        <Image source={require('../../../assets/images/user.jpeg')} style={{width: 50, height: 50, borderRadius: 50}}/>
+                                        <Text style={{fontSize: 15, color: '#fff', textAlign: 'center'}}>
+                                            Sem Preferencia
                                         </Text>
-                                    )}
-                                </TouchableOpacity>
-                            ))}
+                                    </TouchableOpacity>
+                                    <View style={ReservaScreenStyle.linha}/>
+                                    {funcionarios.map((funcionario) => (
+                                        <TouchableOpacity 
+                                            key={funcionario.id}
+                                            style={[
+                                                ReservaScreenStyle.containerSelecionarFuncionarioImagemTexto,
+                                                funcionarioSelecionado?.id === funcionario.id && ReservaScreenStyle.funcionarioSelecionado
+                                            ]}
+                                            onPress={() => handleSelecionarFuncionario(funcionario)}
+                                        >
+                                            <Image 
+                                                source={
+                                                    funcionario.fotoPerfil 
+                                                        ? { uri: funcionario.fotoPerfil } 
+                                                        : require('../../../assets/images/user.jpeg')
+                                                } 
+                                                style={{width: 50, height: 50, borderRadius: 50}}
+                                            />
+                                            <Text style={{fontSize: 15, color: '#fff', textAlign: 'center'}}>
+                                                {funcionario.nome}
+                                            </Text>
+                                            {funcionario.especialidade && (
+                                                <Text style={{fontSize: 12, color: 'rgba(255, 255, 255, 0.7)', textAlign: 'center'}}>
+                                                    {funcionario.especialidade}
+                                                </Text>
+                                            )}
+                                        </TouchableOpacity>
+                                    ))}
+                                </>
+                            )}
                         </View>
                     </ScrollView>
                     <ScrollView style={ReservaScreenStyle.ContainerCalendario}>

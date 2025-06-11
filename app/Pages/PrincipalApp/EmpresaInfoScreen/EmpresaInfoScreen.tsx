@@ -22,6 +22,8 @@ const EmpresaInfoScreen = () => {
     const [cartaoPresente, setCartaoPresente] = useState(false)
     const [detalhes, setDetalhes] = useState(false)
     const empresa = useEmpresaContext();
+    console.log('Empresa data in EmpresaInfoScreen:', empresa);
+    console.log('Endereço data:', empresa.endereco);
     const [average, setAverage] = useState("0.0");
     const [total, setTotal] = useState(0);
     const [formattedTotal, setFormattedTotal] = useState("0");
@@ -161,10 +163,14 @@ const EmpresaInfoScreen = () => {
                                 {empresa.nome || "Nome da Empresa"}
                             </Text>
                             <Text style={EmpresaInfoScreenStyle.empresaMenor}>
-                                {empresa.endereco ? 
-                                    `${empresa.endereco.rua || ''} ${empresa.endereco.numero ? `, ${empresa.endereco.numero}` : ''} ${empresa.endereco.cidade ? `, ${empresa.endereco.cidade}` : ''}`.trim() 
-                                    : "Endereço não disponível"
-                                }
+                                {(() => {
+                                    console.log('Rendering address with data:', empresa.endereco);
+                                    const enderecoStr = empresa.endereco ? 
+                                        `${empresa.endereco.rua || ''} ${empresa.endereco.numero ? `, ${empresa.endereco.numero}` : ''} ${empresa.endereco.cidade ? `, ${empresa.endereco.cidade}` : ''}`.trim() 
+                                        : "Endereço não disponível";
+                                    console.log('Formatted address string:', enderecoStr);
+                                    return enderecoStr;
+                                })()}
                             </Text>
                         </View>
                         <View style={EmpresaInfoScreenStyle.containerFavoritoComp}>
