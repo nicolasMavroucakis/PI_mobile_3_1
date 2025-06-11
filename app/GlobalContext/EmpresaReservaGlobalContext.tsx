@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, ReactNode } from 'react';
+import { Timestamp } from 'firebase/firestore';
 
 interface Endereco {
   cep: string;
@@ -9,37 +10,43 @@ interface Endereco {
 }
 
 interface Servico {
-  createdAt: Date;
   duracao: number;
   nome: string;
   preco: number;
-  updatedAt: Date;
+  valorFinalMuda?: boolean;
+  funcionariosIds: string[];
+  categoria?: string;
+  descricao?: string;
+  imagensUrl?: string[];
+  tipoServico?: string;
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
 }
 
 export interface EmpresaContextData {
   id: string;
-  createdAt: Date | null;
+  createdAt: Timestamp | null;
   email: string;
   endereco: Endereco;
   funcionarios: string[];
   nome: string;
   servicos: Servico[];
   telefone: string;
-  updatedAt: Date | null;
+  updatedAt: Timestamp | null;
   userId: string;
   fotoPerfil: string;
   linkInstagram?: string;
   linkSite?: string;
   
   setId: (id: string) => void;
-  setCreatedAt: (date: Date | null) => void;
+  setCreatedAt: (date: Timestamp | null) => void;
   setEmail: (email: string) => void;
   setEndereco: (endereco: Endereco) => void;
   setFuncionarios: (funcionarios: string[]) => void;
   setNome: (nome: string) => void;
   setServicos: (servicos: Servico[]) => void;
   setTelefone: (telefone: string) => void;
-  setUpdatedAt: (date: Date | null) => void;
+  setUpdatedAt: (date: Timestamp | null) => void;
   setUserId: (userId: string) => void;
   setFotoPerfil: (fotoPerfil: string) => void;
   setAll: (data: Partial<EmpresaContextData>) => void;
@@ -53,14 +60,14 @@ interface EmpresaProviderProps {
 
 interface EmpresaState {
   id: string;
-  createdAt: Date | null;
+  createdAt: Timestamp | null;
   email: string;
   endereco: Endereco;
   funcionarios: string[];
   nome: string;
   servicos: Servico[];
   telefone: string;
-  updatedAt: Date | null;
+  updatedAt: Timestamp | null;
   userId: string;
   fotoPerfil: string;
   linkInstagram?: string;

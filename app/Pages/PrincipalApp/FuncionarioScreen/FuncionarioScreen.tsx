@@ -7,10 +7,10 @@ import { useNavigation } from "expo-router";
 import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext";
 import { useEmpresaContext } from "@/app/GlobalContext/EmpresaReservaGlobalContext";
 import lapisImg from "../../../../assets/images/lapis.png";
-import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc, Timestamp } from "firebase/firestore";
 import StartFirebase from "@/app/crud/firebaseConfig";
 import defaultProfileImg from "../../../../assets/images/user.jpeg";
-import ProfileImage from "@/components/ProfileImage";
+import ProfileImage from "@/app/components/ProfileImage";
 import FuncionarioNavBar from "@/components/FuncionarioNavBar";
 
 interface EmpresaData {
@@ -120,8 +120,8 @@ const FuncionarioScreen: React.FC = () => {
           funcionarios: empresaData.funcionarios || [],
           servicos: empresaData.servicos || [],
           telefone: empresaData.telefone || '',
-          createdAt: empresaData.createdAt ? new Date(empresaData.createdAt.seconds * 1000) : null,
-          updatedAt: empresaData.updatedAt ? new Date(empresaData.updatedAt.seconds * 1000) : null,
+          createdAt: empresaData.createdAt || null,
+          updatedAt: empresaData.updatedAt || null,
           userId: empresaData.userId || '',
           fotoPerfil: fotoPerfil,
           linkInstagram: empresaData.linkInstagram || '',

@@ -1,3 +1,4 @@
+import React from 'react';
 import { AntDesign } from "@expo/vector-icons";
 import { View, Text, ScrollView, TouchableOpacity, Image, Alert } from "react-native";
 import ReservaScreenStyle from "./ReservascreenStyle";
@@ -42,16 +43,6 @@ interface Servico {
     updatedAt?: Timestamp;
 }
 
-interface ServicoEmpresa extends Servico {
-    funcionariosIds: string[];
-    categoria: string;
-    descricao: string;
-    imagensUrl: string[];
-    tipoServico: string;
-    createdAt: Timestamp;
-    updatedAt: Timestamp;
-}
-
 type StatusAgendamento = 'agendado' | 'confirmado' | 'em_andamento' | 'finalizado' | 'cancelado';
 
 interface Agendamento {
@@ -76,8 +67,8 @@ interface EmpresaContextData {
     funcionarios: string[];
     servicos: Servico[];
     telefone: string;
-    createdAt: Date | null;
-    updatedAt: Date | null;
+    createdAt: Timestamp | null;
+    updatedAt: Timestamp | null;
     userId: string;
     fotoPerfil: string;
 }
@@ -179,8 +170,8 @@ const ReservaScreen = () => {
                         funcionarios: empresaData.funcionarios || [],
                         servicos: (empresaData.servicos || []) as Servico[],
                         telefone: empresaData.telefone || '',
-                        createdAt: empresaData.createdAt ? new Date(empresaData.createdAt.seconds * 1000) : null,
-                        updatedAt: empresaData.updatedAt ? new Date(empresaData.updatedAt.seconds * 1000) : null,
+                        createdAt: empresaData.createdAt || null,
+                        updatedAt: empresaData.updatedAt || null,
                         userId: empresaData.userId || '',
                         fotoPerfil: empresaData.fotoPerfil || ''
                     });
@@ -739,7 +730,7 @@ const ReservaScreen = () => {
                 clienteId: userId,
                 data: dataAgendamento,
                 empresaId: empresa.id,
-                funcionarioId: funcionarioId,
+                funcionarioId: funcionarioId as string,
                 servico: servicoAgendamento,
                 horaInicio: horaInicioSelecionada
             });

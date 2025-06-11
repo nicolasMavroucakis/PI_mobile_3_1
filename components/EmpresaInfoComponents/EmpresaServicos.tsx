@@ -219,7 +219,11 @@ const EmpresaServicos = () => {
     const servicos = empresa.servicos as unknown as Servico[];
 
     return (
-        <ScrollView style={EmpresaInfoScreenStyle.styleContainerServico}>
+        <ScrollView 
+            style={EmpresaInfoScreenStyle.styleContainerServico}
+            contentContainerStyle={{ paddingBottom: 200 }}
+            showsVerticalScrollIndicator={false}
+        >
             {categoriasEmpresa.map((categoria) => (
                 <View key={categoria}>
                     <TouchableOpacity

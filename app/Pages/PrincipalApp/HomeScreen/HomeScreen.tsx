@@ -21,7 +21,7 @@ import { RFPercentage } from "react-native-responsive-fontsize";
 import { useUserGlobalContext } from "@/app/GlobalContext/UserGlobalContext";
 import { useEmpresaContext } from "@/app/GlobalContext/EmpresaReservaGlobalContext";
 import { useEffect, useState } from "react";
-import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy, limit, Timestamp } from "firebase/firestore";
 import StartFirebase from "@/app/crud/firebaseConfig";
 
 type RootStackParamList = {
@@ -271,8 +271,8 @@ const HomeScreen = () => {
                     funcionarios: empresaData.funcionarios || [],
                     servicos: empresaData.servicos || [],
                     telefone: empresaData.telefone || '',
-                    createdAt: empresaData.createdAt ? new Date(empresaData.createdAt.seconds * 1000) : null,
-                    updatedAt: empresaData.updatedAt ? new Date(empresaData.updatedAt.seconds * 1000) : null,
+                    createdAt: empresaData.createdAt || null,
+                    updatedAt: empresaData.updatedAt || null,
                     userId: empresaData.userId || '',
                     fotoPerfil: fotoPerfil,
                     linkInstagram: empresaData.linkInstagram || '',
