@@ -224,6 +224,18 @@ const ReservaScreen = () => {
     };
 
     const buscarAgendamentosDoDia = async (data: Date) => {
+        console.log('=== INÍCIO DA BUSCA DE AGENDAMENTOS ===');
+        console.log('Parâmetros da busca:', {
+            data: format(data, 'dd/MM/yyyy HH:mm:ss'),
+            empresaId: empresa?.id,
+            funcionarioSelecionado: funcionarioSelecionado?.id
+        });
+
+        if (!empresa?.id) {
+            console.error('Empresa ID não definido');
+            return;
+        }
+
         setCarregandoAgendamentos(true);
         try {
             const inicioDia = new Date(data);
@@ -234,6 +246,11 @@ const ReservaScreen = () => {
             fimDia.setHours(23, 59, 59, 999);
             const timestampFim = Timestamp.fromDate(fimDia);
 
+            console.log('Período de busca:', {
+                inicio: format(inicioDia, 'dd/MM/yyyy HH:mm:ss'),
+                fim: format(fimDia, 'dd/MM/yyyy HH:mm:ss')
+            });
+
             const agendamentosRef = collection(db, "agendamentos");
             let q = query(
                 agendamentosRef,
@@ -243,6 +260,7 @@ const ReservaScreen = () => {
             );
 
             if (funcionarioSelecionado && funcionarioSelecionado.id !== "sem preferencia") {
+                console.log('Adicionando filtro de funcionário:', funcionarioSelecionado.id);
                 q = query(
                     agendamentosRef,
                     where("empresaId", "==", empresa.id),
@@ -252,22 +270,55 @@ const ReservaScreen = () => {
                 );
             }
 
+            console.log('Executando query no Firebase...');
             const querySnapshot = await getDocs(q);
-            const agendamentosDoDia = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            })) as Agendamento[];
+            console.log('Query executada:', {
+                totalDocumentos: querySnapshot.size,
+                documentosVazios: querySnapshot.empty
+            });
+
+            const agendamentosDoDia = querySnapshot.docs.map(doc => {
+                const data = doc.data();
+                console.log('Documento encontrado:', {
+                    id: doc.id,
+                    data: data.data?.toDate(),
+                    horaInicio: data.horaInicio,
+                    horaFim: data.horaFim,
+                    funcionarioId: data.funcionarioId,
+                    servico: data.servico?.nome
+                });
+                return {
+                    id: doc.id,
+                    ...data
+                };
+            }) as Agendamento[];
+
+            console.log('Resumo da busca:', {
+                totalAgendamentos: agendamentosDoDia.length,
+                agendamentos: agendamentosDoDia.map(ag => ({
+                    id: ag.id,
+                    data: ag.data?.toDate(),
+                    horaInicio: ag.horaInicio,
+                    horaFim: ag.horaFim,
+                    funcionarioId: ag.funcionarioId,
+                    servico: ag.servico?.nome
+                }))
+            });
 
             setAgendamentos(agendamentosDoDia);
-            console.log(`Encontrados ${agendamentosDoDia.length} agendamentos para ${format(data, 'dd/MM/yyyy')}`);
         } catch (error) {
-            console.error("Erro ao buscar agendamentos:", error);
+            console.error("Erro detalhado ao buscar agendamentos:", {
+                erro: error,
+                mensagem: error instanceof Error ? error.message : 'Erro desconhecido',
+                stack: error instanceof Error ? error.stack : undefined
+            });
             Alert.alert(
                 "Erro",
                 "Não foi possível carregar os agendamentos. Tente novamente."
             );
         } finally {
             setCarregandoAgendamentos(false);
+            console.log('=== FIM DA BUSCA DE AGENDAMENTOS ===');
         }
     };
 
@@ -338,25 +389,72 @@ const ReservaScreen = () => {
         : `${tempoTotal.minutos}min`;
 
     const getAgendamentosHora = (hora: number) => {
-        if (!agendamentos || !agendamentos.length) return [];
-        
-        return agendamentos.filter(agendamento => {
-            if (!agendamento || !agendamento.data) return false;
+        console.log(`=== VERIFICANDO AGENDAMENTOS PARA HORA ${hora} ===`);
+        console.log('Estado atual:', {
+            totalAgendamentos: agendamentos?.length || 0,
+            hora: hora
+        });
 
-            const [horaInicioStr] = agendamento.horaInicio.split(':');
-            const [horaFimStr] = agendamento.horaFim.split(':');
+        if (!agendamentos || !agendamentos.length) {
+            console.log(`Nenhum agendamento disponível para hora ${hora}`);
+            return [];
+        }
+        
+        const agendamentosFiltrados = agendamentos.filter(agendamento => {
+            if (!agendamento || !agendamento.data) {
+                console.log(`Agendamento inválido para hora ${hora}:`, agendamento);
+                return false;
+            }
+
+            const [horaInicioStr, minutoInicioStr] = agendamento.horaInicio.split(':');
+            const [horaFimStr, minutoFimStr] = agendamento.horaFim.split(':');
             
             const horaInicio = parseInt(horaInicioStr);
+            const minutoInicio = parseInt(minutoInicioStr || '0');
             const horaFim = parseInt(horaFimStr);
+            const minutoFim = parseInt(minutoFimStr || '0');
+
+            // Converter tudo para minutos para comparação precisa
+            const inicioEmMinutos = horaInicio * 60 + minutoInicio;
+            const fimEmMinutos = horaFim * 60 + minutoFim;
+            const horaAtualEmMinutos = hora * 60;
             
-            const dentroDoIntervalo = hora >= horaInicio && hora < horaFim;
+            console.log(`Verificando agendamento ${agendamento.id}:`, {
+                horaInicio: `${horaInicio}:${minutoInicio}`,
+                horaFim: `${horaFim}:${minutoFim}`,
+                horaAtual: hora,
+                inicioEmMinutos,
+                fimEmMinutos,
+                horaAtualEmMinutos,
+                dentroDoIntervalo: horaAtualEmMinutos >= inicioEmMinutos && horaAtualEmMinutos < fimEmMinutos
+            });
+            
+            const dentroDoIntervalo = horaAtualEmMinutos >= inicioEmMinutos && horaAtualEmMinutos < fimEmMinutos;
             
             if (funcionarioSelecionado && funcionarioSelecionado.id !== "sem preferencia") {
-                return dentroDoIntervalo && agendamento.funcionarioId === funcionarioSelecionado.id;
+                const correspondeAoFuncionario = dentroDoIntervalo && agendamento.funcionarioId === funcionarioSelecionado.id;
+                console.log(`Verificação de funcionário para ${agendamento.id}:`, {
+                    correspondeAoFuncionario,
+                    funcionarioAgendamento: agendamento.funcionarioId,
+                    funcionarioSelecionado: funcionarioSelecionado.id
+                });
+                return correspondeAoFuncionario;
             }
             
             return dentroDoIntervalo;
         });
+
+        console.log(`Resultado para hora ${hora}:`, {
+            totalFiltrados: agendamentosFiltrados.length,
+            agendamentos: agendamentosFiltrados.map(ag => ({
+                id: ag.id,
+                horaInicio: ag.horaInicio,
+                horaFim: ag.horaFim,
+                funcionarioId: ag.funcionarioId
+            }))
+        });
+
+        return agendamentosFiltrados;
     };
 
     const verificarDisponibilidadeHorario = (hora: number) => {
@@ -375,41 +473,78 @@ const ReservaScreen = () => {
             return { altura: 80, offsetTop: 0 };
         }
 
-        const [horaInicioStr] = agendamento.horaInicio.split(':');
-        const [horaFimStr] = agendamento.horaFim.split(':');
+        const [horaInicioStr, minutoInicioStr] = agendamento.horaInicio.split(':');
+        const [horaFimStr, minutoFimStr] = agendamento.horaFim.split(':');
         
         const horaInicio = parseInt(horaInicioStr);
+        const minutoInicio = parseInt(minutoInicioStr || '0');
         const horaFim = parseInt(horaFimStr);
+        const minutoFim = parseInt(minutoFimStr || '0');
+
+        // Converter tudo para minutos para cálculo preciso
+        const inicioEmMinutos = horaInicio * 60 + minutoInicio;
+        const fimEmMinutos = horaFim * 60 + minutoFim;
+        const horaAtualEmMinutos = horaAtual * 60;
         
-        const offsetTop = horaInicio < horaAtual ? (horaAtual - horaInicio) * -80 : 0;
+        // Calcular altura baseada em minutos (80px por hora = 1.33px por minuto)
+        const alturaEmMinutos = fimEmMinutos - inicioEmMinutos;
+        const altura = Math.round(alturaEmMinutos * (80 / 60)); // 80px por hora, convertendo para minutos
         
-        const altura = (horaFim - horaInicio) * 80;
+        // Calcular offset baseado na diferença entre hora atual e início
+        const offsetTop = horaAtualEmMinutos > inicioEmMinutos ? 
+            Math.round((horaAtualEmMinutos - inicioEmMinutos) * (80 / 60)) : 0;
         
-        return { altura, offsetTop };
+        return { 
+            altura: Math.max(altura, 80), // Altura mínima de 80px
+            offsetTop: Math.max(offsetTop, 0) // Offset mínimo de 0
+        };
     };
 
     const renderAgendamento = (agendamento: Agendamento, horaAtual: number) => {
+        console.log('Renderizando agendamento:', {
+            id: agendamento.id,
+            horaInicio: agendamento.horaInicio,
+            horaFim: agendamento.horaFim,
+            servico: agendamento.servico?.nome,
+            funcionarioId: agendamento.funcionarioId
+        });
+
         const funcionarioDoAgendamento = funcionarios.find(f => f.id === agendamento.funcionarioId);
         const { altura, offsetTop } = calcularAlturaAgendamento(agendamento, horaAtual);
         
         return (
-            <View 
-                key={agendamento.id} 
+            <View
+                key={agendamento.id}
                 style={[
                     ReservaScreenStyle.boxAgendamento,
                     { 
                         height: altura,
                         marginTop: offsetTop,
+                        backgroundColor: '#4CAF50',
+                        borderWidth: 1,
+                        borderColor: '#388E3C',
+                        borderRadius: 8,
+                        shadowColor: '#000',
+                        shadowOffset: {
+                            width: 0,
+                            height: 2,
+                        },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 3.84,
+                        elevation: 5,
                     }
                 ]}
             >
-                <View style={ReservaScreenStyle.containerTextAgendamento}>
-                    <Text style={ReservaScreenStyle.textAgendamento}>
+                <View style={[ReservaScreenStyle.containerTextAgendamento, { padding: 5 }]}>
+                    <Text style={[ReservaScreenStyle.textAgendamento, { color: '#FFFFFF', fontWeight: 'bold' }]}>
                         {`${agendamento.horaInicio} - ${agendamento.horaFim}`}
                     </Text>
-                    {carregandoAgendamentos && (
-                        <Text style={{color: '#717171', fontSize: 12}}>Carregando...</Text>
-                    )}
+                    <Text style={[ReservaScreenStyle.textAgendamento, { color: '#FFFFFF' }]}>
+                        {funcionarioDoAgendamento?.nome || "Profissional"}
+                    </Text>
+                    <Text style={[ReservaScreenStyle.textAgendamento, { color: '#FFFFFF' }]}>
+                        {agendamento.servico?.nome}
+                    </Text>
                 </View>
             </View>
         );
@@ -761,6 +896,21 @@ const ReservaScreen = () => {
             );
         }
     };
+
+    // Adicionar useEffect para monitorar mudanças nos agendamentos
+    useEffect(() => {
+        console.log('Estado dos agendamentos atualizado:', {
+            totalAgendamentos: agendamentos?.length || 0,
+            agendamentos: agendamentos?.map(ag => ({
+                id: ag.id,
+                data: ag.data?.toDate(),
+                horaInicio: ag.horaInicio,
+                horaFim: ag.horaFim,
+                funcionarioId: ag.funcionarioId,
+                servico: ag.servico?.nome
+            }))
+        });
+    }, [agendamentos]);
 
     return (
         <View style={{flex:1, backgroundColor: '#717171'}}>

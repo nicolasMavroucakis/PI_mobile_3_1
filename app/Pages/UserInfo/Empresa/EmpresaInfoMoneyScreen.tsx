@@ -383,7 +383,6 @@ const EmpresaInfoMoneyScreen = () => {
                                         textColor="red"
                                         style={{zIndex: 1000}}
                                     />
-                                    <View style={{ backgroundColor: 'white', width: 120, height: 30, position: 'relative', top: 0, left: -120, borderRadius:4}} />
                                 </View>
                             </View>
                             <View style={[EmpresaInfoMoneyScreenStyle.containerFilterDireita, { alignItems: 'flex-end', justifyContent: 'center' }]}>
@@ -452,7 +451,6 @@ const EmpresaInfoMoneyScreen = () => {
                                         textColor="red"
                                         style={{zIndex: 1000}}
                                     />
-                                    <View style={{ backgroundColor: 'white', width: 120, height: 30, position: 'relative', top: 0, left: -120, borderRadius:4}} />
                                 </View>
                             </View>
                             <View style={[EmpresaInfoMoneyScreenStyle.containerFilterDireita, { alignItems: 'flex-end', justifyContent: 'center' }]}>

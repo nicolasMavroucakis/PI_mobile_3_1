@@ -130,6 +130,13 @@ const EmpresaInfoAgendamentoScreen = () => {
             fimDia.setHours(23, 59, 59, 999);
             const timestampFim = Timestamp.fromDate(fimDia);
 
+            console.log('Data selecionada:', {
+                dataOriginal: selectedDate.toISOString(),
+                dataFormatada: format(selectedDate, 'dd/MM/yyyy HH:mm:ss'),
+                inicioDia: format(inicioDia, 'dd/MM/yyyy HH:mm:ss'),
+                fimDia: format(fimDia, 'dd/MM/yyyy HH:mm:ss')
+            });
+
             const agendamentosRef = collection(db, "agendamentos");
             const q = query(
                 agendamentosRef,
@@ -139,10 +146,21 @@ const EmpresaInfoAgendamentoScreen = () => {
             );
 
             const querySnapshot = await getDocs(q);
-            let agendamentosDoDia = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            })) as Agendamento[];
+            let agendamentosDoDia = querySnapshot.docs.map(doc => {
+                const data = doc.data();
+                console.log('Agendamento encontrado:', {
+                    id: doc.id,
+                    data: data.data?.toDate(),
+                    dataFormatada: data.data ? format(data.data.toDate(), 'dd/MM/yyyy HH:mm:ss') : 'sem data',
+                    horaInicio: data.horaInicio,
+                    horaFim: data.horaFim,
+                    servico: data.servico?.nome
+                });
+                return {
+                    id: doc.id,
+                    ...data
+                };
+            }) as Agendamento[];
 
             if (selectedService && selectedService !== "Todos") {
                 agendamentosDoDia = agendamentosDoDia.filter(
@@ -202,73 +220,165 @@ const EmpresaInfoAgendamentoScreen = () => {
 
     const onChange = async (event: any, selectedDate: any) => {
         if (selectedDate) {
+            console.log('Data selecionada no picker:', {
+                dataOriginal: selectedDate.toISOString(),
+                dataFormatada: format(selectedDate, 'dd/MM/yyyy HH:mm:ss')
+            });
             setDate(selectedDate);
             await buscarAgendamentosDoDia(selectedDate);
         }
     };
 
     const getAgendamentosHora = (hora: number) => {
-        if (!agendamentos || !agendamentos.length) return [];
+        if (!agendamentos || !agendamentos.length) {
+            console.log(`Nenhum agendamento para hora ${hora}`);
+            return [];
+        }
         
-        return agendamentos.filter(agendamento => {
-            if (!agendamento || !agendamento.data) return false;
+        const agendamentosFiltrados = agendamentos.filter(agendamento => {
+            if (!agendamento || !agendamento.data) {
+                console.log(`Agendamento inválido para hora ${hora}`);
+                return false;
+            }
 
-            const [horaInicioStr] = agendamento.horaInicio.split(':');
-            const [horaFimStr] = agendamento.horaFim.split(':');
+            const [horaInicioStr, minutoInicioStr] = agendamento.horaInicio.split(':');
+            const [horaFimStr, minutoFimStr] = agendamento.horaFim.split(':');
             
             const horaInicio = parseInt(horaInicioStr);
+            const minutoInicio = parseInt(minutoInicioStr || '0');
             const horaFim = parseInt(horaFimStr);
+            const minutoFim = parseInt(minutoFimStr || '0');
+
+            // Convertendo para minutos para comparação mais precisa
+            const inicioEmMinutos = horaInicio * 60 + minutoInicio;
+            const fimEmMinutos = horaFim * 60 + minutoFim;
+            const horaAtualEmMinutos = hora * 60;
+
+            const estaNaHora = horaAtualEmMinutos >= inicioEmMinutos && horaAtualEmMinutos < fimEmMinutos;
             
-            return hora >= horaInicio && hora < horaFim;
+            if (estaNaHora) {
+                console.log(`Agendamento encontrado para hora ${hora}:`, {
+                    id: agendamento.id,
+                    horaInicio: agendamento.horaInicio,
+                    horaFim: agendamento.horaFim,
+                    servico: agendamento.servico.nome
+                });
+            }
+
+            return estaNaHora;
         });
+
+        console.log(`Hora ${hora}: ${agendamentosFiltrados.length} agendamentos encontrados`);
+        return agendamentosFiltrados;
     };
 
     const calcularAlturaAgendamento = (agendamento: Agendamento, horaAtual: number): { altura: number; offsetTop: number } => {
         if (!agendamento || !agendamento.horaInicio || !agendamento.horaFim) {
+            console.log('Agendamento inválido para cálculo de altura:', agendamento);
             return { altura: 80, offsetTop: 0 };
         }
 
-        const [horaInicioStr] = agendamento.horaInicio.split(':');
-        const [horaFimStr] = agendamento.horaFim.split(':');
+        const [horaInicioStr, minutoInicioStr] = agendamento.horaInicio.split(':');
+        const [horaFimStr, minutoFimStr] = agendamento.horaFim.split(':');
         
         const horaInicio = parseInt(horaInicioStr);
+        const minutoInicio = parseInt(minutoInicioStr || '0');
         const horaFim = parseInt(horaFimStr);
+        const minutoFim = parseInt(minutoFimStr || '0');
+
+        // Converter tudo para minutos para cálculo preciso
+        const inicioEmMinutos = horaInicio * 60 + minutoInicio;
+        const fimEmMinutos = horaFim * 60 + minutoFim;
+        const horaAtualEmMinutos = horaAtual * 60;
+
+        console.log('Cálculo de altura do agendamento:', {
+            id: agendamento.id,
+            horaInicio: `${horaInicio}:${minutoInicio}`,
+            horaFim: `${horaFim}:${minutoFim}`,
+            horaAtual,
+            inicioEmMinutos,
+            fimEmMinutos,
+            horaAtualEmMinutos
+        });
         
-        const offsetTop = horaInicio < horaAtual ? (horaAtual - horaInicio) * -80 : 0;
-        const altura = (horaFim - horaInicio) * 80;
+        // Calcular altura baseada em minutos (80px por hora = 1.33px por minuto)
+        const alturaEmMinutos = fimEmMinutos - inicioEmMinutos;
+        const altura = Math.round(alturaEmMinutos * (80 / 60)); // 80px por hora, convertendo para minutos
         
-        return { altura, offsetTop };
+        // Calcular offset baseado na diferença entre hora atual e início
+        const offsetTop = horaAtualEmMinutos > inicioEmMinutos ? 
+            Math.round((horaAtualEmMinutos - inicioEmMinutos) * (80 / 60)) : 0;
+        
+        console.log('Resultado do cálculo:', {
+            alturaEmMinutos,
+            altura,
+            offsetTop,
+            alturaFinal: Math.max(altura, 80),
+            offsetTopFinal: Math.max(offsetTop, 0)
+        });
+
+        return { 
+            altura: Math.max(altura, 80), // Altura mínima de 80px
+            offsetTop: Math.max(offsetTop, 0) // Offset mínimo de 0
+        };
     };
 
     const renderAgendamento = (agendamento: Agendamento, horaAtual: number) => {
+        console.log('Renderizando agendamento:', {
+            id: agendamento.id,
+            horaInicio: agendamento.horaInicio,
+            horaFim: agendamento.horaFim,
+            servico: agendamento.servico.nome
+        });
+
         const funcionarioDoAgendamento = funcionarios.find(f => f.id === agendamento.funcionarioId);
         const { altura, offsetTop } = calcularAlturaAgendamento(agendamento, horaAtual);
         
+        // Garantir que altura e offsetTop são valores válidos
+        const alturaFinal = Math.max(altura, 80); // Altura mínima de 80
+        const offsetTopFinal = Math.max(offsetTop, 0); // Offset mínimo de 0
+        
+        console.log('Dimensões do agendamento:', {
+            alturaOriginal: altura,
+            alturaFinal,
+            offsetTopOriginal: offsetTop,
+            offsetTopFinal
+        });
+
         return (
             <TouchableOpacity 
                 key={agendamento.id} 
                 style={[
                     ReservaScreenStyle.boxAgendamento,
                     { 
-                        height: altura,
-                        marginTop: offsetTop,
+                        height: alturaFinal,
+                        marginTop: offsetTopFinal,
+                        backgroundColor: '#4CAF50', // Verde
+                        borderWidth: 1,
+                        borderColor: '#388E3C', // Verde mais escuro para a borda
+                        borderRadius: 8,
+                        shadowColor: '#000',
+                        shadowOffset: {
+                            width: 0,
+                            height: 2,
+                        },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 3.84,
+                        elevation: 5,
                     }
                 ]}
                 onPress={() => navigation.navigate('IniciarAgendamentoScreen', { agendamento })}
             >
-                <View style={ReservaScreenStyle.containerTextAgendamento}>
-                    <Text style={ReservaScreenStyle.textAgendamento}>
+                <View style={[ReservaScreenStyle.containerTextAgendamento, { padding: 5 }]}>
+                    <Text style={[ReservaScreenStyle.textAgendamento, { color: '#FFFFFF', fontWeight: 'bold' }]}>
                         {`${agendamento.horaInicio} - ${agendamento.horaFim}`}
                     </Text>
-                    <Text style={ReservaScreenStyle.textAgendamento}>
+                    <Text style={[ReservaScreenStyle.textAgendamento, { color: '#FFFFFF' }]}>
                         {funcionarioDoAgendamento?.nome || "Profissional"}
                     </Text>
-                    <Text style={ReservaScreenStyle.textAgendamento}>
+                    <Text style={[ReservaScreenStyle.textAgendamento, { color: '#FFFFFF' }]}>
                         {agendamento.servico.nome}
                     </Text>
-                    {carregandoAgendamentos && (
-                        <Text style={{color: '#717171', fontSize: 12}}>Carregando...</Text>
-                    )}
                 </View>
             </TouchableOpacity>
         );
@@ -349,7 +459,6 @@ const EmpresaInfoAgendamentoScreen = () => {
                                     textColor="red"
                                     style={{ zIndex: 1000 }}
                                 />
-                                <View style={{ backgroundColor: 'white', width: 120, height: 30, position: 'relative', top: 0, left: -120, borderRadius: 4 }} />
                             </View>
                         </View>
                         <View style={[EmpresaInfoMoneyScreenStyle.containerFilterDireita, { alignItems: 'flex-end', justifyContent: 'center' }]}>

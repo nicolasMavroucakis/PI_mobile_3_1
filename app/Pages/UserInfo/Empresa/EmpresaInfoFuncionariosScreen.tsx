@@ -399,8 +399,6 @@ const EmpresaInfoFuncionariosScreen = () => {
                             </Text>
                         </View>
                     </View>
-
-                    {/* Serviços Reservados */}
                     <View style={EmpresaInfoMoneyScreenStyle.containerServicoReservado}>
                         <View>
                             <Text style={EmpresaInfoMoneyScreenStyle.titleSecundarios}>
@@ -422,7 +420,6 @@ const EmpresaInfoFuncionariosScreen = () => {
                                         textColor="red"
                                         style={{zIndex: 1000}}
                                     />
-                                    <View style={{ backgroundColor: 'white', width: 120, height: 30, position: 'relative', top: 0, left: -120, borderRadius:4}} />
                                 </View>
                             </View>
                             <View style={[EmpresaInfoMoneyScreenStyle.containerFilterDireita, { alignItems: 'flex-end', justifyContent: 'center' }]}>
@@ -490,7 +487,6 @@ const EmpresaInfoFuncionariosScreen = () => {
                                         textColor="red"
                                         style={{zIndex: 1000}}
                                     />
-                                    <View style={{ backgroundColor: 'white', width: 120, height: 30, position: 'relative', top: 0, left: -123, borderRadius:4}} />
                                 </View>
                             </View>
                             <View style={[EmpresaInfoMoneyScreenStyle.containerFilterDireita, { alignItems: 'flex-end', justifyContent: 'center' }]}>

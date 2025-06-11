@@ -267,19 +267,61 @@ const FuncionarioAgendamentoScreen = () => {
     }, [selectedService, date, userId]);
 
     const getAgendamentosHora = (hora: number) => {
-        if (!agendamentos || !agendamentos.length) return [];
-        
-        return agendamentos.filter(agendamento => {
-            if (!agendamento || !agendamento.data) return false;
+        console.log(`=== VERIFICANDO AGENDAMENTOS PARA HORA ${hora} ===`);
+        console.log('Estado atual:', {
+            totalAgendamentos: agendamentos?.length || 0,
+            hora: hora
+        });
 
-            const [horaInicioStr] = agendamento.horaInicio.split(':');
-            const [horaFimStr] = agendamento.horaFim.split(':');
+        if (!agendamentos || !agendamentos.length) {
+            console.log(`Nenhum agendamento disponível para hora ${hora}`);
+            return [];
+        }
+        
+        const agendamentosFiltrados = agendamentos.filter(agendamento => {
+            if (!agendamento || !agendamento.data) {
+                console.log(`Agendamento inválido para hora ${hora}:`, agendamento);
+                return false;
+            }
+
+            const [horaInicioStr, minutoInicioStr] = agendamento.horaInicio.split(':');
+            const [horaFimStr, minutoFimStr] = agendamento.horaFim.split(':');
             
             const horaInicio = parseInt(horaInicioStr);
+            const minutoInicio = parseInt(minutoInicioStr || '0');
             const horaFim = parseInt(horaFimStr);
+            const minutoFim = parseInt(minutoFimStr || '0');
+
+            // Converter tudo para minutos para comparação precisa
+            const inicioEmMinutos = horaInicio * 60 + minutoInicio;
+            const fimEmMinutos = horaFim * 60 + minutoFim;
+            const horaAtualEmMinutos = hora * 60;
             
-            return hora >= horaInicio && hora < horaFim;
+            console.log(`Verificando agendamento ${agendamento.id}:`, {
+                horaInicio: `${horaInicio}:${minutoInicio}`,
+                horaFim: `${horaFim}:${minutoFim}`,
+                horaAtual: hora,
+                inicioEmMinutos,
+                fimEmMinutos,
+                horaAtualEmMinutos,
+                dentroDoIntervalo: horaAtualEmMinutos >= inicioEmMinutos && horaAtualEmMinutos < fimEmMinutos
+            });
+            
+            const dentroDoIntervalo = horaAtualEmMinutos >= inicioEmMinutos && horaAtualEmMinutos < fimEmMinutos;
+            return dentroDoIntervalo;
         });
+
+        console.log(`Resultado para hora ${hora}:`, {
+            totalFiltrados: agendamentosFiltrados.length,
+            agendamentos: agendamentosFiltrados.map(ag => ({
+                id: ag.id,
+                horaInicio: ag.horaInicio,
+                horaFim: ag.horaFim,
+                clienteNome: ag.clienteNome
+            }))
+        });
+
+        return agendamentosFiltrados;
     };
 
     const calcularAlturaAgendamento = (agendamento: Agendamento, horaAtual: number): { altura: number; offsetTop: number } => {
@@ -287,19 +329,42 @@ const FuncionarioAgendamentoScreen = () => {
             return { altura: 80, offsetTop: 0 };
         }
 
-        const [horaInicioStr] = agendamento.horaInicio.split(':');
-        const [horaFimStr] = agendamento.horaFim.split(':');
+        const [horaInicioStr, minutoInicioStr] = agendamento.horaInicio.split(':');
+        const [horaFimStr, minutoFimStr] = agendamento.horaFim.split(':');
         
         const horaInicio = parseInt(horaInicioStr);
+        const minutoInicio = parseInt(minutoInicioStr || '0');
         const horaFim = parseInt(horaFimStr);
+        const minutoFim = parseInt(minutoFimStr || '0');
+
+        // Converter tudo para minutos para cálculo preciso
+        const inicioEmMinutos = horaInicio * 60 + minutoInicio;
+        const fimEmMinutos = horaFim * 60 + minutoFim;
+        const horaAtualEmMinutos = horaAtual * 60;
         
-        const offsetTop = horaInicio < horaAtual ? (horaAtual - horaInicio) * -80 : 0;
-        const altura = (horaFim - horaInicio) * 80;
+        // Calcular altura baseada em minutos (80px por hora = 1.33px por minuto)
+        const alturaEmMinutos = fimEmMinutos - inicioEmMinutos;
+        const altura = Math.round(alturaEmMinutos * (80 / 60)); // 80px por hora, convertendo para minutos
         
-        return { altura, offsetTop };
+        // Calcular offset baseado na diferença entre hora atual e início
+        const offsetTop = horaAtualEmMinutos > inicioEmMinutos ? 
+            Math.round((horaAtualEmMinutos - inicioEmMinutos) * (80 / 60)) : 0;
+        
+        return { 
+            altura: Math.max(altura, 80), // Altura mínima de 80px
+            offsetTop: Math.max(offsetTop, 0) // Offset mínimo de 0
+        };
     };
 
     const renderAgendamento = (agendamento: Agendamento, horaAtual: number) => {
+        console.log('Renderizando agendamento:', {
+            id: agendamento.id,
+            horaInicio: agendamento.horaInicio,
+            horaFim: agendamento.horaFim,
+            clienteNome: agendamento.clienteNome,
+            servico: agendamento.servico.nome
+        });
+
         const { altura, offsetTop } = calcularAlturaAgendamento(agendamento, horaAtual);
         
         return (
@@ -310,23 +375,32 @@ const FuncionarioAgendamentoScreen = () => {
                     { 
                         height: altura,
                         marginTop: offsetTop,
+                        backgroundColor: '#4CAF50',
+                        borderWidth: 1,
+                        borderColor: '#388E3C',
+                        borderRadius: 8,
+                        shadowColor: '#000',
+                        shadowOffset: {
+                            width: 0,
+                            height: 2,
+                        },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 3.84,
+                        elevation: 5,
                     }
                 ]}
                 onPress={() => navigation.navigate('IniciarAgendamentoScreen', { agendamento })}
             >
-                <View style={ReservaScreenStyle.containerTextAgendamento}>
-                    <Text style={ReservaScreenStyle.textAgendamento}>
+                <View style={[ReservaScreenStyle.containerTextAgendamento, { padding: 5 }]}>
+                    <Text style={[ReservaScreenStyle.textAgendamento, { color: '#FFFFFF', fontWeight: 'bold' }]}>
                         {`${agendamento.horaInicio} - ${agendamento.horaFim}`}
                     </Text>
-                    <Text style={ReservaScreenStyle.textAgendamento}>
+                    <Text style={[ReservaScreenStyle.textAgendamento, { color: '#FFFFFF' }]}>
                         {agendamento.clienteNome || "Cliente"}
                     </Text>
-                    <Text style={ReservaScreenStyle.textAgendamento}>
+                    <Text style={[ReservaScreenStyle.textAgendamento, { color: '#FFFFFF' }]}>
                         {agendamento.servico.nome}
                     </Text>
-                    {carregandoAgendamentos && (
-                        <Text style={{color: '#717171', fontSize: 12}}>Carregando...</Text>
-                    )}
                 </View>
             </TouchableOpacity>
         );
@@ -378,6 +452,20 @@ const FuncionarioAgendamentoScreen = () => {
             </Text>
         </TouchableOpacity>
     );
+
+    useEffect(() => {
+        console.log('Estado dos agendamentos atualizado:', {
+            totalAgendamentos: agendamentos?.length || 0,
+            agendamentos: agendamentos?.map(ag => ({
+                id: ag.id,
+                data: ag.data?.toDate(),
+                horaInicio: ag.horaInicio,
+                horaFim: ag.horaFim,
+                clienteNome: ag.clienteNome,
+                servico: ag.servico.nome
+            }))
+        });
+    }, [agendamentos]);
 
     return (
         <View style={{ flex: 1, backgroundColor: "#000" }}>
