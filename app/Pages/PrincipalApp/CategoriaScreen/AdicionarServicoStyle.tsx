@@ -131,6 +131,30 @@ const AdicionarServicoStyle = StyleSheet.create({
     justifyContent: "center",
     overflow: "hidden", // Garante que o conteúdo não ultrapasse os limites
   },
+  selectButton: {
+    backgroundColor: '#007bff',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  selectButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  button: {
+    backgroundColor: '#00C20A',
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 22,
+  },
 });
 
 export default AdicionarServicoStyle;
