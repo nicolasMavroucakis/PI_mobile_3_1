@@ -37,22 +37,22 @@ const EmpresaInfoScreenStyle = StyleSheet.create({
     height: 30,
   },
   containerFavoritoCompText: {
-    width: width,
+    width: width - 32,
     height: 60,
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginLeft: 16
+    marginHorizontal: 16,
+    marginTop: 10,
   },
   containerFavoritoComp: {
     display: 'flex',
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    width: width * 0.4,
+    width: 'auto',
     height: 60,
-    gap: 20,
   },
   containerText: {
     display: 'flex',
@@ -65,11 +65,13 @@ const EmpresaInfoScreenStyle = StyleSheet.create({
     fontSize: 18,
     color: 'white',
     paddingBottom: 5,
+    maxWidth: width * 0.6,
   },
   empresaMenor: {
     fontWeight: 'bold',
     fontSize: 13,
     color: 'white',
+    maxWidth: width * 0.6,
   },
   tipoPagEmpresa: {
     width: width,

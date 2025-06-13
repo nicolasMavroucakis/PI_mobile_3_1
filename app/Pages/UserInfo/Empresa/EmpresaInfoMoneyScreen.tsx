@@ -345,20 +345,28 @@ const EmpresaInfoMoneyScreen = () => {
                 <View style={UserScreenStyle.containerRest}>
                     <View style={EmpresaInfoMoneyScreenStyle.continerAgendamentos}>
                         <View style={EmpresaInfoMoneyScreenStyle.continerAgendamentosMetade}>
-                            <Text style={EmpresaInfoMoneyScreenStyle.textAgendamentos}>
-                                Total de agendamentos para hoje
-                            </Text>
-                            <Text style={[EmpresaInfoMoneyScreenStyle.textAgendamentos, { color: '#0057C2' }]}>
-                                {agendamentosAindaParaHoje}
-                            </Text>
+                            <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+                                <Text style={EmpresaInfoMoneyScreenStyle.textAgendamentos}>
+                                    Reservas para o dia de hoje
+                                </Text>
+                            </View>
+                            <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+                                <Text style={[EmpresaInfoMoneyScreenStyle.textAgendamentos, { color: '#0057C2' }]}>
+                                    {agendamentosAindaParaHoje}
+                                </Text>
+                            </View>
                         </View>
                         <View style={EmpresaInfoMoneyScreenStyle.continerAgendamentosMetade}>
-                            <Text style={EmpresaInfoMoneyScreenStyle.textAgendamentos}>
-                                Agendamentos realizados no dia de hoje
-                            </Text>
-                            <Text style={[EmpresaInfoMoneyScreenStyle.textAgendamentos, { color: '#00C20A' }]}>
-                                {agendamentosFinalizadosHoje}
-                            </Text>
+                            <View style={{justifyContent: 'center', alignItems: 'center' }}>
+                                <Text style={EmpresaInfoMoneyScreenStyle.textAgendamentos}>
+                                    Reservas realizadas Hoje
+                                </Text>
+                            </View>
+                            <View style={{  justifyContent: 'center', alignItems: 'center' }}>
+                                <Text style={[EmpresaInfoMoneyScreenStyle.textAgendamentos, { color: '#00C20A' }]}>
+                                    {agendamentosFinalizadosHoje}
+                                </Text>
+                            </View>
                         </View>
                     </View>
 

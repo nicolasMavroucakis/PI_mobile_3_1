@@ -274,53 +274,22 @@ const EmpresaInfoAgendamentoScreen = () => {
 
     const calcularAlturaAgendamento = (agendamento: Agendamento, horaAtual: number): { altura: number; offsetTop: number } => {
         if (!agendamento || !agendamento.horaInicio || !agendamento.horaFim) {
-            console.log('Agendamento inválido para cálculo de altura:', agendamento);
-            return { altura: 80, offsetTop: 0 };
+            return { altura: 40, offsetTop: 0 };
         }
-
         const [horaInicioStr, minutoInicioStr] = agendamento.horaInicio.split(':');
         const [horaFimStr, minutoFimStr] = agendamento.horaFim.split(':');
-        
         const horaInicio = parseInt(horaInicioStr);
         const minutoInicio = parseInt(minutoInicioStr || '0');
         const horaFim = parseInt(horaFimStr);
         const minutoFim = parseInt(minutoFimStr || '0');
-
-        // Converter tudo para minutos para cálculo preciso
+        // Altura proporcional à duração
         const inicioEmMinutos = horaInicio * 60 + minutoInicio;
         const fimEmMinutos = horaFim * 60 + minutoFim;
-        const horaAtualEmMinutos = horaAtual * 60;
-
-        console.log('Cálculo de altura do agendamento:', {
-            id: agendamento.id,
-            horaInicio: `${horaInicio}:${minutoInicio}`,
-            horaFim: `${horaFim}:${minutoFim}`,
-            horaAtual,
-            inicioEmMinutos,
-            fimEmMinutos,
-            horaAtualEmMinutos
-        });
-        
-        // Calcular altura baseada em minutos (80px por hora = 1.33px por minuto)
         const alturaEmMinutos = fimEmMinutos - inicioEmMinutos;
-        const altura = Math.round(alturaEmMinutos * (80 / 60)); // 80px por hora, convertendo para minutos
-        
-        // Calcular offset baseado na diferença entre hora atual e início
-        const offsetTop = horaAtualEmMinutos > inicioEmMinutos ? 
-            Math.round((horaAtualEmMinutos - inicioEmMinutos) * (80 / 60)) : 0;
-        
-        console.log('Resultado do cálculo:', {
-            alturaEmMinutos,
-            altura,
-            offsetTop,
-            alturaFinal: Math.max(altura, 80),
-            offsetTopFinal: Math.max(offsetTop, 0)
-        });
-
-        return { 
-            altura: Math.max(altura, 80), // Altura mínima de 80px
-            offsetTop: Math.max(offsetTop, 0) // Offset mínimo de 0
-        };
+        const altura = Math.max(Math.round(alturaEmMinutos * (80 / 60)), 20);
+        // Offset proporcional ao minuto de início dentro do bloco da hora
+        const offsetTop = (minutoInicio) * (80 / 60);
+        return { altura, offsetTop };
     };
 
     const renderAgendamento = (agendamento: Agendamento, horaAtual: number) => {
@@ -385,8 +354,15 @@ const EmpresaInfoAgendamentoScreen = () => {
     };
 
     const renderHorario = (hora: number) => {
-        const agendamentosHora = getAgendamentosHora(hora);
-        
+        // Filtra apenas agendamentos que começam dentro deste bloco de hora
+        const agendamentosHora = agendamentos.filter(agendamento => {
+            if (!agendamento || !agendamento.horaInicio) return false;
+            const [horaInicioStr, minutoInicioStr] = agendamento.horaInicio.split(":");
+            const horaInicio = parseInt(horaInicioStr);
+            const minutoInicio = parseInt(minutoInicioStr || '0');
+            const minutosTotais = horaInicio * 60 + minutoInicio;
+            return minutosTotais >= hora * 60 && minutosTotais < (hora + 1) * 60;
+        });
         return (
             <View key={hora} style={{ height: 80 }}>
                 <View style={ReservaScreenStyle.containerHoraLinha}>
@@ -431,24 +407,162 @@ const EmpresaInfoAgendamentoScreen = () => {
         </TouchableOpacity>
     );
 
+    // NOVO: Renderização absoluta dos agendamentos
+    const MINUTOS_POR_DIA = 24 * 60;
+    const PIXELS_POR_MINUTO = 80 / 60; // 80px por hora
+
+    const renderLinhasHora = () => (
+        Array.from({ length: 24 }, (_, i) => (
+            <View key={i} style={{
+                position: 'absolute',
+                top: i * 80,
+                left: 0,
+                right: 0,
+                height: 1,
+                backgroundColor: '#e0e0e0',
+                zIndex: 1
+            }} />
+        ))
+    );
+
+    const renderLabelsHora = () => (
+        Array.from({ length: 24 }, (_, i) => (
+            <Text key={i} style={{
+                position: 'absolute',
+                top: i * 80,
+                left: 5,
+                fontSize: 10,
+                fontWeight: 'bold',
+                color: '#000',
+                zIndex: 2
+            }}>{i.toString().padStart(2, '0')}</Text>
+        ))
+    );
+
+    // Função utilitária para agrupar agendamentos por faixa de tempo sobreposta
+    function agruparAgendamentosSobrepostos(agendamentos: Agendamento[]): Agendamento[][] {
+        // Ordena por início
+        const ordenados = [...agendamentos].sort((a, b) => {
+            const [ha, ma] = a.horaInicio.split(':').map(Number);
+            const [hb, mb] = b.horaInicio.split(':').map(Number);
+            return (ha * 60 + ma) - (hb * 60 + mb);
+        });
+        const grupos = [];
+        let grupoAtual: Agendamento[] = [];
+        let fimAtual = null;
+        for (const ag of ordenados) {
+            const [hIni, mIni] = ag.horaInicio.split(':').map(Number);
+            const [hFim, mFim] = ag.horaFim.split(':').map(Number);
+            const ini = hIni * 60 + mIni;
+            const fim = hFim * 60 + mFim;
+            if (!fimAtual || ini >= fimAtual) {
+                if (grupoAtual.length) grupos.push(grupoAtual);
+                grupoAtual = [ag];
+                fimAtual = fim;
+            } else {
+                grupoAtual.push(ag);
+                fimAtual = Math.max(fimAtual, fim);
+            }
+        }
+        if (grupoAtual.length) grupos.push(grupoAtual);
+        return grupos;
+    }
+
+    const renderAgendamentosAbsolutos = () => {
+        const grupos = agruparAgendamentosSobrepostos(agendamentos);
+        return grupos.map((grupo, idx) => {
+            // Calcula faixa vertical do grupo
+            const [hIni, mIni] = grupo[0].horaInicio.split(':').map(Number);
+            const ini = hIni * 60 + mIni;
+            const fim = Math.max(...grupo.map(ag => {
+                const [hFim, mFim] = ag.horaFim.split(':').map(Number);
+                return hFim * 60 + mFim;
+            }));
+            const top = ini * PIXELS_POR_MINUTO;
+            const height = Math.max((fim - ini) * PIXELS_POR_MINUTO, 20);
+            return (
+                <View
+                    key={idx}
+                    style={{
+                        position: 'absolute',
+                        left: 40,
+                        right: 10,
+                        top,
+                        height,
+                        zIndex: 3,
+                        flexDirection: 'row',
+                    }}
+                >
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={true}
+                        style={{ flex: 1 }}
+                        contentContainerStyle={{ flexDirection: 'row', alignItems: 'stretch', gap: 10 }}
+                    >
+                        {grupo.map(agendamento => {
+                            const [hA, mA] = agendamento.horaInicio.split(':').map(Number);
+                            const [hF, mF] = agendamento.horaFim.split(':').map(Number);
+                            const iniA = hA * 60 + mA;
+                            const fimA = hF * 60 + mF;
+                            const alturaA = Math.max((fimA - iniA) * PIXELS_POR_MINUTO, 20);
+                            const funcionarioDoAgendamento = funcionarios.find(f => f.id === agendamento.funcionarioId);
+                            return (
+                                <View
+                                    key={agendamento.id}
+                                    style={{
+                                        width: 220,
+                                        height: alturaA,
+                                        backgroundColor: '#4CAF50',
+                                        borderRadius: 8,
+                                        borderWidth: 1,
+                                        borderColor: '#388E3C',
+                                        shadowColor: '#000',
+                                        shadowOffset: { width: 0, height: 2 },
+                                        shadowOpacity: 0.25,
+                                        shadowRadius: 3.84,
+                                        elevation: 5,
+                                        marginRight: 10,
+                                        marginBottom: 0,
+                                        marginTop: (iniA - ini) * PIXELS_POR_MINUTO,
+                                        zIndex: 4
+                                    }}
+                                >
+                                    <View style={[ReservaScreenStyle.containerTextAgendamento, { padding: 5 }]}> 
+                                        <Text style={[ReservaScreenStyle.textAgendamento, { color: '#FFFFFF', fontWeight: 'bold' }]}> 
+                                            {`${agendamento.horaInicio} - ${agendamento.horaFim}`}
+                                        </Text>
+                                        <Text style={[ReservaScreenStyle.textAgendamento, { color: '#FFFFFF' }]}> 
+                                            {funcionarioDoAgendamento?.nome || "Profissional"}
+                                        </Text>
+                                        <Text style={[ReservaScreenStyle.textAgendamento, { color: '#FFFFFF' }]}> 
+                                            {agendamento.servico.nome}
+                                        </Text>
+                                    </View>
+                                </View>
+                            );
+                        })}
+                    </ScrollView>
+                </View>
+            );
+        });
+    };
+
     return (
         <View style={{ flex: 1, backgroundColor: "#000" }}>
             <View style={[EmpresaInfoMoneyScreenStyle.containerTitle]}>
-                <TouchableOpacity onPress={() => navigation.navigate("UserScreen")}>
+                <TouchableOpacity onPress={() => navigation.navigate("UserScreen")}> 
                     <Image source={setaImg} style={EmpresaInfoMoneyScreenStyle.tamanhoImagensContainerTitle} />
                 </TouchableOpacity>
                 <Text style={UserScreenStyle.textTitle}>Agendamentos</Text>
-                <TouchableOpacity onPress={() => navigation.navigate("ConfigEmpresaInfo")}>
+                <TouchableOpacity onPress={() => navigation.navigate("ConfigEmpresaInfo")}> 
                     <Image source={engrenagemImg} style={EmpresaInfoMoneyScreenStyle.tamanhoImagensContainerTitle} />
                 </TouchableOpacity>
             </View>
-            <ScrollView showsVerticalScrollIndicator={false}>
-                <View style={[UserScreenStyle.containerRest, { minHeight: 750, flexGrow: 1 }]}>
+            <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
+                <View style={[UserScreenStyle.containerRest, { minHeight: 750, flexGrow: 1 }]}> 
                     <View style={EmpresaInfoMoneyScreenStyle.containerServicoReservadosfiltros}>
-                        <View style={[EmpresaInfoMoneyScreenStyle.containerFilterEsquerda, { alignItems: 'flex-start', justifyContent: 'center' }]}>
-                            <Text style={EmpresaInfoMoneyScreenStyle.textFiltros}>
-                                Linha Temporal
-                            </Text>
+                        <View style={[EmpresaInfoMoneyScreenStyle.containerFilterEsquerda, { alignItems: 'flex-start', justifyContent: 'center' }]}> 
+                            <Text style={EmpresaInfoMoneyScreenStyle.textFiltros}>Linha Temporal</Text>
                             <View style={EmpresaInfoMoneyScreenStyle.containerFilterFiltrosEsquerda}>
                                 <Image source={calendarioImg} style={EmpresaInfoMoneyScreenStyle.imgFiltros} />
                                 <DateTimePicker
@@ -461,10 +575,8 @@ const EmpresaInfoAgendamentoScreen = () => {
                                 />
                             </View>
                         </View>
-                        <View style={[EmpresaInfoMoneyScreenStyle.containerFilterDireita, { alignItems: 'flex-end', justifyContent: 'center' }]}>
-                            <Text style={EmpresaInfoMoneyScreenStyle.textFiltros}>
-                                Serviços
-                            </Text>
+                        <View style={[EmpresaInfoMoneyScreenStyle.containerFilterDireita, { alignItems: 'flex-end', justifyContent: 'center' }]}> 
+                            <Text style={EmpresaInfoMoneyScreenStyle.textFiltros}>Serviços</Text>
                             <TouchableOpacity
                                 onPress={() => setModalVisible(true)}
                                 style={[EmpresaInfoMoneyScreenStyle.containerFilterFiltrosEsquerda, { backgroundColor: "rgba(50, 50, 50, 0.8)", padding: 10, borderRadius: 8, justifyContent: 'flex-end', }]}
@@ -476,9 +588,12 @@ const EmpresaInfoAgendamentoScreen = () => {
                             </TouchableOpacity>
                         </View>
                     </View>
-                    <ScrollView style={ReservaScreenStyle.ContainerCalendario}>
-                        {Array.from({length: 24}, (_, i) => renderHorario(i))}
-                    </ScrollView>
+                    {/* NOVO: Container absoluto para linhas e agendamentos */}
+                    <View style={{ height: MINUTOS_POR_DIA * PIXELS_POR_MINUTO, position: 'relative', backgroundColor: '#f5f5f0', marginTop: 20, borderRadius: 10, overflow: 'visible' }}>
+                        {renderLinhasHora()}
+                        {renderLabelsHora()}
+                        {renderAgendamentosAbsolutos()}
+                    </View>
                 </View>
             </ScrollView>
             <EmpresaNavBar />
