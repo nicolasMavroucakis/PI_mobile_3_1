@@ -163,7 +163,7 @@ const EmpresaInfoScreen = () => {
                             </Text>
                         </View>
                         <View style={EmpresaInfoScreenStyle.containerFavoritoComp}>
-                            <TouchableOpacity onPress={toggleFavorito} style={{ marginRight: 40 }}>
+                            <TouchableOpacity onPress={toggleFavorito} >
                                 <AntDesign 
                                     name={favoritado ? "heart" : "hearto"} 
                                     size={30} 

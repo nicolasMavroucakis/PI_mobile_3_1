@@ -951,7 +951,7 @@ const ReservaScreen = () => {
                                     style={{zIndex: 1000}}
                                     minimumDate={new Date()}
                                 />
-                                <View style={{ backgroundColor: 'black', width: 110, height: 30, position: 'relative', top: 0, borderRadius:4, left: -113}} />
+                            
                             </View>
                         </View>
                         <View>
@@ -968,7 +968,7 @@ const ReservaScreen = () => {
                                     minuteInterval={10}
                                     style={{zIndex: 1000, position: 'relative', right: -50}}
                                 />
-                                <View style={{ backgroundColor: 'black', width: 70, height: 30, position: 'relative', top: 0, borderRadius:4, left: -20}} />
+                                <View style={{  width: 70, height: 30, position: 'relative', top: 0, borderRadius:4, left: -20}} />
                                 <View>
                                     <Image source={RelogioImg} style={{width: 40, height: 40}}/>
                                 </View>
