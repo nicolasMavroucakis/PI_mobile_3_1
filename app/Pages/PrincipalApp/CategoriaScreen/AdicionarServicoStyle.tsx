@@ -29,7 +29,7 @@ const AdicionarServicoStyle = StyleSheet.create({
   },
 
   linkTexto: {
-    textAlign: "right",
+    textAlign: "center",
     color: "#fff",
     fontSize: 15,
     marginBottom: 20,

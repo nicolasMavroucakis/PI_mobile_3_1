@@ -535,10 +535,15 @@ const ReservaScreen = () => {
                     }
                 ]}
             >
-                <View style={[ReservaScreenStyle.containerTextAgendamento, { padding: 5 }]}>
-                    <Text style={[ReservaScreenStyle.textAgendamento, { color: '#FFFFFF', fontWeight: 'bold' }]}>
+                <View style={[ReservaScreenStyle.containerTextAgendamento, { padding: 5 }]}> 
+                    <Text style={[ReservaScreenStyle.textAgendamento, { color: '#FFFFFF', fontWeight: 'bold' }]}> 
                         {`${agendamento.horaInicio} - ${agendamento.horaFim}`}
                     </Text>
+                    {funcionarioDoAgendamento && (
+                        <Text style={[ReservaScreenStyle.textAgendamento, { color: '#FFFFFF', fontSize: 12 }]}> 
+                            {funcionarioDoAgendamento.nome}
+                        </Text>
+                    )}
                 </View>
             </View>
         );
@@ -998,6 +1003,11 @@ const ReservaScreen = () => {
                                         <Text style={[ReservaScreenStyle.textAgendamento, { color: '#FFFFFF', fontWeight: 'bold' }]}> 
                                             {`${agendamento.horaInicio} - ${agendamento.horaFim}`}
                                         </Text>
+                                        {funcionarioDoAgendamento && (
+                                            <Text style={[ReservaScreenStyle.textAgendamento, { color: '#FFFFFF', fontSize: 12 }]}> 
+                                                {funcionarioDoAgendamento.nome}
+                                            </Text>
+                                        )}
                                     </View>
                                 </View>
                             );

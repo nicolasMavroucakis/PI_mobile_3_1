@@ -20,6 +20,7 @@ interface Servico {
     imagensUrl?: string[];
     tipoServico: string;
     ValorFinalMuda: boolean;
+    tipoAtendimento: string;
 }
 
 interface CategoriaExpandida {
@@ -256,6 +257,20 @@ const EmpresaServicos = () => {
                                                 <Text style={EmpresaInfoScreenStyle.subtitleDentroServico}>
                                                     {servico.descricao}
                                                 </Text>
+                                                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 5 }}>
+                                                    <Text style={{ 
+                                                        color: '#00C20A', 
+                                                        fontSize: 12, 
+                                                        fontWeight: 'bold',
+                                                        backgroundColor: 'rgba(0, 194, 10, 0.1)',
+                                                        paddingHorizontal: 8,
+                                                        paddingVertical: 2,
+                                                        borderRadius: 4,
+                                                        marginRight: 8
+                                                    }}>
+                                                        {servico.tipoAtendimento === 'residencia' ? 'Atendimento a Residência' : 'Atendimento no Estabelecimento'}
+                                                    </Text>
+                                                </View>
                                                 <ImagemCarrossel imagens={servico.imagensUrl} />
                                             </View>
                                             <View style={EmpresaInfoScreenStyle.servicoContainerReserva}>

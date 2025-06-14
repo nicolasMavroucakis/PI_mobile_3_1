@@ -371,23 +371,30 @@ const HomeScreen = () => {
                                                 {agendamento.data && agendamento.data.seconds ? new Date(agendamento.data.seconds * 1000).getDate() : ''}
                                             </Text>
                                         </View>
-                                        <View style={[HomeScreenStyle.containersDentroAgendamento, {alignItems: 'center'}]}>
+                                        <View style={[HomeScreenStyle.containersDentroAgendamento, {alignItems: 'flex-start'}]}>
                                             <View style={HomeScreenStyle.containersDentroAgendamentoLocHora}>
-                                                <Image source={ClockImg}/>
+                                                <Image source={ClockImg} style={{width: 20, height: 20}}/>
                                                 <Text style={{fontWeight: 'bold', fontSize: 15}}>
                                                     {agendamento.data && agendamento.data.seconds ? new Date(agendamento.data.seconds * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''}
                                                 </Text>
                                             </View>
                                             <View style={HomeScreenStyle.containersDentroAgendamentoLocHora}>
-                                                <Image source={Location}/>
+                                                <Image source={Location} style={{width: 20, height: 20}}/>
                                                 <Text style={{fontWeight: 'bold', fontSize: 15}}>
                                                     Atendimento a Residencia
                                                 </Text>
                                             </View>
                                         </View>
                                         <View style={[HomeScreenStyle.containersDentroAgendamento, {alignItems: 'flex-end'}]}>
-                                            <Text style={{fontWeight: 'bold', fontSize: 15, paddingRight: 10}}>
-                                                {agendamento.servico?.nome || "Serviço"}
+                                            <Text 
+                                                numberOfLines={1} 
+                                                ellipsizeMode="tail" 
+                                                style={{fontWeight: 'bold', fontSize: 15, paddingRight: 10, maxWidth: 100}}
+                                            >
+                                                {(agendamento.servico?.nome || "Serviço").length > 7 
+                                                    ? (agendamento.servico?.nome || "Serviço").substring(0, 7) + "..."
+                                                    : agendamento.servico?.nome || "Serviço"
+                                                }
                                             </Text>
                                         </View>
                                     </View>

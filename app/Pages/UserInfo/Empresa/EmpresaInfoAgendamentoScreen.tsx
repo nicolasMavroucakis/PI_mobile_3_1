@@ -507,8 +507,9 @@ const EmpresaInfoAgendamentoScreen = () => {
                             const alturaA = Math.max((fimA - iniA) * PIXELS_POR_MINUTO, 20);
                             const funcionarioDoAgendamento = funcionarios.find(f => f.id === agendamento.funcionarioId);
                             return (
-                                <View
+                                <TouchableOpacity
                                     key={agendamento.id}
+                                    onPress={() => navigation.navigate('IniciarAgendamentoScreen', { agendamento })}
                                     style={{
                                         width: 220,
                                         height: alturaA,
@@ -538,7 +539,7 @@ const EmpresaInfoAgendamentoScreen = () => {
                                             {agendamento.servico.nome}
                                         </Text>
                                     </View>
-                                </View>
+                                </TouchableOpacity>
                             );
                         })}
                     </ScrollView>

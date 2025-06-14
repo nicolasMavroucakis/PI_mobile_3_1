@@ -70,7 +70,7 @@ const HomeScreenStyle = StyleSheet.create({
     },
     containersDentroAgendamentoLocHora: {
         display: 'flex',
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
         alignItems: 'center',
         flexDirection: 'row'
     },
