@@ -55,6 +55,7 @@ const AdicionarServico = () => {
   const [duracao, setDuracao] = useState("");
   const [descricao, setDescricao] = useState("");
   const [tipoServico, setTipoServico] = useState("");
+  const [tipoAtendimento, setTipoAtendimento] = useState("");
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
   const [funcionariosSelecionados, setFuncionariosSelecionados] = useState<Funcionario[]>([]);
   const [imagens, setImagens] = useState<string[]>([]);
@@ -130,7 +131,7 @@ const AdicionarServico = () => {
   }, [userId]);
 
   const handleSalvar = async () => {
-    if (servico.trim() === "" || valor.trim() === "" || duracao.trim() === "" || tipoServico.trim() === "") {
+    if (servico.trim() === "" || valor.trim() === "" || duracao.trim() === "" || tipoServico.trim() === "" || tipoAtendimento.trim() === "") {
       Alert.alert("Erro", "Por favor, preencha todos os campos obrigatórios.");
       return;
     }
@@ -184,6 +185,7 @@ const AdicionarServico = () => {
           imagensUrl: newUploadedImageUrls,
           tipoServico: pagamento,
           ValorFinalMuda: valorFinalMuda,
+          tipoAtendimento: tipoAtendimento,
           funcionariosIds: funcionariosSelecionados.map(f => f.id),
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now(),
@@ -204,6 +206,7 @@ const AdicionarServico = () => {
         setImagens([]);
         setUploadedImageUrls([]);
         setTipoServico("");
+        setTipoAtendimento("");
         setFuncionariosSelecionados([]);
         navigation.goBack();
       } else {
@@ -418,6 +421,35 @@ const AdicionarServico = () => {
               value={duracao}
               onChangeText={setDuracao}
             />
+          </View>
+        </View>
+        <View style={{ marginTop: 20, marginBottom: 20 }}>
+          <Text style={AdicionarServicoStyle.subtitulo}>Tipo de Atendimento</Text>
+          <View style={AdicionarServicoStyle.containerTipoServico}>
+            <View style={AdicionarServicoStyle.containerTipoServicoMetade}>
+              <Text style={AdicionarServicoStyle.linkTexto}>Atendimento a Residência</Text>
+              <TouchableOpacity
+                style={[
+                  AdicionarServicoStyle.botaoTipoServico,
+                  { backgroundColor: tipoAtendimento === "residencia" ? "#00C20A" : "#ccc" },
+                ]}
+                onPress={() => {
+                  setTipoAtendimento("residencia");
+                }}
+              />
+            </View>
+            <View style={AdicionarServicoStyle.containerTipoServicoMetade}>
+              <Text style={AdicionarServicoStyle.linkTexto}>Atendimento no Estabelecimento</Text>
+              <TouchableOpacity
+                style={[
+                  AdicionarServicoStyle.botaoTipoServico,
+                  { backgroundColor: tipoAtendimento === "estabelecimento" ? "#00C20A" : "#ccc" },
+                ]}
+                onPress={() => {
+                  setTipoAtendimento("estabelecimento");
+                }}
+              />
+            </View>
           </View>
         </View>
         <View style={[stylesSingLog.inputContainerOneInput, { backgroundColor: "transparent", margin: "auto", marginTop: 20, marginBottom: 0, height: 80 }]}>

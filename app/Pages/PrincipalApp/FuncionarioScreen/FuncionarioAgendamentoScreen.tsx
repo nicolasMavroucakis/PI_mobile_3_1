@@ -391,15 +391,15 @@ const FuncionarioAgendamentoScreen = () => {
                 ]}
                 onPress={() => navigation.navigate('IniciarAgendamentoScreen', { agendamento })}
             >
-                <View style={[ReservaScreenStyle.containerTextAgendamento, { padding: 5 }]}>
-                    <Text style={[ReservaScreenStyle.textAgendamento, { color: '#FFFFFF', fontWeight: 'bold' }]}>
+                <View style={{ padding: 5, alignItems: 'center' }}>
+                    <Text style={{ color: '#FFFFFF', fontWeight: 'bold', textAlign: 'center', fontSize: 12 }}> 
                         {`${agendamento.horaInicio} - ${agendamento.horaFim}`}
                     </Text>
-                    <Text style={[ReservaScreenStyle.textAgendamento, { color: '#FFFFFF' }]}>
-                        {agendamento.clienteNome || "Cliente"}
-                    </Text>
-                    <Text style={[ReservaScreenStyle.textAgendamento, { color: '#FFFFFF' }]}>
+                    <Text style={{ color: '#FFFFFF', textAlign: 'center', fontSize: 10, marginTop: 2 }}> 
                         {agendamento.servico.nome}
+                    </Text>
+                    <Text style={{ color: '#FFFFFF', textAlign: 'center', fontSize: 10, marginTop: 2 }}> 
+                        {agendamento.clienteNome || "Cliente"}
                     </Text>
                 </View>
             </TouchableOpacity>
@@ -467,6 +467,116 @@ const FuncionarioAgendamentoScreen = () => {
         });
     }, [agendamentos]);
 
+    // Função utilitária para agrupar agendamentos por faixa de tempo sobreposta
+    function agruparAgendamentosSobrepostos(agendamentos: Agendamento[]): Agendamento[][] {
+        const ordenados = [...agendamentos].sort((a, b) => {
+            const [ha, ma] = a.horaInicio.split(':').map(Number);
+            const [hb, mb] = b.horaInicio.split(':').map(Number);
+            return (ha * 60 + ma) - (hb * 60 + mb);
+        });
+        const grupos: Agendamento[][] = [];
+        let grupoAtual: Agendamento[] = [];
+        let fimAtual: number | null = null;
+        for (const ag of ordenados) {
+            const [hIni, mIni] = ag.horaInicio.split(':').map(Number);
+            const [hFim, mFim] = ag.horaFim.split(':').map(Number);
+            const ini = hIni * 60 + mIni;
+            const fim = hFim * 60 + mFim;
+            if (!fimAtual || ini >= fimAtual) {
+                if (grupoAtual.length) grupos.push(grupoAtual);
+                grupoAtual = [ag];
+                fimAtual = fim;
+            } else {
+                grupoAtual.push(ag);
+                fimAtual = Math.max(fimAtual, fim);
+            }
+        }
+        if (grupoAtual.length) grupos.push(grupoAtual);
+        return grupos;
+    }
+
+    // NOVO: Renderização agrupada com scroll horizontal
+    const PIXELS_POR_MINUTO = 80 / 60;
+    const renderAgendamentosAgrupados = () => {
+        const grupos = agruparAgendamentosSobrepostos(agendamentos);
+        return grupos.map((grupo, idx) => {
+            const [hIni, mIni] = grupo[0].horaInicio.split(':').map(Number);
+            const ini = hIni * 60 + mIni;
+            const fim = Math.max(...grupo.map(ag => {
+                const [hFim, mFim] = ag.horaFim.split(':').map(Number);
+                return hFim * 60 + mFim;
+            }));
+            const top = ini * PIXELS_POR_MINUTO;
+            const height = Math.max((fim - ini) * PIXELS_POR_MINUTO, 20);
+            return (
+                <View
+                    key={idx}
+                    style={{
+                        position: 'absolute',
+                        left: 40,
+                        right: 10,
+                        top,
+                        height,
+                        zIndex: 3,
+                        flexDirection: 'row',
+                    }}
+                >
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={true}
+                        style={{ flex: 1 }}
+                        contentContainerStyle={{ flexDirection: 'row', alignItems: 'stretch', gap: 10 }}
+                    >
+                        {grupo.map(agendamento => {
+                            const [hA, mA] = agendamento.horaInicio.split(':').map(Number);
+                            const [hF, mF] = agendamento.horaFim.split(':').map(Number);
+                            const iniA = hA * 60 + mA;
+                            const fimA = hF * 60 + mF;
+                            const alturaA = Math.max((fimA - iniA) * PIXELS_POR_MINUTO, 20);
+                            return (
+                                <TouchableOpacity
+                                    key={agendamento.id}
+                                    style={{
+                                        width: 220,
+                                        height: alturaA,
+                                        backgroundColor: '#4CAF50',
+                                        borderRadius: 8,
+                                        borderWidth: 1,
+                                        borderColor: '#388E3C',
+                                        shadowColor: '#000',
+                                        shadowOffset: { width: 0, height: 2 },
+                                        shadowOpacity: 0.25,
+                                        shadowRadius: 3.84,
+                                        elevation: 5,
+                                        marginRight: 10,
+                                        marginBottom: 0,
+                                        marginTop: (iniA - ini) * PIXELS_POR_MINUTO,
+                                        zIndex: 4,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                    }}
+                                    onPress={() => navigation.navigate('IniciarAgendamentoScreen', { agendamento })}
+                                >
+                                    <View style={{ padding: 5, alignItems: 'center' }}>
+                                        <Text style={{ color: '#FFFFFF', fontWeight: 'bold', textAlign: 'center', fontSize: 12 }}> 
+                                            {`${agendamento.horaInicio} - ${agendamento.horaFim}`}
+                                        </Text>
+                                        <Text style={{ color: '#FFFFFF', textAlign: 'center', fontSize: 10, marginTop: 2 }}> 
+                                            {agendamento.servico.nome}
+                                        </Text>
+                                        <Text style={{ color: '#FFFFFF', textAlign: 'center', fontSize: 10, marginTop: 2 }}> 
+                                            {agendamento.clienteNome || "Cliente"}
+                                        </Text>
+                                    </View>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </ScrollView>
+                </View>
+            );
+        });
+    };
+
     return (
         <View style={{ flex: 1, backgroundColor: "#000" }}>
             <View style={[EmpresaInfoMoneyScreenStyle.containerTitle, {alignItems: 'center', justifyContent: 'center'}]}>
@@ -512,9 +622,34 @@ const FuncionarioAgendamentoScreen = () => {
                             </TouchableOpacity>
                         </View>
                     </View>
-                    <ScrollView style={ReservaScreenStyle.ContainerCalendario}>
-                        {Array.from({length: 24}, (_, i) => renderHorario(i))}
-                    </ScrollView>
+                    {/* NOVO: Container absoluto para linhas e agendamentos agrupados */}
+                    <View style={{ height: 24 * 80, position: 'relative', backgroundColor: '#f5f5f0', marginTop: 20, borderRadius: 10, overflow: 'visible' }}>
+                        {/* Renderizar linhas de hora e labels */}
+                        {Array.from({length: 24}, (_, i) => (
+                            <View key={i} style={{
+                                position: 'absolute',
+                                top: i * 80,
+                                left: 0,
+                                right: 0,
+                                height: 1,
+                                backgroundColor: '#e0e0e0',
+                                zIndex: 1
+                            }} />
+                        ))}
+                        {Array.from({length: 24}, (_, i) => (
+                            <Text key={i} style={{
+                                position: 'absolute',
+                                top: i * 80,
+                                left: 5,
+                                fontSize: 10,
+                                fontWeight: 'bold',
+                                color: '#000',
+                                zIndex: 2
+                            }}>{i.toString().padStart(2, '0')}</Text>
+                        ))}
+                        {/* Renderizar agendamentos agrupados com scroll horizontal */}
+                        {renderAgendamentosAgrupados()}
+                    </View>
                 </View>
             </ScrollView>
             <FuncionarioNavBar />

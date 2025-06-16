@@ -49,6 +49,20 @@ interface AgendamentoDoc {
     };
 }
 
+interface SelectionModalItem {
+    id: string;
+    label: string;
+}
+
+interface SelectionModalProps {
+    visible: boolean;
+    onClose: () => void;
+    title: string;
+    items: SelectionModalItem[];
+    selectedValue: string;
+    onValueChange: (value: string) => void;
+    emptyMessage: string;
+}
 
 const EmpresaInfoFuncionariosScreen = () => {
     const navigation = useNavigation<NavigationProp>();
@@ -357,7 +371,7 @@ const EmpresaInfoFuncionariosScreen = () => {
                 </TouchableOpacity>
             </View>
             <ScrollView showsVerticalScrollIndicator={false}>
-                <View style={[UserScreenStyle.containerRest,{height:930}]}>
+                <View style={[UserScreenStyle.containerRest, { minHeight: 930, flexGrow: 1 }]}>
                     <View style={EmpresaInfoMoneyScreenStyle.containerInputFotoFuncionarios}>
                         <View style={EmpresaInfoMoneyScreenStyle.contianerImgFuncionarios}>
                             <Image source={funcionariosImg} style={EmpresaInfoMoneyScreenStyle.imgFuncionarios}/>
@@ -383,20 +397,28 @@ const EmpresaInfoFuncionariosScreen = () => {
 
                     <View style={EmpresaInfoMoneyScreenStyle.continerAgendamentos}>
                         <View style={EmpresaInfoMoneyScreenStyle.continerAgendamentosMetade}>
-                            <Text style={EmpresaInfoMoneyScreenStyle.textAgendamentos}>
-                                Total de agendamentos para hoje
-                            </Text>
-                            <Text style={[EmpresaInfoMoneyScreenStyle.textAgendamentos, { color: '#0057C2' }]}>
-                                {agendamentosAindaParaHoje}
-                            </Text>
+                            <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+                                <Text style={EmpresaInfoMoneyScreenStyle.textAgendamentos}>
+                                    Reservas para o dia de hoje
+                                </Text>
+                            </View>
+                            <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+                                <Text style={[EmpresaInfoMoneyScreenStyle.textAgendamentos, { color: '#0057C2' }]}>
+                                    {agendamentosAindaParaHoje}
+                                </Text>
+                            </View>
                         </View>
                         <View style={EmpresaInfoMoneyScreenStyle.continerAgendamentosMetade}>
-                            <Text style={EmpresaInfoMoneyScreenStyle.textAgendamentos}>
-                                Agendamentos realizados no dia de hoje
-                            </Text>
-                            <Text style={[EmpresaInfoMoneyScreenStyle.textAgendamentos, { color: '#00C20A' }]}>
-                                {agendamentosFinalizadosHoje}
-                            </Text>
+                            <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+                                <Text style={EmpresaInfoMoneyScreenStyle.textAgendamentos}>
+                                    Agendamentos realizados hoje
+                                </Text>
+                            </View>
+                            <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+                                <Text style={[EmpresaInfoMoneyScreenStyle.textAgendamentos, { color: '#00C20A' }]}>
+                                    {agendamentosFinalizadosHoje}
+                                </Text>
+                            </View>
                         </View>
                     </View>
                     <View style={EmpresaInfoMoneyScreenStyle.containerServicoReservado}>
@@ -536,78 +558,72 @@ const EmpresaInfoFuncionariosScreen = () => {
                 </View>
             </ScrollView>
             <EmpresaNavBar/>
-            <Modal visible={modalFuncionarioVisible} transparent animationType="slide">
-                <View style={EmpresaInfoMoneyScreenStyle.modalContainer}>
-                    <View style={EmpresaInfoMoneyScreenStyle.modalContent}>
-                        <Text style={EmpresaInfoMoneyScreenStyle.modalTitle}>Selecione o funcionário</Text>
-                        <View style={{ backgroundColor: "#f0f0f0", borderRadius: 8, width: "100%" }}>
-                            {funcionarios.length > 0 ? (
-                                <Picker
-                                    selectedValue={selectedFuncionario}
-                                    onValueChange={(itemValue) => {
-                                        setSelectedFuncionario(itemValue);
-                                        setModalFuncionarioVisible(false); // Fechar modal ao selecionar
-                                    }}
-                                    itemStyle={{ color: "black", fontSize: 16 }}
-                                    dropdownIconColor="black"
-                                >
-                                    {funcionarios.map((funcionario) => (
-                                        <Picker.Item
-                                            key={funcionario.id}
-                                            label={funcionario.nome}
-                                            value={funcionario.id}
-                                        />
-                                    ))}
-                                </Picker>
-                            ) : (
-                                <Text style={{ padding: 10, textAlign: 'center' }}>
-                                    Nenhum funcionário encontrado
-                                </Text>
-                            )}
-                        </View>
-                        <TouchableOpacity onPress={() => setModalFuncionarioVisible(false)} style={EmpresaInfoMoneyScreenStyle.modalButton}>
-                            <Text style={{ color: "white" }}>Fechar</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
-            <Modal visible={modalServicoVisible} transparent animationType="slide">
-                <View style={EmpresaInfoMoneyScreenStyle.modalContainer}>
-                    <View style={EmpresaInfoMoneyScreenStyle.modalContent}>
-                        <Text style={EmpresaInfoMoneyScreenStyle.modalTitle}>Selecione o serviço</Text>
-                        <View style={{ backgroundColor: "#f0f0f0", borderRadius: 8, width: "100%" }}>
-                            {servicos.length > 0 ? (
-                                <Picker
-                                    selectedValue={selectedServico}
-                                    onValueChange={(itemValue) => {
-                                        setSelectedServico(itemValue);
-                                        setModalServicoVisible(false); // Fechar modal ao selecionar
-                                    }}
-                                    itemStyle={{ color: "black", fontSize: 16 }}
-                                    dropdownIconColor="black"
-                                >
-                                    {servicos.map((servico) => (
-                                        <Picker.Item
-                                            key={servico.id}
-                                            label={`${servico.nome} - R$ ${servico.preco.toFixed(2)}`}
-                                            value={servico.id}
-                                        />
-                                    ))}
-                                </Picker>
-                            ) : (
-                                <Text style={{ padding: 10, textAlign: 'center' }}>
-                                    Nenhum serviço encontrado
-                                </Text>
-                            )}
-                        </View>
-                        <TouchableOpacity onPress={() => setModalServicoVisible(false)} style={EmpresaInfoMoneyScreenStyle.modalButton}>
-                            <Text style={{ color: "white" }}>Fechar</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
+            <SelectionModal
+                visible={modalFuncionarioVisible}
+                onClose={() => setModalFuncionarioVisible(false)}
+                title="Selecione o funcionário"
+                items={funcionarios.map(f => ({ id: f.id, label: f.nome }))}
+                selectedValue={selectedFuncionario}
+                onValueChange={setSelectedFuncionario}
+                emptyMessage="Nenhum funcionário encontrado"
+            />
+            <SelectionModal
+                visible={modalServicoVisible}
+                onClose={() => setModalServicoVisible(false)}
+                title="Selecione o serviço"
+                items={servicos.map(s => ({ id: s.id, label: `${s.nome} - R$ ${s.preco.toFixed(2)}` }))}
+                selectedValue={selectedServico}
+                onValueChange={setSelectedServico}
+                emptyMessage="Nenhum serviço encontrado"
+            />
         </View>
     );
 };
+
+const SelectionModal: React.FC<SelectionModalProps> = ({ 
+    visible, 
+    onClose, 
+    title, 
+    items, 
+    selectedValue, 
+    onValueChange, 
+    emptyMessage 
+}) => (
+    <Modal visible={visible} transparent animationType="slide">
+        <View style={EmpresaInfoMoneyScreenStyle.modalContainer}>
+            <View style={EmpresaInfoMoneyScreenStyle.modalContent}>
+                <Text style={EmpresaInfoMoneyScreenStyle.modalTitle}>{title}</Text>
+                <View style={{ backgroundColor: "#f0f0f0", borderRadius: 8, width: "100%" }}>
+                    {items.length > 0 ? (
+                        <Picker
+                            selectedValue={selectedValue}
+                            onValueChange={(itemValue) => {
+                                onValueChange(itemValue);
+                                onClose();
+                            }}
+                            itemStyle={{ color: "black", fontSize: 16 }}
+                            dropdownIconColor="black"
+                        >
+                            {items.map((item: SelectionModalItem) => (
+                                <Picker.Item
+                                    key={item.id}
+                                    label={item.label}
+                                    value={item.id}
+                                />
+                            ))}
+                        </Picker>
+                    ) : (
+                        <Text style={{ padding: 10, textAlign: 'center' }}>
+                            {emptyMessage}
+                        </Text>
+                    )}
+                </View>
+                <TouchableOpacity onPress={onClose} style={EmpresaInfoMoneyScreenStyle.modalButton}>
+                    <Text style={{ color: "white" }}>Fechar</Text>
+                </TouchableOpacity>
+            </View>
+        </View>
+    </Modal>
+);
 
 export default EmpresaInfoFuncionariosScreen;
